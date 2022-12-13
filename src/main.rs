@@ -11,5 +11,10 @@ fn main() {
     #[cfg(feature = "debug")]
     app.add_plugin(WorldInspectorPlugin::new());
     app.add_plugin(DwarfPlugin);
+    app.add_startup_system(setup);
     app.run();
+}
+
+fn setup(mut commands: Commands) {
+    commands.spawn(Camera2dBundle::default());
 }
