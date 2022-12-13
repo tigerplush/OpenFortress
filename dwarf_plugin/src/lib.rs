@@ -14,6 +14,7 @@ impl DwarfPlugin {
     fn add_dwarves(mut commands: Commands) {
         commands.spawn(
                 Transform::from_xyz(0.0, 0.0, 0.0)
-        );
+        )
+        .insert(Name::new("Dwarf"));
     }
 }
