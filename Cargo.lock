@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "OpenFortress"
+name = "open_fortress"
 version = "0.1.0"

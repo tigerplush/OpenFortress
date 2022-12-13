@@ -1,5 +1,5 @@
 [package]
-name = "OpenFortress"
+name = "open_fortress"
 version = "0.1.0"
 edition = "2021"
 
