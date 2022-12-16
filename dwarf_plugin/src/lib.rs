@@ -34,6 +34,7 @@ impl Plugin for DwarfPlugin {
         app.add_startup_system(Self::add_dwarves);
         app.add_startup_system(Self::spawn_food);
         app.add_system(Self::tick_desires);
+        app.add_system(Self::calc_dist);
         #[cfg(feature = "debug")]
         {
             app.register_inspectable::<Position>();
@@ -76,5 +77,20 @@ impl DwarfPlugin {
         for (mut desire, _desire_type, _parent) in query.iter_mut() {
             desire.value = desire.value + desire.increase * time.delta_seconds();
         }
+    }
+
+    fn calc_dist(
+        mut commands: Commands,
+        dwarf_query: Query<&Position, With<Dwarf>>,
+        food_query: Query<(&Position, Entity), With<Food>>
+    )
+    {
+        if let Some(d) = dwarf_query.iter().next() {
+            if let Some(f) = food_query.iter().next() {
+                if Position::calculate_path(*d, *f.0) {
+                    commands.entity(f.1).despawn();
+                }
+            }
+        } 
     }
 }

@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, log::LogPlugin};
 
 #[cfg(feature = "debug")]
 use bevy_inspector_egui::WorldInspectorPlugin;
