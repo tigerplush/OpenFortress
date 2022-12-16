@@ -12,9 +12,9 @@ fn main() {
     app.add_plugins(DefaultPlugins);
     #[cfg(feature = "debug")]
     app.add_plugin(WorldInspectorPlugin::new());
-    app.add_plugin(DwarfPlugin);
     #[cfg(feature = "debug")]
     app.add_plugin(FpsPlugin);
+    app.add_plugin(DwarfPlugin);
     app.add_startup_system(setup);
     app.run();
 }

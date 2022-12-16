@@ -1338,6 +1338,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "data"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy-inspector-egui",
+ "colored",
+ "rand",
+]
+
+[[package]]
 name = "deflate"
 version = "0.8.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1372,6 +1382,7 @@ dependencies = [
  "bevy",
  "bevy-inspector-egui",
  "colored",
+ "data",
  "queues",
  "rand",
 ]
@@ -2569,6 +2580,7 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "bevy-inspector-egui",
+ "data",
  "dwarf_plugin",
  "fps_plugin",
 ]
