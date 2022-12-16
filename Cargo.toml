@@ -9,6 +9,7 @@ edition = "2021"
 default = []
 debug = [
     "dwarf_plugin/debug",
+    "fps_plugin/debug",
     "bevy-inspector-egui"
 ]
 
@@ -17,8 +18,10 @@ bevy = "0.9.1"
 bevy-inspector-egui = { version = "0.14.0", optional = true }
 
 dwarf_plugin = { path = "dwarf_plugin" }
+fps_plugin = { path = "fps_plugin" }
 
 [workspace]
 members = [
-    "dwarf_plugin"
+    "dwarf_plugin",
+    "fps_plugin"
 ]

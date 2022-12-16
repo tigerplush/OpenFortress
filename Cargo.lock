@@ -1555,6 +1555,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "fps_plugin"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy-inspector-egui",
+]
+
+[[package]]
 name = "fsevent-sys"
 version = "4.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2562,6 +2570,7 @@ dependencies = [
  "bevy",
  "bevy-inspector-egui",
  "dwarf_plugin",
+ "fps_plugin",
 ]
 
 [[package]]

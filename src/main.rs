@@ -4,6 +4,8 @@ use bevy::prelude::*;
 use bevy_inspector_egui::WorldInspectorPlugin;
 
 use dwarf_plugin::DwarfPlugin;
+#[cfg(feature = "debug")]
+use fps_plugin::FpsPlugin;
 
 fn main() {
     let mut app = App::new();
@@ -11,6 +13,8 @@ fn main() {
     #[cfg(feature = "debug")]
     app.add_plugin(WorldInspectorPlugin::new());
     app.add_plugin(DwarfPlugin);
+    #[cfg(feature = "debug")]
+    app.add_plugin(FpsPlugin);
     app.add_startup_system(setup);
     app.run();
 }
