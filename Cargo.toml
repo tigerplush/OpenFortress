@@ -11,7 +11,8 @@ debug = [
     "dwarf_plugin/debug",
     "fps_plugin/debug",
     "bevy-inspector-egui",
-    "data/debug"
+    "data/debug",
+    "task_plugin/debug"
 ]
 
 [dependencies]
@@ -21,10 +22,12 @@ bevy-inspector-egui = { version = "0.14.0", optional = true }
 data = { path = "data" }
 dwarf_plugin = { path = "dwarf_plugin" }
 fps_plugin = { path = "fps_plugin" }
+task_plugin = { path = "task_plugin" }
 
 [workspace]
 members = [
     "dwarf_plugin",
     "fps_plugin",
-    "data"
+    "data",
+    "task_plugin"
 ]

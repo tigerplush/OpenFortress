@@ -1386,6 +1386,7 @@ dependencies = [
  "data",
  "queues",
  "rand",
+ "task_plugin",
 ]
 
 [[package]]
@@ -2584,6 +2585,7 @@ dependencies = [
  "data",
  "dwarf_plugin",
  "fps_plugin",
+ "task_plugin",
 ]
 
 [[package]]
@@ -3138,6 +3140,16 @@ dependencies = [
  "hash32-derive",
  "num-traits",
  "typenum",
+]
+
+[[package]]
+name = "task_plugin"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy-inspector-egui",
+ "colored",
+ "data",
 ]
 
 [[package]]

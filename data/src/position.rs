@@ -19,6 +19,8 @@ pub struct Position {
     pub elevation: i16,
 }
 
+pub struct Path(Vec<Position>);
+
 const DIRECTIONS: [Position; 6] = [
     // up
     Position { x: 0, y: 0, elevation: 1},
@@ -76,7 +78,7 @@ impl Position {
     pub fn calculate_path(
         start: Position,
         target: Position
-    ) -> bool {
+    ) -> Option<Path> {
         log::info!("Calculating path from {} to {}", start, target);
         let mut priority_queue: DoublePriorityQueue<Position, i32> = DoublePriorityQueue::new();
         priority_queue.push(start, 0);
@@ -91,7 +93,7 @@ impl Position {
             if let Some((current, _prio)) = priority_queue.pop_min() {
                 if current == target {
                     log::info!("Found path: {}", current == target);
-                    return true;
+                    return Some(Path(Vec::new()));
                 }
 
                 for neighbor in current.neighbors() {
@@ -105,6 +107,6 @@ impl Position {
                 }
             }
         }
-        false
+        None
     }
 }
