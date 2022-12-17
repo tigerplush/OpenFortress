@@ -76,7 +76,7 @@ impl Position {
     pub fn calculate_path(
         start: Position,
         target: Position
-    ) -> bool {        
+    ) -> bool {
         log::info!("Calculating path from {} to {}", start, target);
         let mut priority_queue: DoublePriorityQueue<Position, i32> = DoublePriorityQueue::new();
         priority_queue.push(start, 0);

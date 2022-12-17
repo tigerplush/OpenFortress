@@ -1,4 +1,6 @@
 
+use std::collections::VecDeque;
+
 use bevy::log;
 use bevy::prelude::*;
 #[cfg(feature = "debug")]
@@ -15,6 +17,40 @@ struct Dwarf;
 struct Food;
 
 #[cfg_attr(feature = "debug", derive(bevy_inspector_egui::Inspectable))]
+#[derive(Component)]
+struct TaskQueue {
+    current_task: Option<Task>,
+    queue: VecDeque<Task>
+}
+
+impl TaskQueue {
+    fn next_task(&mut self) -> Option<Task> {
+        match self.current_task {
+            None => {
+                if let Some(task) = self.queue.pop_front() {
+                    self.current_task = Some(task);
+                    return self.current_task;
+                }
+            },
+            _ => ()
+        }
+        None
+    }
+}
+
+impl Default for TaskQueue {
+    fn default() -> Self {
+        TaskQueue { current_task: None, queue: VecDeque::new() }
+    }
+}
+
+#[cfg_attr(feature = "debug", derive(bevy_inspector_egui::Inspectable))]
+#[derive(Clone, Component, Copy, Default)]
+struct Task {
+    satisfies: Option<DesireType>,
+}
+
+#[cfg_attr(feature = "debug", derive(bevy_inspector_egui::Inspectable))]
 #[derive(Component, Debug)]
 struct Desire {
     pub value: f32,
@@ -23,7 +59,7 @@ struct Desire {
 }
 
 #[cfg_attr(feature = "debug", derive(bevy_inspector_egui::Inspectable))]
-#[derive(Component)]
+#[derive(Clone, Component, Copy)]
 enum DesireType {
     Hunger,
     Socialize,
@@ -34,12 +70,15 @@ impl Plugin for DwarfPlugin {
         app.add_startup_system(Self::add_dwarves);
         app.add_startup_system(Self::spawn_food);
         app.add_system(Self::tick_desires);
-        app.add_system(Self::calc_dist);
+        //app.add_system(Self::calc_dist);
+        app.add_system(Self::tick_tasks);
         #[cfg(feature = "debug")]
         {
             app.register_inspectable::<Position>();
             app.register_inspectable::<Desire>();
             app.register_inspectable::<DesireType>();
+            app.register_inspectable::<TaskQueue>();
+            app.register_inspectable::<Task>();
         }
         log::info!("Loaded DwarfPlugin");
     }
@@ -52,6 +91,7 @@ impl DwarfPlugin {
         )
         .insert(Name::new("Dwarf"))
         .insert(Position {x: 0, y:0, elevation: 0})
+        .insert(TaskQueue::default())
         .with_children(|parent| {
             parent.spawn(Desire { value: 0.0, increase: 0.0, threshold: 70.0})
             .insert(DesireType::Hunger)
@@ -72,10 +112,16 @@ impl DwarfPlugin {
 
     fn tick_desires(
         time: Res<Time>,
-        mut query:Query<(&mut Desire, &DesireType, &Parent)>
+        mut parent_query: Query<(&mut TaskQueue, Entity)>,
+        mut query: Query<(&mut Desire, &DesireType, &Parent)>
     ) {
-        for (mut desire, _desire_type, _parent) in query.iter_mut() {
+        for (mut desire, desire_type, parent) in query.iter_mut() {
             desire.value = desire.value + desire.increase * time.delta_seconds();
+            if desire.value > desire.threshold {
+                if let Ok((mut queue, _entity)) = parent_query.get_mut(parent.get()) {
+                    queue.queue.push_back(Task { satisfies: Some(*desire_type)});
+                }
+            }
         }
     }
 
@@ -92,5 +138,16 @@ impl DwarfPlugin {
                 }
             }
         } 
+    }
+
+    fn tick_tasks(
+        mut commands: Commands,
+        mut query: Query<(&mut TaskQueue, Entity)>
+    ) {
+        for (mut queue, entity) in query.iter_mut() {
+            if let Some(task) = queue.next_task() {
+                commands.entity(entity).insert(task);
+            }
+        }
     }
 }
