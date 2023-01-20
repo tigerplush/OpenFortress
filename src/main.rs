@@ -1,24 +1,37 @@
 use std::collections::HashMap;
 
-use bevy::{prelude::*, log::LogPlugin};
+use bevy::prelude::{*, system_adapter::new};
+
+#[cfg(feature = "debug")]
+use bevy::log::LogPlugin;
 
 use priority_queue::DoublePriorityQueue;
 
-#[cfg(feature = "debug")]
-use bevy_inspector_egui::WorldInspectorPlugin;
+#[cfg(feature = "inspector")]
+use bevy_inspector_egui::{WorldInspectorPlugin, RegisterInspectable};
+
+#[cfg(feature = "fps")]
+use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 
 mod position;
 use position::*;
 
 fn main() {
     let mut app = App::new();
+
+    #[cfg(not(feature = "debug"))]
+    app.add_plugins(DefaultPlugins);
+    #[cfg(feature = "debug")]
     app.add_plugins(DefaultPlugins.set(LogPlugin {
         level: bevy::log::Level::DEBUG,
         ..default()
     }));
-    #[cfg(feature = "debug")]
-    app.add_plugin(WorldInspectorPlugin::new());
-
+    #[cfg(feature = "inspector")]
+    app.add_plugin(WorldInspectorPlugin::new())
+        .register_inspectable::<Path>();
+    #[cfg(feature = "fps")]
+    app.add_plugin(LogDiagnosticsPlugin::default())
+    .add_plugin(FrameTimeDiagnosticsPlugin::default());
     app.add_startup_system(setup);
     app.add_startup_system(spawn_dwarf);
     app.add_startup_system(spawn_food);
@@ -53,19 +66,22 @@ fn spawn_food(mut commands: Commands) {
         .insert(Name::from("Food"));
 }
 
+#[cfg_attr(feature = "inspector", derive(bevy_inspector_egui::Inspectable))]
 enum PathState {
     Queued,
     Calculating,
+    Building,
     Success,
     Error,
 }
 
+#[cfg_attr(feature = "inspector", derive(bevy_inspector_egui::Inspectable))]
 #[derive(Component)]
 struct Path {
     start: Position,
     target: Position,
     state: PathState,
-    path: Option<Vec<Position>>,
+    path: Vec<Position>,
     frontier: DoublePriorityQueue<Position, i32>,
     came_from: HashMap<Position, Option<Position>>,
     cost_so_far: HashMap<Position, i32>,
@@ -77,7 +93,7 @@ impl Path {
             start,
             target,
             state: PathState::Queued,
-            path: None,
+            path: Vec::new(),
             frontier: DoublePriorityQueue::new(),
             came_from: HashMap::new(),
             cost_so_far: HashMap::new(),
@@ -110,24 +126,52 @@ fn calculate_path(
                     Some((current, _prio)) => {
                         if current == path.target {
                             info!("Calculated path from {} to {}!", path.start, path.target);
-                            // todo: actually calculate path
-                            path.state = PathState::Success;
+                            path.state = PathState::Building;
                             return;
                         }
 
                         for neighbor in current.neighbors() {
-                            if let Some(cost) = path.cost_so_far.get(&current) {
+                            if let Some(&cost) = path.cost_so_far.get(&current) {
+                                // todo: replace 1 with cost of traversing a tile
                                 let new_cost = cost + 1;
-                                path.cost_so_far.entry(neighbor).and_modify(|v| *v = new_cost).or_insert(new_cost);
-                                let priority = new_cost + neighbor.distance(path.target) as i32;
-                                debug!("Testing from {} to {}, cost {}, distance {}", current, neighbor, new_cost, neighbor.distance(path.target) as i32);
-                                path.frontier.push(neighbor, priority);
-                                path.came_from.insert(neighbor, Some(current));
+                                match (path.cost_so_far.get(&neighbor), new_cost + 1) {
+                                    (None, prev) |
+                                    (Some(&prev), _) if new_cost < prev => {
+                                        path.cost_so_far.insert(neighbor, new_cost);
+                                        // todo: finetune distance function, currently returns actual distance and then throws away decimals
+                                        let priority = new_cost + neighbor.distance(path.target) as i32;
+                                        debug!("Testing from {} to {}, cost {}, distance {}", current, neighbor, new_cost, neighbor.distance(path.target) as i32);
+                                        path.frontier.push(neighbor, priority);
+                                        path.came_from.insert(neighbor, Some(current));
+                                    },
+                                    _ => ()
+                                }
                             }
                         }
                     }
                 }
             },
+            PathState::Building => {
+                debug!("Rebuilding path...");
+                if let Some(current) = path.path.last() {
+                    if *current == path.start {
+                        debug!("Path is finished, reversing...");
+                        path.path.reverse();
+                        info!("{:?}", path.path);
+                        path.state = PathState::Success;
+                    }
+                    else {
+                        let previous = path.came_from.get(current).unwrap().unwrap();
+                        debug!("Going from {} to {}", current, previous);
+                        path.path.push(previous);
+                    }
+                }
+                else {
+                    let target = path.target;
+                    debug!("Path is brand new, adding target {}", target);
+                    path.path.push(target);
+                }
+            }
             _ => (),
         }
     }

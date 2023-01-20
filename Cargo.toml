@@ -7,7 +7,9 @@ edition = "2021"
 
 [features]
 default = []
-debug = [
+fps = []
+debug = []
+inspector = [
     "bevy-inspector-egui",
 ]
 

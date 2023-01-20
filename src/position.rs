@@ -2,7 +2,9 @@ use std::ops::{Sub, Add};
 
 use bevy::prelude::*;
 
-#[derive(Clone, Component, Copy, Eq, Hash, PartialEq)]
+
+#[cfg_attr(feature = "inspector", derive(bevy_inspector_egui::Inspectable, Default))]
+#[derive(Clone, Component, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct Position {
     x: i32,
     z: i32,
