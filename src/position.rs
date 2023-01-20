@@ -44,6 +44,10 @@ impl Position {
     pub fn distance(self, rhs: Self) -> f32 {
         (self - rhs).length()
     }
+    
+    pub fn world_distance(self, rhs: Self) -> f32 {
+        (self - rhs).length() * Self::CONVERSION
+    }
 
     fn dot(self, rhs: Self) -> f32 {
         ((self.x * rhs.x) + (self.elevation * rhs.elevation) + (self.z * rhs.z)) as f32
@@ -53,6 +57,8 @@ impl Position {
         self.dot(self).sqrt()
     }
 
+    pub const CONVERSION: f32 = 32.0;
+
     pub const ZERO: Self = Self::new(0, 0, 0);
     pub const UP: Self = Self::new(0, 0, 1);
     pub const DOWN: Self = Self::new(0, 0, -1);
@@ -60,6 +66,22 @@ impl Position {
     pub const RIGHT: Self = Self::new(0, 1, 0);
     pub const FORWARD: Self = Self::new(-1, 0, 0);
     pub const BACKWARD: Self = Self::new(1, 0, 0);
+
+    pub fn into_world(self) -> Vec3 {
+        Vec3::new(
+            self.x as f32 * Self::CONVERSION,
+            self.z as f32 * Self::CONVERSION,
+            self.elevation as f32,
+        )
+    }
+
+    pub fn from_world(value: Vec3) -> Self {
+        Self {
+            x: (value.x / Self::CONVERSION).round() as i32,
+            z: (value.y / Self::CONVERSION).round() as i32,
+            elevation: value.z as i32,
+        }
+    }
 }
 
 impl Add<Position> for Position {
