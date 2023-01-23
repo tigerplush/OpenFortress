@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use priority_queue::DoublePriorityQueue;
 use bevy::prelude::*;
 
-use crate::position::Position;
+use crate::{position::Position, map::Map};
 
 #[cfg_attr(feature = "inspector", derive(bevy_inspector_egui::Inspectable))]
 #[derive(PartialEq)]
@@ -15,7 +15,6 @@ enum PathState {
     Error,
 }
 
-#[cfg_attr(feature = "inspector", derive(bevy_inspector_egui::Inspectable))]
 #[derive(Component)]
 pub struct Path {
     start: Position,
@@ -47,7 +46,8 @@ impl Path {
 /// todo: needs access to a world component/resource
 /// maybe rework to attach PathState as components, so this can be split?
 pub fn calculate_path(
-    mut query: Query<&mut Path>
+    mut query: Query<&mut Path>,
+    mut map: Res<Map>,
 ) {
     for mut path in &mut query {
         match path.state {
@@ -150,7 +150,7 @@ pub fn follow_path(
             let target: Vec3 = path.target.into_world();
             let start: Vec3 = path.start.into_world();
             path.current_lerp += time.delta_seconds() * SPEED;
-            transform.translation = start.lerp(target, path.current_lerp);
+            transform.translation = start.lerp(target, path.current_lerp) + Vec3::new(0.0, 0.5, 0.0);
             debug!("at {:?}, walking from {} towards {}", transform.translation, start, target);
         }
     }

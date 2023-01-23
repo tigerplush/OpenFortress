@@ -1,11 +1,12 @@
 
 
-use bevy::prelude::*;
+use bevy::{prelude::*, ecs::schedule::ShouldRun};
 
 #[cfg(feature = "debug")]
 use bevy::log::LogPlugin;
 
 
+use bevy_ecs_tilemap::TilemapPlugin;
 #[cfg(feature = "inspector")]
 use bevy_inspector_egui::{WorldInspectorPlugin, RegisterInspectable};
 
@@ -26,25 +27,33 @@ fn main() {
 
     #[cfg(not(feature = "debug"))]
     app.add_plugins(DefaultPlugins);
+    app.add_plugin(TilemapPlugin);
     #[cfg(feature = "debug")]
     app.add_plugins(DefaultPlugins.set(LogPlugin {
         level: bevy::log::Level::DEBUG,
         ..default()
     }));
     #[cfg(feature = "inspector")]
-    app.add_plugin(WorldInspectorPlugin::new())
-        .register_inspectable::<Path>();
+    app.add_plugin(WorldInspectorPlugin::new());
     #[cfg(feature = "fps")]
     app.add_plugin(LogDiagnosticsPlugin::default())
     .add_plugin(FrameTimeDiagnosticsPlugin::default());
-    app.insert_resource(Map::generate(10, 10, 10));
+    app.insert_resource(Map::generate(10,10, 10));
     app.add_startup_system(setup);
     app.add_startup_system(spawn_dwarf);
     app.add_startup_system(spawn_food);
+    app.add_startup_system(spawn_map.with_run_criteria(has_resource::<Map>));
     app.add_system(calculate_path);
     app.add_system(animate_sprite);
     app.add_system(follow_path);
     app.run();
+}
+
+fn has_resource<T: Resource>(resource: Option<Res<T>>) -> ShouldRun {
+    match resource.is_some() {
+        true => ShouldRun::Yes,
+        false => ShouldRun::No,
+    }
 }
 
 fn setup(mut commands: Commands) {

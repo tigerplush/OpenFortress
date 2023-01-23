@@ -44,7 +44,7 @@ impl Position {
     pub fn distance(self, rhs: Self) -> f32 {
         (self - rhs).length()
     }
-    
+
     pub fn world_distance(self, rhs: Self) -> f32 {
         (self - rhs).length() * Self::CONVERSION
     }
