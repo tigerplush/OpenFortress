@@ -1,25 +1,26 @@
 use std::collections::HashMap;
 
 use priority_queue::DoublePriorityQueue;
-use bevy::prelude::*;
+use bevy::{prelude::*, math};
 
 use crate::{position::Position, map::Map};
 
 #[cfg_attr(feature = "inspector", derive(bevy_inspector_egui::Inspectable))]
 #[derive(PartialEq)]
-enum PathState {
+pub enum PathState {
     Queued,
     Calculating,
     Building,
     Success,
     Error,
+    Done,
 }
 
 #[derive(Component)]
 pub struct Path {
     start: Position,
     target: Position,
-    state: PathState,
+    pub state: PathState,
     path: Vec<Position>,
     frontier: DoublePriorityQueue<Position, i32>,
     came_from: HashMap<Position, Option<Position>>,
@@ -142,15 +143,15 @@ pub fn follow_path(
                 path.current_lerp = 0.0;
             }
             else {
-                //despawn path
                 debug!("No more points");
+                path.state = PathState::Done;
             }
         }
         else {
             let target: Vec3 = path.target.into_world();
             let start: Vec3 = path.start.into_world();
-            path.current_lerp += time.delta_seconds() * SPEED;
-            transform.translation = start.lerp(target, path.current_lerp) + Vec3::new(0.0, 0.5, 0.0);
+            path.current_lerp = (path.current_lerp + time.delta_seconds() * SPEED).clamp(0.0, 1.0);
+            transform.translation = start.lerp(target, path.current_lerp);
             debug!("at {:?}, walking from {} towards {}", transform.translation, start, target);
         }
     }
