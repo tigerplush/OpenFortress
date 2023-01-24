@@ -1,6 +1,6 @@
 
 
-use bevy::{prelude::*, ecs::schedule::ShouldRun, render::texture};
+use bevy::{prelude::*, ecs::schedule::ShouldRun};
 
 #[cfg(feature = "debug")]
 use bevy::log::LogPlugin;

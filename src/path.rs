@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use priority_queue::DoublePriorityQueue;
-use bevy::{prelude::*, math};
+use bevy::prelude::*;
 
 use crate::{position::Position, map::Map};
 
@@ -48,7 +48,7 @@ impl Path {
 /// maybe rework to attach PathState as components, so this can be split?
 pub fn calculate_path(
     mut query: Query<&mut Path>,
-    mut map: Res<Map>,
+    mut _map: Res<Map>,
 ) {
     for mut path in &mut query {
         match path.state {
