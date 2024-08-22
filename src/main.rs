@@ -1,14 +1,11 @@
-
-
-use bevy::{prelude::*, ecs::schedule::ShouldRun};
+use bevy::{ecs::schedule::ShouldRun, prelude::*};
 
 #[cfg(feature = "debug")]
 use bevy::log::LogPlugin;
 
-
 use bevy_ecs_tilemap::TilemapPlugin;
 #[cfg(feature = "inspector")]
-use bevy_inspector_egui::{WorldInspectorPlugin, RegisterInspectable};
+use bevy_inspector_egui::{RegisterInspectable, WorldInspectorPlugin};
 
 #[cfg(feature = "fps")]
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
@@ -40,8 +37,8 @@ fn main() {
     app.add_plugin(WorldInspectorPlugin::new());
     #[cfg(feature = "fps")]
     app.add_plugin(LogDiagnosticsPlugin::default())
-    .add_plugin(FrameTimeDiagnosticsPlugin::default());
-    app.insert_resource(Map::generate(50,20, 10));
+        .add_plugin(FrameTimeDiagnosticsPlugin::default());
+    app.insert_resource(Map::generate(50, 20, 10));
     app.add_plugin(DwarfPlugin);
     app.add_startup_system(setup);
     app.add_startup_system(spawn_food);
@@ -61,7 +58,7 @@ fn has_resource<T: Resource>(resource: Option<Res<T>>) -> ShouldRun {
 fn setup(mut commands: Commands) {
     //others from the discord server don' recommend to move the 2d camera away from z:999.9
     // when it becomes an issue, change it
-    commands.spawn(Camera2dBundle{
+    commands.spawn(Camera2dBundle {
         transform: Transform::from_xyz(0.0, 0.0, 500.0),
         ..default()
     });
@@ -79,7 +76,8 @@ fn spawn_food(
     asset_server: Res<AssetServer>,
 ) {
     let texture_handle = asset_server.load("food.png");
-    let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 8, 8, None, None);
+    let texture_atlas =
+        TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 8, 8, None, None);
     let texture_atlas_handle = texture_atlasses.add(texture_atlas);
 
     commands

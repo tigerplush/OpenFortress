@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 
-use priority_queue::DoublePriorityQueue;
 use bevy::prelude::*;
+use priority_queue::DoublePriorityQueue;
 
-use crate::{position::Position, map::Map};
+use crate::{map::Map, position::Position};
 
 #[cfg_attr(feature = "inspector", derive(bevy_inspector_egui::Inspectable))]
 #[derive(PartialEq)]
@@ -46,10 +46,7 @@ impl Path {
 /// Calculates a path
 /// todo: needs access to a world component/resource
 /// maybe rework to attach PathState as components, so this can be split?
-pub fn calculate_path(
-    mut query: Query<&mut Path>,
-    mut _map: Res<Map>,
-) {
+pub fn calculate_path(mut query: Query<&mut Path>, mut _map: Res<Map>) {
     for mut path in &mut query {
         match path.state {
             PathState::Queued => {
@@ -59,14 +56,17 @@ pub fn calculate_path(
                 path.came_from.insert(start, None);
                 path.cost_so_far.insert(start, 0);
                 path.state = PathState::Calculating;
-            },
+            }
             PathState::Calculating => {
                 debug!("Calculating path from {} to {}...", path.start, path.target);
                 match path.frontier.pop_min() {
                     None => {
-                        error!("Could not calculate path from {} to {}", path.start, path.target);
+                        error!(
+                            "Could not calculate path from {} to {}",
+                            path.start, path.target
+                        );
                         path.state = PathState::Error;
-                    },
+                    }
                     Some((current, _prio)) => {
                         if current == path.target {
                             info!("Calculated path from {} to {}!", path.start, path.target);
@@ -79,22 +79,28 @@ pub fn calculate_path(
                                 // todo: replace 1 with cost of traversing a tile
                                 let new_cost = cost + 1;
                                 match (path.cost_so_far.get(&neighbor), new_cost + 1) {
-                                    (None, prev) |
-                                    (Some(&prev), _) if new_cost < prev => {
+                                    (None, prev) | (Some(&prev), _) if new_cost < prev => {
                                         path.cost_so_far.insert(neighbor, new_cost);
                                         // todo: finetune distance function, currently returns actual distance and then throws away decimals
-                                        let priority = new_cost + neighbor.world_distance(path.target) as i32;
-                                        debug!("Testing from {} to {}, cost {}, distance {}", current, neighbor, new_cost, neighbor.distance(path.target) as i32);
+                                        let priority =
+                                            new_cost + neighbor.world_distance(path.target) as i32;
+                                        debug!(
+                                            "Testing from {} to {}, cost {}, distance {}",
+                                            current,
+                                            neighbor,
+                                            new_cost,
+                                            neighbor.distance(path.target) as i32
+                                        );
                                         path.frontier.push(neighbor, priority);
                                         path.came_from.insert(neighbor, Some(current));
-                                    },
-                                    _ => ()
+                                    }
+                                    _ => (),
                                 }
                             }
                         }
                     }
                 }
-            },
+            }
             PathState::Building => {
                 debug!("Rebuilding path...");
                 if let Some(current) = path.path.last() {
@@ -104,14 +110,12 @@ pub fn calculate_path(
                             path.target = next;
                         }
                         path.state = PathState::Success;
-                    }
-                    else {
+                    } else {
                         let previous = path.came_from.get(current).unwrap().unwrap();
                         debug!("Going from {} to {}", current, previous);
                         path.path.push(previous);
                     }
-                }
-                else {
+                } else {
                     let target = path.target;
                     debug!("Path is brand new, adding target {}", target);
                     path.path.push(target);
@@ -126,10 +130,7 @@ const SPEED: f32 = 1.0;
 
 /// System for Transforms to follow a path
 /// todo: update dwarf position
-pub fn follow_path(
-    time: Res<Time>,
-    mut query: Query<(&mut Transform, &mut Path)>,
-){
+pub fn follow_path(time: Res<Time>, mut query: Query<(&mut Transform, &mut Path)>) {
     for (mut transform, mut path) in &mut query {
         if path.state != PathState::Success {
             return;
@@ -141,18 +142,19 @@ pub fn follow_path(
                 path.start = path.target;
                 path.target = next;
                 path.current_lerp = 0.0;
-            }
-            else {
+            } else {
                 debug!("No more points");
                 path.state = PathState::Done;
             }
-        }
-        else {
+        } else {
             let target: Vec3 = path.target.into_world();
             let start: Vec3 = path.start.into_world();
             path.current_lerp = (path.current_lerp + time.delta_seconds() * SPEED).clamp(0.0, 1.0);
             transform.translation = start.lerp(target, path.current_lerp);
-            debug!("at {:?}, walking from {} towards {}", transform.translation, start, target);
+            debug!(
+                "at {:?}, walking from {} towards {}",
+                transform.translation, start, target
+            );
         }
     }
 }

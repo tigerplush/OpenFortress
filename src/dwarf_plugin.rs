@@ -1,16 +1,15 @@
 use bevy::prelude::*;
 
-use crate::{position::Position, path::*, Food, ClaimedBy};
+use crate::{path::*, position::Position, ClaimedBy, Food};
 
 pub struct DwarfPlugin;
 
 impl Plugin for DwarfPlugin {
     fn build(&self, app: &mut App) {
-        app
-        .add_startup_system(spawn_dwarf)
-        .add_system(animate_sprite)
-        .add_system(consume_food)
-        .add_system(find_food);
+        app.add_startup_system(spawn_dwarf)
+            .add_system(animate_sprite)
+            .add_system(consume_food)
+            .add_system(find_food);
     }
 }
 
@@ -26,7 +25,8 @@ fn spawn_dwarf(
     mut texture_atlasses: ResMut<Assets<TextureAtlas>>,
 ) {
     let texture_handle = asset_server.load("Dwarf Sprite Sheet 1.3v.png");
-    let texture_atlas = TextureAtlas::from_grid(texture_handle, Vec2::new(64.0, 32.0), 8, 8, None, None);
+    let texture_atlas =
+        TextureAtlas::from_grid(texture_handle, Vec2::new(64.0, 32.0), 8, 8, None, None);
     let texture_atlas_handle = texture_atlasses.add(texture_atlas);
     commands
         .spawn(SpriteSheetBundle {
@@ -34,25 +34,35 @@ fn spawn_dwarf(
             transform: Transform::from_scale(Vec3::splat(1.0)),
             ..default()
         })
-        .insert(AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)))
+        .insert(AnimationTimer(Timer::from_seconds(
+            0.1,
+            TimerMode::Repeating,
+        )))
         .insert(Dwarf)
         .insert(Name::from("Dwarf"));
 
     commands
-    .spawn(SpriteSheetBundle {
-        texture_atlas: texture_atlas_handle.clone(),
-        transform: Transform::from_xyz(-32.0, -32.0, 0.0),
-        ..default()
-    })
-    .insert(AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)))
-    .insert(Dwarf)
-    .insert(Name::from("Dwarf 2"));
+        .spawn(SpriteSheetBundle {
+            texture_atlas: texture_atlas_handle.clone(),
+            transform: Transform::from_xyz(-32.0, -32.0, 0.0),
+            ..default()
+        })
+        .insert(AnimationTimer(Timer::from_seconds(
+            0.1,
+            TimerMode::Repeating,
+        )))
+        .insert(Dwarf)
+        .insert(Name::from("Dwarf 2"));
 }
 
 fn animate_sprite(
     time: Res<Time>,
     texture_atlasses: Res<Assets<TextureAtlas>>,
-    mut query: Query<(&mut AnimationTimer, &mut TextureAtlasSprite, &Handle<TextureAtlas>)>,
+    mut query: Query<(
+        &mut AnimationTimer,
+        &mut TextureAtlasSprite,
+        &Handle<TextureAtlas>,
+    )>,
 ) {
     for (mut timer, mut sprite, texture_atlas_handle) in &mut query {
         timer.tick(time.delta());
@@ -74,7 +84,9 @@ fn consume_food(
         }
 
         for (food_entity, &position) in &foods {
-            if Position::from_world(position.translation) == Position::from_world(current_position.translation) {
+            if Position::from_world(position.translation)
+                == Position::from_world(current_position.translation)
+            {
                 info!("Food is on the same tile, consuming...");
                 commands.entity(food_entity).despawn();
                 commands.entity(entity).remove::<Path>();
@@ -103,11 +115,10 @@ fn find_food(
         }
         if let Some(target_entity) = target {
             commands.entity(target_entity).insert(ClaimedBy(entity));
-            commands.entity(entity).insert(
-                Path::new(
-                    Position::from_world(transform.translation),
-                    Position::from_world(target_pos.unwrap()))
-            );
+            commands.entity(entity).insert(Path::new(
+                Position::from_world(transform.translation),
+                Position::from_world(target_pos.unwrap()),
+            ));
         }
     }
 }

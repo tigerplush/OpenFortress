@@ -1,9 +1,11 @@
-use std::ops::{Sub, Add};
+use std::ops::{Add, Sub};
 
 use bevy::prelude::*;
 
-
-#[cfg_attr(feature = "inspector", derive(bevy_inspector_egui::Inspectable, Default))]
+#[cfg_attr(
+    feature = "inspector",
+    derive(bevy_inspector_egui::Inspectable, Default)
+)]
 #[derive(Clone, Component, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct Position {
     x: i32,
@@ -13,7 +15,11 @@ pub struct Position {
 
 impl std::fmt::Display for Position {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "(x: {}, z: {}, elevation: {})", self.x, self.z, self.elevation)
+        write!(
+            f,
+            "(x: {}, z: {}, elevation: {})",
+            self.x, self.z, self.elevation
+        )
     }
 }
 
