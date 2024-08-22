@@ -6,10 +6,8 @@ pub struct DwarfPlugin;
 
 impl Plugin for DwarfPlugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(spawn_dwarf)
-            .add_system(animate_sprite)
-            .add_system(consume_food)
-            .add_system(find_food);
+        app.add_systems(Startup, spawn_dwarf)
+            .add_systems(Update, (animate_sprite, consume_food, find_food));
     }
 }
 
@@ -22,52 +20,48 @@ pub struct AnimationTimer(Timer);
 fn spawn_dwarf(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut texture_atlasses: ResMut<Assets<TextureAtlas>>,
+    mut texture_atlasses: ResMut<Assets<TextureAtlasLayout>>,
 ) {
     let texture_handle = asset_server.load("Dwarf Sprite Sheet 1.3v.png");
-    let texture_atlas =
-        TextureAtlas::from_grid(texture_handle, Vec2::new(64.0, 32.0), 8, 8, None, None);
+    let texture_atlas = TextureAtlasLayout::from_grid(UVec2::new(64, 32), 8, 8, None, None);
     let texture_atlas_handle = texture_atlasses.add(texture_atlas);
-    commands
-        .spawn(SpriteSheetBundle {
-            texture_atlas: texture_atlas_handle.clone(),
+
+    commands.spawn((
+        SpriteBundle {
+            texture: texture_handle.clone(),
             transform: Transform::from_scale(Vec3::splat(1.0)),
             ..default()
-        })
-        .insert(AnimationTimer(Timer::from_seconds(
-            0.1,
-            TimerMode::Repeating,
-        )))
-        .insert(Dwarf)
-        .insert(Name::from("Dwarf"));
+        },
+        TextureAtlas {
+            layout: texture_atlas_handle.clone(),
+            index: 0,
+        },
+        AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
+        Dwarf,
+        Name::from("Dwarf"),
+    ));
 
-    commands
-        .spawn(SpriteSheetBundle {
-            texture_atlas: texture_atlas_handle.clone(),
-            transform: Transform::from_xyz(-32.0, -32.0, 0.0),
+    commands.spawn((
+        SpriteBundle {
+            texture: texture_handle.clone(),
+            transform: Transform::from_scale(Vec3::splat(1.0))
+                .with_translation(Vec3::new(-32.0, -32.0, 0.0)),
             ..default()
-        })
-        .insert(AnimationTimer(Timer::from_seconds(
-            0.1,
-            TimerMode::Repeating,
-        )))
-        .insert(Dwarf)
-        .insert(Name::from("Dwarf 2"));
+        },
+        TextureAtlas {
+            layout: texture_atlas_handle.clone(),
+            index: 0,
+        },
+        AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
+        Dwarf,
+        Name::from("Dwarf 2"),
+    ));
 }
 
-fn animate_sprite(
-    time: Res<Time>,
-    texture_atlasses: Res<Assets<TextureAtlas>>,
-    mut query: Query<(
-        &mut AnimationTimer,
-        &mut TextureAtlasSprite,
-        &Handle<TextureAtlas>,
-    )>,
-) {
-    for (mut timer, mut sprite, texture_atlas_handle) in &mut query {
+fn animate_sprite(time: Res<Time>, mut query: Query<(&mut AnimationTimer, &mut TextureAtlas)>) {
+    for (mut timer, mut sprite) in &mut query {
         timer.tick(time.delta());
         if timer.just_finished() {
-            let _texture_atlas = texture_atlasses.get(texture_atlas_handle).unwrap();
             sprite.index = (sprite.index + 1) % 5;
         }
     }

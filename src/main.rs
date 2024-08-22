@@ -1,4 +1,4 @@
-use bevy::{ecs::schedule::ShouldRun, prelude::*};
+use bevy::prelude::*;
 
 #[cfg(feature = "debug")]
 use bevy::log::LogPlugin;
@@ -27,7 +27,7 @@ fn main() {
 
     #[cfg(not(feature = "debug"))]
     app.add_plugins(DefaultPlugins);
-    app.add_plugin(TilemapPlugin);
+    app.add_plugins(TilemapPlugin);
     #[cfg(feature = "debug")]
     app.add_plugins(DefaultPlugins.set(LogPlugin {
         level: bevy::log::Level::DEBUG,
@@ -39,20 +39,10 @@ fn main() {
     app.add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(FrameTimeDiagnosticsPlugin::default());
     app.insert_resource(Map::generate(50, 20, 10));
-    app.add_plugin(DwarfPlugin);
-    app.add_startup_system(setup);
-    app.add_startup_system(spawn_food);
-    app.add_startup_system(spawn_map.with_run_criteria(has_resource::<Map>));
-    app.add_system(calculate_path);
-    app.add_system(follow_path);
+    app.add_plugins(DwarfPlugin);
+    app.add_systems(Startup, (setup, spawn_food, spawn_map));
+    app.add_systems(Update, (calculate_path, follow_path));
     app.run();
-}
-
-fn has_resource<T: Resource>(resource: Option<Res<T>>) -> ShouldRun {
-    match resource.is_some() {
-        true => ShouldRun::Yes,
-        false => ShouldRun::No,
-    }
 }
 
 fn setup(mut commands: Commands) {
@@ -72,25 +62,38 @@ struct Food;
 
 fn spawn_food(
     mut commands: Commands,
-    mut texture_atlasses: ResMut<Assets<TextureAtlas>>,
+    mut texture_atlasses: ResMut<Assets<TextureAtlasLayout>>,
     asset_server: Res<AssetServer>,
 ) {
     let texture_handle = asset_server.load("food.png");
-    let texture_atlas =
-        TextureAtlas::from_grid(texture_handle, Vec2::new(16.0, 16.0), 8, 8, None, None);
+    let texture_atlas = TextureAtlasLayout::from_grid(UVec2::new(16, 16), 8, 8, None, None);
     let texture_atlas_handle = texture_atlasses.add(texture_atlas);
 
-    commands
-        .spawn_empty()
-        .insert(Food)
-        .insert(SpriteSheetBundle {
-            texture_atlas: texture_atlas_handle.clone(),
-            sprite: TextureAtlasSprite {
-                index: 34,
-                ..default()
-            },
+    commands.spawn((
+        SpriteBundle {
+            texture: texture_handle.clone(),
             transform: Transform::from_translation(Position::new(5, 5, 0).into_world()),
             ..default()
-        })
-        .insert(Name::from("Food"));
+        },
+        TextureAtlas {
+            layout: texture_atlas_handle.clone(),
+            index: 34,
+        },
+        Food,
+        Name::from("Food"),
+    ));
+
+    // commands
+    //     .spawn_empty()
+    //     .insert(Food)
+    //     .insert(SpriteSheetBundle {
+    //         texture_atlas: texture_atlas_handle.clone(),
+    //         sprite: TextureAtlasSprite {
+    //             index: 34,
+    //             ..default()
+    //         },
+    //         transform: Transform::from_translation(Position::new(5, 5, 0).into_world()),
+    //         ..default()
+    //     })
+    //     .insert(Name::from("Food"));
 }
