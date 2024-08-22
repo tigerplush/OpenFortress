@@ -1,5 +1,5 @@
 # OpenFortress
-This is a Dwarf Fortress clone implemented in Rust
+This is an attempt of a Dwarf Fortress clone implemented in Rust
 
 ## Startup
 Run with `cargo run`
