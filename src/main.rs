@@ -27,7 +27,11 @@ fn main() {
     let mut app = App::new();
 
     #[cfg(not(feature = "debug"))]
-    app.add_plugins(DefaultPlugins);
+    app.add_plugins(
+        DefaultPlugins
+            // to avoid blurry pixels
+            .set(ImagePlugin::default_nearest()),
+    );
     app.add_plugins(TilemapPlugin);
     #[cfg(feature = "debug")]
     app.add_plugins(DefaultPlugins.set(LogPlugin {
@@ -40,10 +44,7 @@ fn main() {
     app.add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(FrameTimeDiagnosticsPlugin::default());
     app.insert_resource(Map::generate(50, 20, 10));
-    app.add_plugins((
-        DwarfPlugin,
-        camera::plugin,
-    ));
+    app.add_plugins((DwarfPlugin, camera::plugin));
     app.add_systems(Startup, (spawn_food, spawn_map));
     app.add_systems(Update, (calculate_path, follow_path));
     app.run();
@@ -77,18 +78,4 @@ fn spawn_food(
         Food,
         Name::from("Food"),
     ));
-
-    // commands
-    //     .spawn_empty()
-    //     .insert(Food)
-    //     .insert(SpriteSheetBundle {
-    //         texture_atlas: texture_atlas_handle.clone(),
-    //         sprite: TextureAtlasSprite {
-    //             index: 34,
-    //             ..default()
-    //         },
-    //         transform: Transform::from_translation(Position::new(5, 5, 0).into_world()),
-    //         ..default()
-    //     })
-    //     .insert(Name::from("Food"));
 }
