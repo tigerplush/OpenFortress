@@ -5,6 +5,10 @@ use priority_queue::DoublePriorityQueue;
 
 use crate::{map::Map, position::Position};
 
+pub fn plugin(app: &mut App) {
+    app.add_systems(Update, (calculate_path, follow_path));
+}
+
 #[derive(PartialEq)]
 pub enum PathState {
     Queued,

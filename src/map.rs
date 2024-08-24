@@ -8,6 +8,11 @@ use std::collections::HashMap;
 
 use crate::position::Position;
 
+pub fn plugin(app: &mut App) {
+    app.insert_resource(Map::generate(50, 20, 10))
+        .add_systems(Startup, spawn_map);
+}
+
 #[derive(Clone, Copy)]
 pub enum Tile {
     Solid,

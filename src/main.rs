@@ -13,15 +13,7 @@ use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 mod dwarf_plugin;
 use dwarf_plugin::*;
 
-mod map;
-use map::*;
-
-mod path;
-use open_fortress::camera;
-use path::*;
-
-mod position;
-use position::*;
+use open_fortress::*;
 
 fn main() {
     let mut app = App::new();
@@ -48,10 +40,8 @@ fn main() {
     #[cfg(feature = "fps")]
     app.add_plugins(LogDiagnosticsPlugin::default())
         .add_plugins(FrameTimeDiagnosticsPlugin::default());
-    app.insert_resource(Map::generate(50, 20, 10));
-    app.add_plugins((DwarfPlugin, camera::plugin));
-    app.add_systems(Startup, (spawn_food, spawn_map));
-    app.add_systems(Update, (calculate_path, follow_path));
+    app.add_plugins((DwarfPlugin, camera::plugin, map::plugin, path::plugin));
+    app.add_systems(Startup, spawn_food);
     app.run();
 }
 
