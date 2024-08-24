@@ -32,17 +32,22 @@ fn main() {
             // to avoid blurry pixels
             .set(ImagePlugin::default_nearest()),
     );
-    app.add_plugins(TilemapPlugin);
     #[cfg(feature = "debug")]
-    app.add_plugins(DefaultPlugins.set(LogPlugin {
-        level: bevy::log::Level::DEBUG,
-        ..default()
-    }));
+    app.add_plugins(
+        DefaultPlugins
+            // to avoid blurry pixels
+            .set(ImagePlugin::default_nearest())
+            .set(LogPlugin {
+                level: bevy::log::Level::DEBUG,
+                ..default()
+            }),
+    );
+    app.add_plugins(TilemapPlugin);
     #[cfg(feature = "inspector")]
     app.add_plugins(WorldInspectorPlugin::new());
     #[cfg(feature = "fps")]
-    app.add_plugin(LogDiagnosticsPlugin::default())
-        .add_plugin(FrameTimeDiagnosticsPlugin::default());
+    app.add_plugins(LogDiagnosticsPlugin::default())
+        .add_plugins(FrameTimeDiagnosticsPlugin::default());
     app.insert_resource(Map::generate(50, 20, 10));
     app.add_plugins((DwarfPlugin, camera::plugin));
     app.add_systems(Startup, (spawn_food, spawn_map));
