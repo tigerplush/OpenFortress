@@ -17,6 +17,7 @@ mod map;
 use map::*;
 
 mod path;
+use open_fortress::camera;
 use path::*;
 
 mod position;
@@ -39,19 +40,13 @@ fn main() {
     app.add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(FrameTimeDiagnosticsPlugin::default());
     app.insert_resource(Map::generate(50, 20, 10));
-    app.add_plugins(DwarfPlugin);
-    app.add_systems(Startup, (setup, spawn_food, spawn_map));
+    app.add_plugins((
+        DwarfPlugin,
+        camera::plugin,
+    ));
+    app.add_systems(Startup, (spawn_food, spawn_map));
     app.add_systems(Update, (calculate_path, follow_path));
     app.run();
-}
-
-fn setup(mut commands: Commands) {
-    //others from the discord server don' recommend to move the 2d camera away from z:999.9
-    // when it becomes an issue, change it
-    commands.spawn(Camera2dBundle {
-        transform: Transform::from_xyz(0.0, 0.0, 500.0),
-        ..default()
-    });
 }
 
 #[derive(Component)]
