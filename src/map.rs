@@ -20,6 +20,8 @@ pub fn plugin(app: &mut App) {
 #[derive(Component)]
 struct MapController {
     current_level: i32,
+    texture_handle: Handle<Image>,
+    tilemaps: HashMap<i32, Entity>,
 }
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq, Reflect)]
@@ -90,31 +92,35 @@ impl Map {
 
 pub fn spawn_map(asset_server: Res<AssetServer>, mut commands: Commands, map: Res<Map>) {
     let texture_handle = asset_server.load("1_terrain_clone.png");
-    let map_size = TilemapSize {
-        x: (map.width * 2) as u32,
-        y: (map.height * 2) as u32,
-    };
 
-    let input_map = InputMap::default().with_axis(
-        MapControls::LevelChange,
-        KeyboardVirtualAxis::VERTICAL_NUMPAD,
-    )
-    .with(MapControls::ButtonPressed, KeyCode::Numpad2)
-    .with(MapControls::ButtonPressed, KeyCode::Numpad8);
+    let input_map = InputMap::default()
+        .with_axis(
+            MapControls::LevelChange,
+            KeyboardVirtualAxis::VERTICAL_NUMPAD,
+        )
+        .with(MapControls::ButtonPressed, KeyCode::Numpad2)
+        .with(MapControls::ButtonPressed, KeyCode::Numpad8);
 
     let current_level = 0;
     let parent = commands
         .spawn((
-            MapController { current_level },
             InputManagerBundle::with_map(input_map),
             Name::from("Map"),
             SpatialBundle::default(),
         ))
         .id();
 
+    let mut tilemaps = HashMap::new();
     for d in -map.depth..=current_level {
-        spawn_layer(&mut commands, d, &map, &texture_handle, parent);
+        let layer = spawn_layer(&mut commands, d, &map, &texture_handle, parent);
+        tilemaps.insert(d, layer);
     }
+
+    commands.entity(parent).insert(MapController {
+        current_level,
+        texture_handle: texture_handle.clone(),
+        tilemaps,
+    });
 }
 
 fn spawn_layer(
@@ -123,7 +129,7 @@ fn spawn_layer(
     map: &Map,
     texture_handle: &Handle<Image>,
     parent: Entity,
-) {
+) -> Entity {
     let map_size = TilemapSize {
         x: (map.width * 2) as u32,
         y: (map.height * 2) as u32,
@@ -189,21 +195,38 @@ fn spawn_layer(
             ..default()
         })
         .insert(Name::from(format!("Tilemap {}", layer)))
-        .set_parent(parent);
+        .set_parent(parent)
+        .id()
 }
 
-fn update(asset_server: Res<AssetServer>, map: Res<Map>, mut query: Query<(&ActionState<MapControls>, &mut MapController, Entity)>, mut commands: Commands) {
+fn update(
+    map: Res<Map>,
+    mut query: Query<(&ActionState<MapControls>, &mut MapController, Entity)>,
+    mut commands: Commands,
+) {
     let Ok((action_state, mut controller, entity)) = query.get_single_mut() else {
         return;
     };
 
     if action_state.just_pressed(&MapControls::ButtonPressed) {
-        let delta = action_state.value(&MapControls::LevelChange);
-        controller.current_level += delta as i32;
-        commands.entity(entity).despawn_descendants();
-        let texture_handle = asset_server.load("1_terrain_clone.png");
-        for d in controller.current_level-10..=controller.current_level {
-            spawn_layer(&mut commands, d, &map, &texture_handle, entity);
+        let delta = action_state.value(&MapControls::LevelChange) as i32;
+        let key_to_delete = if delta > 0 {
+            controller.current_level - 10
         }
+        else {
+            controller.current_level
+        };
+        if let Some(old_tilemap) = controller.tilemaps.remove(&key_to_delete) {
+            commands.entity(old_tilemap).despawn_recursive();
+        }
+        controller.current_level += delta;
+        let key_to_add = if delta > 0 {
+            controller.current_level
+        }
+        else {
+            controller.current_level - 10
+        };
+        let new_tilemap = spawn_layer(&mut commands, key_to_add, &map, &controller.texture_handle, entity);
+        controller.tilemaps.insert(key_to_add, new_tilemap);
     }
 }
