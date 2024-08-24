@@ -2,10 +2,6 @@ use std::ops::{Add, Sub};
 
 use bevy::prelude::*;
 
-#[cfg_attr(
-    feature = "inspector",
-    derive(bevy_inspector_egui::Inspectable, Default)
-)]
 #[derive(Clone, Component, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct Position {
     x: i32,

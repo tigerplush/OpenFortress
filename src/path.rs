@@ -5,7 +5,6 @@ use priority_queue::DoublePriorityQueue;
 
 use crate::{map::Map, position::Position};
 
-#[cfg_attr(feature = "inspector", derive(bevy_inspector_egui::Inspectable))]
 #[derive(PartialEq)]
 pub enum PathState {
     Queued,

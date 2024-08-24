@@ -5,7 +5,7 @@ use bevy::log::LogPlugin;
 
 use bevy_ecs_tilemap::TilemapPlugin;
 #[cfg(feature = "inspector")]
-use bevy_inspector_egui::{RegisterInspectable, WorldInspectorPlugin};
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 #[cfg(feature = "fps")]
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
@@ -39,7 +39,7 @@ fn main() {
         ..default()
     }));
     #[cfg(feature = "inspector")]
-    app.add_plugin(WorldInspectorPlugin::new());
+    app.add_plugins(WorldInspectorPlugin::new());
     #[cfg(feature = "fps")]
     app.add_plugin(LogDiagnosticsPlugin::default())
         .add_plugin(FrameTimeDiagnosticsPlugin::default());
