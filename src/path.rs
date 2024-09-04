@@ -1,12 +1,20 @@
 use std::collections::HashMap;
 
 use bevy::prelude::*;
+
+#[cfg(feature = "debug")]
+use bevy::color::palettes::css::*;
 use priority_queue::DoublePriorityQueue;
 
-use crate::{map::Map, position::Position};
+use crate::{
+    map::{Map, Tile},
+    position::Position,
+};
 
 pub fn plugin(app: &mut App) {
     app.add_systems(Update, (calculate_path, follow_path));
+    #[cfg(feature = "debug")]
+    app.add_systems(Update, draw_gizmos);
 }
 
 #[derive(PartialEq)]
@@ -29,6 +37,8 @@ pub struct Path {
     came_from: HashMap<Position, Option<Position>>,
     cost_so_far: HashMap<Position, i32>,
     current_lerp: f32,
+    previous_position: Option<Position>,
+    current_target: Option<Position>,
 }
 
 impl Path {
@@ -42,6 +52,8 @@ impl Path {
             came_from: HashMap::new(),
             cost_so_far: HashMap::new(),
             current_lerp: 0.0,
+            previous_position: None,
+            current_target: None,
         }
     }
 }
@@ -49,7 +61,7 @@ impl Path {
 /// Calculates a path
 /// todo: needs access to a world component/resource
 /// maybe rework to attach PathState as components, so this can be split?
-pub fn calculate_path(mut query: Query<&mut Path>, mut _map: Res<Map>) {
+pub fn calculate_path(map: Res<Map>, mut query: Query<&mut Path>) {
     for mut path in &mut query {
         match path.state {
             PathState::Queued => {
@@ -78,6 +90,9 @@ pub fn calculate_path(mut query: Query<&mut Path>, mut _map: Res<Map>) {
                         }
 
                         for neighbor in current.neighbors() {
+                            if map.get_tile(neighbor) == Tile::Solid {
+                                continue;
+                            }
                             if let Some(&cost) = path.cost_so_far.get(&current) {
                                 // todo: replace 1 with cost of traversing a tile
                                 let new_cost = cost + 1;
@@ -109,9 +124,6 @@ pub fn calculate_path(mut query: Query<&mut Path>, mut _map: Res<Map>) {
                 if let Some(current) = path.path.last() {
                     if *current == path.start {
                         info!("{:?}", path.path);
-                        if let Some(next) = path.path.pop() {
-                            path.target = next;
-                        }
                         path.state = PathState::Success;
                     } else {
                         let previous = path.came_from.get(current).unwrap().unwrap();
@@ -139,25 +151,72 @@ pub fn follow_path(time: Res<Time>, mut query: Query<(&mut Transform, &mut Path)
             return;
         }
 
-        if transform.translation.distance(path.target.into_world()) < 0.1 {
+        if path.previous_position.is_none() {
+            debug!("Setting first start");
+            path.previous_position = Some(Position::from_world(transform.translation));
+        }
+
+        if path.current_target.is_none() {
+            debug!("Setting first target");
+            if let Some(next) = path.path.pop() {
+                path.current_target = Some(next);
+            } else {
+                warn!("Something went wrong");
+            }
+        }
+
+        if transform
+            .translation
+            .distance(path.current_target.unwrap().into_world())
+            < 0.1
+        {
             if let Some(next) = path.path.pop() {
                 debug!("target and start are very close, next point");
-                path.start = path.target;
-                path.target = next;
+                path.previous_position = path.current_target;
+                path.current_target = Some(next);
                 path.current_lerp = 0.0;
             } else {
                 debug!("No more points");
                 path.state = PathState::Done;
             }
         } else {
-            let target: Vec3 = path.target.into_world();
-            let start: Vec3 = path.start.into_world();
+            let target: Vec3 = path.current_target.unwrap().into_world();
+            let start: Vec3 = path.previous_position.unwrap().into_world();
             path.current_lerp = (path.current_lerp + time.delta_seconds() * SPEED).clamp(0.0, 1.0);
             transform.translation = start.lerp(target, path.current_lerp);
             debug!(
                 "at {:?}, walking from {} towards {}",
                 transform.translation, start, target
             );
+        }
+    }
+}
+
+#[cfg(feature = "debug")]
+fn draw_gizmos(mut gizmos: Gizmos, query: Query<&Path>) {
+    for path in &query {
+        gizmos.line(path.start.into_world(), path.target.into_world(), YELLOW);
+
+        if path.previous_position.is_some() && path.current_target.is_some() {
+            gizmos.line(
+                path.previous_position.unwrap().into_world(),
+                path.current_target.unwrap().into_world(),
+                ORANGE,
+            );
+        }
+
+        if path.current_target.is_some() && path.path.len() > 0 {
+            gizmos.line(
+                path.current_target.unwrap().into_world(),
+                path.path.last().unwrap().into_world(),
+                GREEN,
+            );
+        }
+
+        for i in 1..path.path.len() {
+            let current = path.path[i - 1];
+            let next = path.path[i];
+            gizmos.line(current.into_world(), next.into_world(), GREEN);
         }
     }
 }

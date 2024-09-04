@@ -4,9 +4,9 @@ use bevy::prelude::*;
 
 #[derive(Clone, Component, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct Position {
-    x: i32,
-    z: i32,
-    elevation: i32,
+    pub x: i32,
+    pub z: i32,
+    pub elevation: i32,
 }
 
 impl std::fmt::Display for Position {
@@ -107,6 +107,12 @@ impl Sub<Position> for Position {
             elevation: self.elevation.sub(rhs.elevation),
             z: self.z.sub(rhs.z),
         }
+    }
+}
+
+impl From<(u32, u32, i32)> for Position {
+    fn from(value: (u32, u32, i32)) -> Self {
+        Position::new(value.0 as i32, value.1 as i32, value.2)
     }
 }
 

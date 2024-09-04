@@ -39,7 +39,7 @@ impl Actionlike for MapControls {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum Tile {
     Solid,
     Empty,
@@ -80,10 +80,10 @@ impl Map {
         }
     }
 
-    pub fn get_tile(&self, x: u32, y: i32, z: u32) -> Tile {
-        let w = x as i32 - self.width;
-        let h = z as i32 - self.height;
-        if let Some(&tile) = self.tiles.get(&Position::new(w, h, y)) {
+    pub fn get_tile(&self, position: Position) -> Tile {
+        let w = position.x - self.width;
+        let h = position.z - self.height;
+        if let Some(&tile) = self.tiles.get(&Position::new(w, h, position.elevation)) {
             return tile;
         }
         Tile::Empty
@@ -139,37 +139,23 @@ fn spawn_layer(
     let mut tile_storage = TileStorage::empty(map_size);
     for x in 0..map_size.x {
         for y in 0..map_size.y {
-            match map.get_tile(x, layer, y) {
-                Tile::Solid => {
-                    let tile_pos = TilePos { x, y };
-                    let tile_entity = commands
-                        .spawn(TileBundle {
-                            texture_index: TileTextureIndex(16),
-                            position: tile_pos,
-                            tilemap_id: TilemapId(tilemap_entity),
-                            ..default()
-                        })
-                        .insert(Name::from(format!("Tile {:?}", tile_pos)))
-                        .set_parent(tilemap_entity)
-                        .id();
-                    tile_storage.set(&tile_pos, tile_entity);
-                }
-                _ => {
-                    let tile_pos = TilePos { x, y };
-                    let tile_entity = commands
-                        .spawn(TileBundle {
-                            texture_index: TileTextureIndex(15 * 24),
-                            position: tile_pos,
-                            tilemap_id: TilemapId(tilemap_entity),
-                            color: Color::srgba(0.0, 0.0, 0.0, 0.5).into(),
-                            ..default()
-                        })
-                        .insert(Name::from(format!("Tile {:?}", tile_pos)))
-                        .set_parent(tilemap_entity)
-                        .id();
-                    tile_storage.set(&tile_pos, tile_entity);
-                }
-            }
+            let tile_pos = TilePos { x, y };
+            let (tile_texture_index, color) = match map.get_tile((x, y, layer).into()) {
+                Tile::Solid => (TileTextureIndex(16), Color::WHITE),
+                _ => (TileTextureIndex(15 * 24), Color::srgba(0.0, 0.0, 0.0, 0.5)),
+            };
+            let tile_entity = commands
+                .spawn(TileBundle {
+                    texture_index: tile_texture_index,
+                    position: tile_pos,
+                    tilemap_id: TilemapId(tilemap_entity),
+                    color: color.into(),
+                    ..default()
+                })
+                .insert(Name::from(format!("Tile {:?}", tile_pos)))
+                .set_parent(tilemap_entity)
+                .id();
+            tile_storage.set(&tile_pos, tile_entity);
         }
     }
 
@@ -186,12 +172,7 @@ fn spawn_layer(
             storage: tile_storage,
             texture: TilemapTexture::Single(texture_handle.clone()),
             tile_size,
-            transform: get_tilemap_center_transform(
-                &map_size,
-                &grid_size,
-                &map_type,
-                layer as f32 - 0.1,
-            ),
+            transform: Transform::from_translation(Vec2::splat(0.0).extend(layer as f32 - 0.1)),
             ..default()
         })
         .insert(Name::from(format!("Tilemap {}", layer)))
@@ -212,8 +193,7 @@ fn update(
         let delta = action_state.value(&MapControls::LevelChange) as i32;
         let key_to_delete = if delta > 0 {
             controller.current_level - 10
-        }
-        else {
+        } else {
             controller.current_level
         };
         if let Some(old_tilemap) = controller.tilemaps.remove(&key_to_delete) {
@@ -222,11 +202,16 @@ fn update(
         controller.current_level += delta;
         let key_to_add = if delta > 0 {
             controller.current_level
-        }
-        else {
+        } else {
             controller.current_level - 10
         };
-        let new_tilemap = spawn_layer(&mut commands, key_to_add, &map, &controller.texture_handle, entity);
+        let new_tilemap = spawn_layer(
+            &mut commands,
+            key_to_add,
+            &map,
+            &controller.texture_handle,
+            entity,
+        );
         controller.tilemaps.insert(key_to_add, new_tilemap);
     }
 }
