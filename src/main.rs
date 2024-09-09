@@ -40,7 +40,13 @@ fn main() {
     #[cfg(feature = "fps")]
     app.add_plugins(LogDiagnosticsPlugin::default())
         .add_plugins(FrameTimeDiagnosticsPlugin::default());
-    app.add_plugins((DwarfPlugin, camera::plugin, map::plugin, path::plugin));
+    app.add_plugins((
+        DwarfPlugin,
+        camera::plugin,
+        map::plugin,
+        path::plugin,
+        tools::plugin,
+    ));
     app.add_systems(Startup, spawn_food);
     app.run();
 }

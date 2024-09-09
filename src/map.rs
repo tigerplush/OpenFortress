@@ -18,8 +18,8 @@ pub fn plugin(app: &mut App) {
 }
 
 #[derive(Component)]
-struct MapController {
-    current_level: i32,
+pub struct MapController {
+    pub current_level: i32,
     texture_handle: Handle<Image>,
     tilemaps: HashMap<i32, Entity>,
 }
@@ -41,7 +41,8 @@ impl Actionlike for MapControls {
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum Tile {
-    Solid,
+    Grass,
+    Dirt,
     Empty,
 }
 
@@ -63,8 +64,10 @@ impl Map {
                     let height = noise.get([w as f64 + 0.5, h as f64 + 0.5]);
                     let height = height * 10.0;
                     // info!("height at {}, {} = {}", w, h, height);
-                    if d <= height as i32 {
-                        tiles.insert(Position::new(w, h, d), Tile::Solid);
+                    if d == height as i32 {
+                        tiles.insert(Position::new(w, h, d), Tile::Grass);
+                    } else if d < height as i32 {
+                        tiles.insert(Position::new(w, h, d), Tile::Dirt);
                     } else {
                         tiles.insert(Position::new(w, h, d), Tile::Empty);
                     }
@@ -141,7 +144,8 @@ fn spawn_layer(
         for y in 0..map_size.y {
             let tile_pos = TilePos { x, y };
             let (tile_texture_index, color) = match map.get_tile((x, y, layer).into()) {
-                Tile::Solid => (TileTextureIndex(16), Color::WHITE),
+                Tile::Grass => (TileTextureIndex(16), Color::WHITE),
+                Tile::Dirt => (TileTextureIndex(1 + 15 * 19), Color::WHITE),
                 _ => (TileTextureIndex(15 * 24), Color::srgba(0.0, 0.0, 0.0, 0.5)),
             };
             let tile_entity = commands

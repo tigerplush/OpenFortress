@@ -2,7 +2,7 @@ use std::ops::{Add, Sub};
 
 use bevy::prelude::*;
 
-#[derive(Clone, Component, Copy, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Component, Copy, Debug, Default, Eq, Hash, PartialEq)]
 pub struct Position {
     pub x: i32,
     pub z: i32,
@@ -60,6 +60,8 @@ impl Position {
     }
 
     pub const CONVERSION: f32 = 32.0;
+
+    pub const OFFSET: Vec3 = Vec3::new(Self::CONVERSION / 2.0, Self::CONVERSION / 2.0, 0.0);
 
     pub const ZERO: Self = Self::new(0, 0, 0);
     pub const UP: Self = Self::new(0, 0, 1);

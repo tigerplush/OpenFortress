@@ -90,7 +90,7 @@ pub fn calculate_path(map: Res<Map>, mut query: Query<&mut Path>) {
                         }
 
                         for neighbor in current.neighbors() {
-                            if map.get_tile(neighbor) == Tile::Solid {
+                            if map.get_tile(neighbor) == Tile::Grass {
                                 continue;
                             }
                             if let Some(&cost) = path.cost_so_far.get(&current) {
