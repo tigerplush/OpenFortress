@@ -19,7 +19,9 @@ default = []
 bevy = "=0.16.0-rc.2"
 
 [dependencies]
+assets = { path = "crates/assets"}
 common = { path = "crates/common"}
 dwarf = { path = "crates/dwarf"}
+loading_screen = { path = "crates/loading_screen"}
 splashscreen = { path = "crates/splashscreen"}
 bevy = { workspace = true }

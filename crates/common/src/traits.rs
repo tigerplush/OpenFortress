@@ -11,6 +11,10 @@ impl UiRoot for Commands<'_, '_> {
             Node {
                 width: Val::Percent(100.0),
                 height: Val::Percent(100.0),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                flex_direction: FlexDirection::Column,
+                position_type: PositionType::Absolute,
                 ..default()
             },
         ))

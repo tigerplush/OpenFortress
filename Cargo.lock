@@ -188,6 +188,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "assets"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
 name = "async-broadcast"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2596,6 +2603,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4ce301924b7887e9d637144fdade93f9dfff9b60981d4ac161db09720d39aa5"
 
 [[package]]
+name = "loading_screen"
+version = "0.1.0"
+dependencies = [
+ "assets",
+ "bevy",
+ "common",
+]
+
+[[package]]
 name = "lock_api"
 version = "0.4.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2779,10 +2795,6 @@ checksum = "ee6cda3051665f1fb8d9e08fc35c96d5a244fb1be711a03b71118828afc9a873"
 dependencies = [
  "jni-sys",
 ]
-
-[[package]]
-name = "new_crate"
-version = "0.1.0"
 
 [[package]]
 name = "nix"
@@ -3137,9 +3149,11 @@ checksum = "c2806eaa3524762875e21c3dcd057bc4b7bfa01ce4da8d46be1cd43649e1cc6b"
 name = "open_fortress"
 version = "0.1.0"
 dependencies = [
+ "assets",
  "bevy",
  "common",
  "dwarf",
+ "loading_screen",
  "splashscreen",
 ]
 

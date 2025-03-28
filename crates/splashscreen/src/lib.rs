@@ -2,10 +2,23 @@ use bevy::{
     image::{ImageLoaderSettings, ImageSampler},
     prelude::*,
 };
-use common::{states::AppState, traits::UiRoot};
+use common::{
+    components::image_node_fade::{self, ImageNodeFade},
+    states::AppState,
+    traits::UiRoot,
+};
 
 pub fn plugin(app: &mut App) {
     app.add_systems(OnEnter(AppState::Splashscreen), setup)
+        .add_systems(
+            Update,
+            (
+                image_node_fade::tick,
+                image_node_fade::apply.after(image_node_fade::tick),
+                advance_state.after(image_node_fade::tick),
+            )
+                .run_if(in_state(AppState::Splashscreen)),
+        )
         .add_systems(OnExit(AppState::Splashscreen), teardown);
 }
 
@@ -28,11 +41,21 @@ fn setup(asset_server: Res<AssetServer>, mut commands: Commands) {
                     },
                 ),
                 ..default()
-            }
+            },
+            ImageNodeFade::default()
         )],
     ));
 
     commands.spawn((Camera2d, StateScoped(AppState::Splashscreen)));
+}
+
+fn advance_state(
+    mut next_state: ResMut<NextState<AppState>>,
+    animation_query: Query<&ImageNodeFade>,
+) {
+    if animation_query.iter().all(|anim| anim.elapsed()) {
+        next_state.set(AppState::Loading);
+    }
 }
 
 fn teardown() {}

@@ -12,6 +12,11 @@ fn main() {
         }),
         ..default()
     }));
-    app.add_plugins((common::plugin, splashscreen::plugin));
+    app.add_plugins((
+        assets::plugin,
+        common::plugin,
+        loading_screen::plugin,
+        splashscreen::plugin,
+    ));
     app.run();
 }
