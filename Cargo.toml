@@ -23,6 +23,7 @@ assets = { path = "crates/assets"}
 common = { path = "crates/common"}
 dwarf = { path = "crates/dwarf"}
 loading_screen = { path = "crates/loading_screen"}
+main_game = { path = "crates/main_game" }
 menu_screen = { path = "crates/menu_screen"}
 splashscreen = { path = "crates/splashscreen"}
 ui = { path = "crates/ui"}

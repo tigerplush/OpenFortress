@@ -16,6 +16,7 @@ fn main() {
         assets::plugin,
         common::plugin,
         loading_screen::plugin,
+        main_game::plugin,
         menu_screen::plugin,
         splashscreen::plugin,
         ui::plugin,
