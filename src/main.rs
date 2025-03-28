@@ -18,6 +18,7 @@ fn main() {
         loading_screen::plugin,
         menu_screen::plugin,
         splashscreen::plugin,
+        ui::plugin,
     ));
     app.run();
 }

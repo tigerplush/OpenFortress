@@ -3,17 +3,23 @@ use bevy::prelude::*;
 use dwarf_sprite::DwarfSpriteAsset;
 use font_asset::FontAsset;
 use resource_handles::{ResourceHandles, load_resource_assets};
+use sound_assets::SoundAsset;
+use ui_panel_asset::UiPanelAsset;
 
 pub mod background_asset;
 pub mod dwarf_sprite;
 pub mod font_asset;
 pub mod resource_handles;
+pub mod sound_assets;
+pub mod ui_panel_asset;
 
 pub fn plugin(app: &mut App) {
     app.init_resource::<ResourceHandles>()
         .load_resource::<DwarfSpriteAsset>()
         .load_resource::<MenuBackgroundAsset>()
         .load_resource::<FontAsset>()
+        .load_resource::<SoundAsset>()
+        .load_resource::<UiPanelAsset>()
         .add_systems(PreUpdate, load_resource_assets);
 }
 
