@@ -1,5 +1,8 @@
 use assets::{font_asset::FontAsset, sound_assets::SoundAsset, ui_panel_asset::UiPanelAsset};
-use bevy::{color::palettes::css::BLACK, prelude::*};
+use bevy::{
+    color::palettes::css::{BLACK, WHITE},
+    prelude::*,
+};
 
 #[derive(Component)]
 pub enum UiButton {
@@ -13,8 +16,13 @@ impl UiButton {
 }
 
 pub fn plugin(app: &mut App) {
-    app.add_observer(add_button)
-        .add_systems(Update, (trigger_interaction_sound_effect));
+    app.add_observer(add_button).add_systems(
+        Update,
+        (
+            trigger_interaction_sound_effect,
+            trigger_interaction_color_change,
+        ),
+    );
 }
 
 fn add_button(
@@ -64,5 +72,18 @@ fn trigger_interaction_sound_effect(
             _ => continue,
         };
         commands.spawn((AudioPlayer::new(source), PlaybackSettings::DESPAWN));
+    }
+}
+
+fn trigger_interaction_color_change(
+    mut query: Query<(&mut ImageNode, &Interaction), Changed<Interaction>>,
+) {
+    for (mut node, interaction) in &mut query {
+        let color = match interaction {
+            Interaction::None => WHITE.into(),
+            Interaction::Hovered => Color::srgba(0.9607843, 0.9607843, 0.9607843, 1.0),
+            Interaction::Pressed => Color::srgba(0.7843137, 0.7843137, 0.7843137, 1.0),
+        };
+        node.color = color;
     }
 }
