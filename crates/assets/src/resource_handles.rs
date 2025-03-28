@@ -2,11 +2,13 @@ use std::collections::VecDeque;
 
 use bevy::prelude::*;
 
+type InsertFn = fn(&mut World, &UntypedHandle);
+
 #[derive(Resource, Default)]
 pub struct ResourceHandles {
     // Use a queue for waiting assets so they can be cycled through and moved to
     // `finished` one at a time.
-    pub waiting: VecDeque<(UntypedHandle, fn(&mut World, &UntypedHandle))>,
+    pub waiting: VecDeque<(UntypedHandle, InsertFn)>,
     pub(crate) finished: Vec<UntypedHandle>,
 }
 
