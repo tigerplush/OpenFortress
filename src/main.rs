@@ -16,6 +16,7 @@ fn main() {
         assets::plugin,
         common::plugin,
         loading_screen::plugin,
+        menu_screen::plugin,
         splashscreen::plugin,
     ));
     app.run();

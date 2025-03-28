@@ -23,5 +23,6 @@ assets = { path = "crates/assets"}
 common = { path = "crates/common"}
 dwarf = { path = "crates/dwarf"}
 loading_screen = { path = "crates/loading_screen"}
+menu_screen = { path = "crates/menu_screen"}
 splashscreen = { path = "crates/splashscreen"}
 bevy = { workspace = true }

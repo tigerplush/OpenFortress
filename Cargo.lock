@@ -2670,6 +2670,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "menu_screen"
+version = "0.1.0"
+dependencies = [
+ "assets",
+ "bevy",
+ "common",
+]
+
+[[package]]
 name = "metal"
 version = "0.31.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3154,6 +3163,7 @@ dependencies = [
  "common",
  "dwarf",
  "loading_screen",
+ "menu_screen",
  "splashscreen",
 ]
 

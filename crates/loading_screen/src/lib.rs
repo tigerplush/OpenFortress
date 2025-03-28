@@ -23,7 +23,7 @@ fn setup(mut commands: Commands) {
             Text::new("Loading..."),
             TextFont::from_font_size(24.0),
             TextColor(Color::srgb(0.867, 0.827, 0.412)),
-        )]
+        )],
     ));
 
     commands.spawn((Camera2d, StateScoped(AppState::Loading)));
@@ -37,5 +37,4 @@ fn all_assets_loaded(resource_handles: Res<ResourceHandles>) -> bool {
     resource_handles.is_all_done()
 }
 
-fn teardown() {
-}
+fn teardown() {}

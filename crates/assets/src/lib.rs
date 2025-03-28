@@ -1,13 +1,16 @@
+use background_asset::MenuBackgroundAsset;
 use bevy::prelude::*;
 use dwarf_sprite::DwarfSpriteAsset;
-use resource_handles::{load_resource_assets, ResourceHandles};
+use resource_handles::{ResourceHandles, load_resource_assets};
 
+pub mod background_asset;
 pub mod dwarf_sprite;
 pub mod resource_handles;
 
 pub fn plugin(app: &mut App) {
     app.init_resource::<ResourceHandles>()
         .load_resource::<DwarfSpriteAsset>()
+        .load_resource::<MenuBackgroundAsset>()
         .add_systems(PreUpdate, load_resource_assets);
 }
 
