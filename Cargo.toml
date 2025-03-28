@@ -1,23 +1,25 @@
+[workspace]
+members = [
+    "crates/*"
+]
+resolver = "2"
+
 [package]
 name = "open_fortress"
 version = "0.1.0"
 edition = "2021"
+license = "MIT OR Apache-2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
 default = []
-fps = []
-debug = []
-inspector = [
-    "bevy-inspector-egui",
-]
+
+[workspace.dependencies]
+bevy = "=0.16.0-rc.2"
 
 [dependencies]
-bevy = "0.14.1"
-bevy-inspector-egui = { version = "0.25.2", optional = true }
-priority-queue = "2.1.0"
-bevy_ecs_tilemap = "0.14.0"
-leafwing-input-manager = "0.15.0"
-noise_rs = "0.1.16"
-noise = "0.9.0"
+common = { path = "crates/common"}
+dwarf = { path = "crates/dwarf"}
+splashscreen = { path = "crates/splashscreen"}
+bevy = { workspace = true }
