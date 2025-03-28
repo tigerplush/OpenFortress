@@ -35,7 +35,7 @@ fn setup(asset_server: Res<AssetServer>, mut commands: Commands) {
             },
             ImageNode {
                 image: asset_server.load_with_settings(
-                    "open_fortress_splashscreen.png",
+                    "ui/open_fortress_splashscreen.png",
                     |settings: &mut ImageLoaderSettings| {
                         settings.sampler = ImageSampler::nearest()
                     },

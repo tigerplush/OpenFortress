@@ -10,7 +10,7 @@ pub struct UiPanelAsset {
 }
 
 impl UiPanelAsset {
-    const PATH: &'static str = "panel-003.png";
+    const PATH: &'static str = "ui/panel-003.png";
 }
 
 impl FromWorld for UiPanelAsset {

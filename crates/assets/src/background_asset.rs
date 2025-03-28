@@ -9,7 +9,7 @@ pub struct MenuBackgroundAsset {
 }
 
 impl MenuBackgroundAsset {
-    const PATH: &'static str = "open_fortress_main_bg_cropped.png";
+    const PATH: &'static str = "ui/open_fortress_main_bg_cropped.png";
 }
 
 impl FromWorld for MenuBackgroundAsset {
