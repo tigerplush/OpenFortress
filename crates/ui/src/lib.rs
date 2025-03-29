@@ -19,7 +19,7 @@ pub fn plugin(app: &mut App) {
     app.add_observer(add_button).add_systems(
         Update,
         (
-            trigger_interaction_sound_effect,
+            trigger_interaction_sound_effect.run_if(resource_exists::<SoundAsset>),
             trigger_interaction_color_change,
         ),
     );
