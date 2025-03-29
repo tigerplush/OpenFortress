@@ -21,7 +21,6 @@ bevy = "=0.16.0-rc.2"
 [dependencies]
 assets = { path = "crates/assets"}
 common = { path = "crates/common"}
-dwarf = { path = "crates/dwarf"}
 loading_screen = { path = "crates/loading_screen"}
 main_game = { path = "crates/main_game" }
 menu_screen = { path = "crates/menu_screen"}

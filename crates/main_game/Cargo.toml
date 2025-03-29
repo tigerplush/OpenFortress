@@ -5,3 +5,5 @@ edition = "2024"
 
 [dependencies]
 bevy = { workspace = true }
+common = { path = "../common"}
+dwarf = { path = "../dwarf"}

@@ -1849,6 +1849,10 @@ checksum = "f25c0e292a7ca6d6498557ff1df68f32c99850012b6ea401cf8daf771f22ff53"
 [[package]]
 name = "dwarf"
 version = "0.1.0"
+dependencies = [
+ "assets",
+ "bevy",
+]
 
 [[package]]
 name = "either"
@@ -2641,6 +2645,8 @@ name = "main_game"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "common",
+ "dwarf",
 ]
 
 [[package]]
@@ -3169,7 +3175,6 @@ dependencies = [
  "assets",
  "bevy",
  "common",
- "dwarf",
  "loading_screen",
  "main_game",
  "menu_screen",
