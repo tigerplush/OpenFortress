@@ -141,6 +141,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "animation"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
 name = "approx"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1850,6 +1857,7 @@ checksum = "f25c0e292a7ca6d6498557ff1df68f32c99850012b6ea401cf8daf771f22ff53"
 name = "dwarf"
 version = "0.1.0"
 dependencies = [
+ "animation",
  "assets",
  "bevy",
 ]
@@ -3172,6 +3180,7 @@ checksum = "c2806eaa3524762875e21c3dcd057bc4b7bfa01ce4da8d46be1cd43649e1cc6b"
 name = "open_fortress"
 version = "0.1.0"
 dependencies = [
+ "animation",
  "assets",
  "bevy",
  "common",

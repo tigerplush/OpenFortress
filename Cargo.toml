@@ -19,6 +19,7 @@ default = []
 bevy = "=0.16.0-rc.2"
 
 [dependencies]
+animation = { path = "crates/animation"}
 assets = { path = "crates/assets"}
 common = { path = "crates/common"}
 loading_screen = { path = "crates/loading_screen"}

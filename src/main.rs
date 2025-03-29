@@ -13,6 +13,7 @@ fn main() {
         ..default()
     }));
     app.add_plugins((
+        animation::plugin,
         assets::plugin,
         common::plugin,
         loading_screen::plugin,
