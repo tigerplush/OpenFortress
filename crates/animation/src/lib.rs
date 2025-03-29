@@ -3,8 +3,7 @@ use std::{sync::Arc, time::Duration};
 use bevy::prelude::*;
 
 pub fn plugin(app: &mut App) {
-    app
-    .add_systems(Update, (tick, animate.after(tick)));
+    app.add_systems(Update, (tick, animate.after(tick)));
 }
 
 fn tick(time: Res<Time>, mut query: Query<(&mut AnimationConfig, &AnimationState)>) {

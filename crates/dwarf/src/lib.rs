@@ -7,20 +7,22 @@ pub fn plugin(app: &mut App) {
 }
 
 #[derive(Component)]
-#[require(Sprite, AnimationConfig)]
+#[require(AnimationConfig)]
 pub struct Dwarf;
 
 fn on_add_dwarf(
     trigger: Trigger<OnAdd, Dwarf>,
     dwarf: Res<DwarfSpriteAsset>,
-    mut query: Query<&mut Sprite, With<Dwarf>>,
     mut commands: Commands,
 ) {
-    if let Ok(mut sprite) = query.get_mut(trigger.target()) {
-        sprite.image = dwarf.sprite.clone_weak();
-        sprite.texture_atlas = Some(dwarf.texture_atlas.clone())
-    }
-    commands.entity(trigger.target()).insert(AnimationState::new(DwarfAnimationState::default()));
+    commands.entity(trigger.target()).insert((
+        Sprite {
+            image: dwarf.sprite.clone_weak(),
+            texture_atlas: Some(dwarf.texture_atlas.clone()),
+            ..default()
+        },
+        AnimationState::new(DwarfAnimationState::default()),
+    ));
 }
 
 #[derive(Component, Default, Reflect)]
