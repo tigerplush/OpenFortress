@@ -4,14 +4,19 @@ use assets::dwarf_sprite::DwarfSpriteAsset;
 use bevy::prelude::*;
 
 pub fn plugin(app: &mut App) {
-    app.add_observer(on_add_dwarf).add_systems(Update, (tick, animate.after(tick)));
+    app.add_observer(on_add_dwarf)
+        .add_systems(Update, (tick, animate.after(tick)));
 }
 
 #[derive(Component)]
 #[require(Sprite, AnimationConfig, AnimationState)]
 pub struct Dwarf;
 
-fn on_add_dwarf(trigger: Trigger<OnAdd, Dwarf>, dwarf: Res<DwarfSpriteAsset>, mut query: Query<&mut Sprite, With<Dwarf>>) {
+fn on_add_dwarf(
+    trigger: Trigger<OnAdd, Dwarf>,
+    dwarf: Res<DwarfSpriteAsset>,
+    mut query: Query<&mut Sprite, With<Dwarf>>,
+) {
     if let Ok(mut sprite) = query.get_mut(trigger.target()) {
         sprite.image = dwarf.sprite.clone_weak();
         sprite.texture_atlas = Some(dwarf.texture_atlas.clone())
@@ -52,7 +57,10 @@ impl AnimationConfig {
         AnimationConfig {
             current_frame: 0,
             fps,
-            timer: Timer::new(Duration::from_secs_f32(1.0 / (fps as f32)), TimerMode::Repeating),
+            timer: Timer::new(
+                Duration::from_secs_f32(1.0 / (fps as f32)),
+                TimerMode::Repeating,
+            ),
         }
     }
 }

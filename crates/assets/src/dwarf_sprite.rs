@@ -30,8 +30,8 @@ impl FromWorld for DwarfSpriteAsset {
             ),
             texture_atlas: TextureAtlas {
                 index: 0,
-                layout: layout_handle
-            }
+                layout: layout_handle,
+            },
         }
     }
 }
