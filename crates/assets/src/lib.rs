@@ -4,6 +4,7 @@ use dwarf_sprite::DwarfSpriteAsset;
 use font_asset::FontAsset;
 use resource_handles::{ResourceHandles, load_resource_assets};
 use sound_assets::SoundAsset;
+use tileset_asset::TilesetAsset;
 use ui_panel_asset::UiPanelAsset;
 
 pub mod background_asset;
@@ -11,6 +12,7 @@ pub mod dwarf_sprite;
 pub mod font_asset;
 pub mod resource_handles;
 pub mod sound_assets;
+pub mod tileset_asset;
 pub mod ui_panel_asset;
 
 pub fn plugin(app: &mut App) {
@@ -18,6 +20,7 @@ pub fn plugin(app: &mut App) {
         .load_resource::<DwarfSpriteAsset>()
         .load_resource::<MenuBackgroundAsset>()
         .load_resource::<FontAsset>()
+        .load_resource::<TilesetAsset>()
         .load_resource::<SoundAsset>()
         .load_resource::<UiPanelAsset>()
         .add_systems(PreUpdate, load_resource_assets);
