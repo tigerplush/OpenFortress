@@ -16,6 +16,7 @@ fn on_add_dwarf(
     mut commands: Commands,
 ) {
     commands.entity(trigger.target()).insert((
+        Name::new("Dwarf"),
         Sprite {
             image: dwarf.sprite.clone_weak(),
             texture_atlas: Some(dwarf.texture_atlas.clone()),
