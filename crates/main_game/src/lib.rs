@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use common::states::AppState;
 use dwarf::Dwarf;
-use map_generation::WorldMap;
 
 pub fn plugin(app: &mut App) {
     app.add_plugins((dwarf::plugin, map_generation::plugin))
@@ -13,6 +12,5 @@ fn setup(mut commands: Commands) {
     commands.spawn(Dwarf);
     // }
 
-    commands.spawn(WorldMap);
     commands.spawn(Camera2d);
 }

@@ -11,17 +11,51 @@ pub struct TilesetAsset {
 
 pub const TILE_SIZE: Vec2 = Vec2::new(32.0, 32.0);
 
-pub struct TileType;
-
-impl TileType {
-    pub const GRASS: usize = 1 * 14 + 1;
-    pub const WATER: usize = 1 * 14 + 6;
-    pub const LAVA: usize = 1 * 14 + 11;
-    pub const BRIGHT_GRASS: usize = 10 * 14 + 1;
-    pub const DIRT: usize = 10 * 14 + 6;
-    pub const FIELD: usize = 10 * 14 + 11;
-    pub const NONE: usize = 23 * 14 + 14;
+#[derive(Clone, Copy, PartialEq, Reflect)]
+pub enum TileType {
+    Grass,
+    Water,
+    Lava,
+    BrightGrass,
+    Dirt,
+    Field,
+    None,
 }
+
+impl From<usize> for TileType {
+    fn from(value: usize) -> Self {
+        match value {
+            GRASS => TileType::Grass,
+            WATER => TileType::Water,
+            LAVA => TileType::Lava,
+            BRIGHT_GRASS => TileType::BrightGrass,
+            DIRT => TileType::Dirt,
+            FIELD => TileType::Field,
+            _ => TileType::None,
+        }
+    }
+}
+
+impl Into<usize> for TileType {
+    fn into(self) -> usize {
+        match self {
+            TileType::Grass => GRASS,
+            TileType::Water => WATER,
+            TileType::Lava => LAVA,
+            TileType::BrightGrass => BRIGHT_GRASS,
+            TileType::Dirt => DIRT,
+            TileType::Field => FIELD,
+            _ => NONE,
+        }
+    }
+}
+const GRASS: usize = 1 * 14 + 1;
+const WATER: usize = 1 * 14 + 6;
+const LAVA: usize = 1 * 14 + 11;
+const BRIGHT_GRASS: usize = 10 * 14 + 1;
+const DIRT: usize = 10 * 14 + 6;
+const FIELD: usize = 10 * 14 + 11;
+const NONE: usize = 23 * 14 + 13;
 
 impl TilesetAsset {
     const PATH: &'static str = "1_terrain.png";

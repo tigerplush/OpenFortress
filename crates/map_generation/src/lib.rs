@@ -1,39 +1,176 @@
-use assets::tileset_asset::{TileType, TilesetAsset, TILE_SIZE};
-use bevy::prelude::*;
-use common::traits::AsVec2;
+use assets::tileset_asset::{TILE_SIZE, TileType, TilesetAsset};
+use bevy::{platform_support::collections::HashMap, prelude::*};
+use common::{states::AppState, traits::AsVec2};
 
 pub fn plugin(app: &mut App) {
-    app.add_observer(on_add_world_map);
+    app.add_systems(OnEnter(AppState::MainGame), spawn_world)
+        .add_systems(Update, request_chunks.run_if(in_state(AppState::MainGame)))
+        .add_observer(on_add_chunk_visualisation);
 }
 
-#[derive(Component)]
-pub struct WorldMap;
+#[derive(Resource, Reflect)]
+#[reflect(Resource)]
+struct WorldMap {
+    chunks: HashMap<IVec3, Chunk>,
+}
 
-fn on_add_world_map(
-    trigger: Trigger<OnAdd, WorldMap>,
+impl WorldMap {
+    fn new() -> Self {
+        WorldMap {
+            chunks: HashMap::default(),
+        }
+    }
+}
+
+fn spawn_world(mut commands: Commands) {
+    commands.insert_resource(WorldMap::new());
+}
+
+fn on_add_chunk_visualisation(
+    trigger: Trigger<OnAdd, ChunkVisualisation>,
+    world_map: Res<WorldMap>,
     tileset: Res<TilesetAsset>,
+    chunks: Query<&ChunkVisualisation>,
     mut commands: Commands,
 ) {
-    commands
-        .entity(trigger.target())
-        .insert((Transform::default(), Visibility::Inherited))
-        .with_children(|world_map| {
+    let chunk = chunks.get(trigger.target()).unwrap();
+    if let Some(chunk) = world_map.chunks.get(&chunk.0) {
+        commands.entity(trigger.target()).with_children(|parent| {
             for x in 0..CHUNK_SIZE.x {
                 for y in 0..CHUNK_SIZE.y {
-                    world_map.spawn((
-                        Sprite {
-                            image: tileset.image.clone_weak(),
-                            texture_atlas: Some(TextureAtlas {
-                                layout: tileset.layout_handle.clone_weak(),
-                                index: TileType::GRASS,
-                            }),
-                            ..default()
-                        },
-                        Transform::from_translation(((x, y).as_vec2() * TILE_SIZE).extend(-1.0)),
-                    ));
+                    for z in (0..CHUNK_SIZE.z).rev() {
+                        let index = to_index(x, y, z);
+                        if chunk.blocks[index] != TileType::None {
+                            parent.spawn((
+                                Sprite {
+                                    image: tileset.image.clone_weak(),
+                                    texture_atlas: Some(TextureAtlas {
+                                        layout: tileset.layout_handle.clone_weak(),
+                                        index: chunk.blocks[index].into(),
+                                    }),
+                                    ..default()
+                                },
+                                Transform::from_translation(
+                                    ((x, y).as_vec2() * TILE_SIZE).extend(-1.0),
+                                ),
+                            ));
+                            break;
+                        }
+                    }
                 }
             }
         });
+    }
 }
 
-const CHUNK_SIZE: UVec2 = UVec2::new(16, 16);
+#[derive(Component)]
+struct ChunkVisualisation(IVec3);
+
+impl ChunkVisualisation {
+    fn new(coordinates: IVec3) -> impl Bundle {
+        (
+            Name::new(format!("{}", coordinates)),
+            ChunkVisualisation(coordinates),
+            Transform::from_xyz(
+                coordinates.x as f32 * CHUNK_SIZE.x as f32 * TILE_SIZE.x,
+                coordinates.y as f32 * CHUNK_SIZE.y as f32 * TILE_SIZE.y,
+                coordinates.z as f32 * CHUNK_SIZE.z as f32,
+            ),
+            Visibility::Inherited,
+        )
+    }
+}
+
+fn request_chunks(
+    mut world_map: ResMut<WorldMap>,
+    camera_transform: Single<(&Transform, &Projection)>,
+    chunks: Query<&ChunkVisualisation>,
+    mut commands: Commands,
+) {
+    // check which chunks should be visible from the camera
+    let (transform, projection) = camera_transform.into_inner();
+    let Projection::Orthographic(values) = projection else {
+        return;
+    };
+    let camera_x = transform.translation.x;
+    let camera_y = transform.translation.y;
+
+    let chunk_size_x = CHUNK_SIZE.x as f32 * TILE_SIZE.x;
+    let chunk_size_y = CHUNK_SIZE.y as f32 * TILE_SIZE.y;
+    let min_x = camera_x + values.area.min.x;
+    let max_x = camera_x + values.area.max.x;
+    let min_y = camera_y + values.area.min.y;
+    let max_y = camera_y + values.area.max.y;
+
+    let min_chunk_x = (min_x / chunk_size_x).floor() as i32;
+    let max_chunk_x = (max_x / chunk_size_x).ceil() as i32;
+    let min_chunk_y = (min_y / chunk_size_y).floor() as i32;
+    let max_chunk_y = (max_y / chunk_size_y).ceil() as i32;
+
+    // are the chunks already there?
+    let mut requested_chunks = vec![];
+    for x in min_chunk_x..max_chunk_x {
+        for y in min_chunk_y..max_chunk_y {
+            for z in -1..=1 {
+                requested_chunks.push(IVec3::new(x, y, z));
+            }
+        }
+    }
+    // requested_chunks.push(IVec3::NEG_Z);
+    // if not, spawn them
+    for coordinates in requested_chunks {
+        if let None = chunks.iter().find(|chunk| chunk.0 == coordinates) {
+            info!("spawning chunk at {:?}", coordinates);
+            let a = world_map
+                .chunks
+                .entry(coordinates)
+                .or_insert(Chunk::new(coordinates));
+            commands.spawn(ChunkVisualisation::new(coordinates));
+        }
+    }
+}
+
+const CHUNK_SIZE: UVec3 = UVec3::new(16, 16, 16);
+
+#[derive(Reflect)]
+struct Chunk {
+    coordinates: IVec3,
+    blocks: [TileType; (CHUNK_SIZE.x * CHUNK_SIZE.y * CHUNK_SIZE.z) as usize],
+}
+
+impl Chunk {
+    fn new(coordinates: IVec3) -> Self {
+        let mut blocks = [TileType::None; (CHUNK_SIZE.x * CHUNK_SIZE.y * CHUNK_SIZE.z) as usize];
+        for x in 0..CHUNK_SIZE.x {
+            for y in 0..CHUNK_SIZE.y {
+                for z in 0..CHUNK_SIZE.z {
+                    let height = coordinates.z * CHUNK_SIZE.z as i32 + z as i32;
+                    if height < 0 {
+                        blocks[to_index(x, y, z)] = TileType::Grass
+                    }
+                }
+            }
+        }
+        Chunk {
+            coordinates,
+            blocks,
+        }
+    }
+}
+
+fn to_index(x: u32, y: u32, z: u32) -> usize {
+    (x * CHUNK_SIZE.x * CHUNK_SIZE.y + y * CHUNK_SIZE.z + z) as usize
+}
+
+#[test]
+fn test_to_index() {
+    let mut index = 0;
+    for x in 0..CHUNK_SIZE.x {
+        for y in 0..CHUNK_SIZE.y {
+            for z in 0..CHUNK_SIZE.z {
+                assert_eq!(to_index(x, y, z), index);
+                index += 1;
+            }
+        }
+    }
+}
