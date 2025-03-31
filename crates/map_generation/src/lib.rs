@@ -198,8 +198,8 @@ impl Chunk {
         let mut blocks = [TileType::None; (CHUNK_SIZE.x * CHUNK_SIZE.y * CHUNK_SIZE.z) as usize];
         for x in 0..CHUNK_SIZE.x {
             for y in 0..CHUNK_SIZE.y {
-                let world_x = coordinates.x * CHUNK_SIZE.x as i32 + x as i32;
-                let world_y = coordinates.y * CHUNK_SIZE.y as i32  + y as i32;
+                let world_x = coordinates.x as f32 + (x as f32 / CHUNK_SIZE.x as f32);
+                let world_y = coordinates.y as f32 + (y as f32 / CHUNK_SIZE.y as f32);
                 let threshold = noise
                     .get([world_x as f64, world_y as f64])
                     .remap(-1.0, 1.0, -10984.0, 8848.0)
