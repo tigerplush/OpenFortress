@@ -42,6 +42,7 @@ fn setup(mut commands: Commands) {
         InputManagerBundle::with_map(input_map),
         Camera2d,
         CameraLayer(0),
+        StateScoped(AppState::MainGame),
     ));
 }
 
