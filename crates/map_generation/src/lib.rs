@@ -247,13 +247,6 @@ fn to_index(x: u32, y: u32, z: u32) -> usize {
     (x * CHUNK_SIZE.y * CHUNK_SIZE.z + y * CHUNK_SIZE.z + z) as usize
 }
 
-pub fn world_to_tile(world_position: Vec3) -> IVec3 {
-    let x = world_position.x / TILE_SIZE.x;
-    let y = world_position.y / TILE_SIZE.y;
-    let z = world_position.z;
-    IVec3::new(x.round() as i32, y.round() as i32, z.round() as i32)
-}
-
 #[test]
 fn test_to_index() {
     let mut index = 0;

@@ -1,14 +1,14 @@
-use assets::{icon_asset::IconAsset, tileset_asset::TILE_SIZE};
+use assets::icon_asset::IconAsset;
 use bevy::{prelude::*, window::PrimaryWindow};
 use camera::CameraLayer;
-use common::states::AppState;
+use common::{components::work_order::WorkOrder, functions::world_to_tile, resources::work_order_queue::WorkOrderQueue, states::AppState};
 use dwarf::Dwarf;
 use leafwing_input_manager::{
     Actionlike, InputManagerBundle,
     plugin::InputManagerPlugin,
     prelude::{ActionState, InputMap, MouseMove},
 };
-use map_generation::{WorldMap, world_to_tile};
+use map_generation::WorldMap;
 
 pub fn plugin(app: &mut App) {
     app.add_plugins((camera::plugin, dwarf::plugin, map_generation::plugin))
