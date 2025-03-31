@@ -5,6 +5,8 @@ edition = "2024"
 
 [dependencies]
 bevy = { workspace = true }
+leafwing-input-manager = { workspace = true }
+assets = { path = "../assets"}
 camera = { path = "../camera"}
 common = { path = "../common"}
 dwarf = { path = "../dwarf"}

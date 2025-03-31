@@ -19,7 +19,7 @@ pub fn plugin(app: &mut App) {
 
 #[derive(Resource, Reflect)]
 #[reflect(Resource)]
-struct WorldMap {
+pub struct WorldMap {
     chunks: HashMap<IVec3, Chunk>,
     #[reflect(ignore)]
     noise: OpenSimplex,
@@ -33,10 +33,26 @@ impl WorldMap {
         }
     }
 
-    fn get(&mut self, coordinates: IVec3) -> &Chunk {
+    fn get_chunk(&mut self, coordinates: IVec3) -> &Chunk {
         self.chunks
             .entry(coordinates)
             .or_insert(Chunk::new(coordinates, self.noise))
+    }
+
+    pub fn get_tile(&self, coordinates: IVec3) -> Option<TileType> {
+        let chunk_coordinates = coordinates.div_euclid(CHUNK_SIZE.as_ivec3());
+        let block_coordinates = coordinates.rem_euclid(CHUNK_SIZE.as_ivec3()).as_uvec3();
+        let index = to_index(
+            block_coordinates.x,
+            block_coordinates.y,
+            block_coordinates.z,
+        );
+        self.chunks
+            .get(&chunk_coordinates)
+            .and_then(|chunk| match chunk.blocks[index] {
+                TileType::None => None,
+                _ => Some(chunk.blocks[index])
+            })
     }
 }
 
@@ -52,7 +68,7 @@ fn on_add_chunk_visualisation(
     mut commands: Commands,
 ) {
     let chunk_visualisation = chunks.get(trigger.target()).unwrap();
-    let chunk = world_map.get(chunk_visualisation.0);
+    let chunk = world_map.get_chunk(chunk_visualisation.0);
     commands.entity(trigger.target()).with_children(|parent| {
         for x in 0..CHUNK_SIZE.x {
             for y in 0..CHUNK_SIZE.y {
@@ -185,7 +201,7 @@ fn calculate_visible_chunk_ranges(
     )
 }
 
-const CHUNK_SIZE: UVec3 = UVec3::new(16, 16, 16);
+const CHUNK_SIZE: UVec3 = UVec3::new(16, 16, 1);
 
 #[derive(Reflect)]
 struct Chunk {
@@ -206,7 +222,7 @@ impl Chunk {
                     .round() as i32;
                 for z in 0..CHUNK_SIZE.z {
                     let height = coordinates.z * CHUNK_SIZE.z as i32 + z as i32;
-                    let tile_type = if height == threshold && threshold > 0{
+                    let tile_type = if height == threshold && threshold > 0 {
                         TileType::BrightGrass
                     } else if height < threshold {
                         TileType::Dirt
@@ -226,8 +242,16 @@ impl Chunk {
     }
 }
 
+/// returns the index of a tile in it's block array by coordinates
 fn to_index(x: u32, y: u32, z: u32) -> usize {
-    (x * CHUNK_SIZE.x * CHUNK_SIZE.y + y * CHUNK_SIZE.z + z) as usize
+    (x * CHUNK_SIZE.y * CHUNK_SIZE.z + y * CHUNK_SIZE.z + z) as usize
+}
+
+pub fn world_to_tile(world_position: Vec3) -> IVec3 {
+    let x = world_position.x / TILE_SIZE.x;
+    let y = world_position.y / TILE_SIZE.y;
+    let z = world_position.z;
+    IVec3::new(x.round() as i32, y.round() as i32, z.round() as i32)
 }
 
 #[test]
@@ -236,7 +260,7 @@ fn test_to_index() {
     for x in 0..CHUNK_SIZE.x {
         for y in 0..CHUNK_SIZE.y {
             for z in 0..CHUNK_SIZE.z {
-                assert_eq!(to_index(x, y, z), index);
+                assert_eq!(to_index(x, y, z), index, "x: {}, y: {}, z: {}", x, y, z);
                 index += 1;
             }
         }

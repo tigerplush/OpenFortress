@@ -3331,10 +3331,12 @@ dependencies = [
 name = "main_game"
 version = "0.1.0"
 dependencies = [
+ "assets",
  "bevy",
  "camera",
  "common",
  "dwarf",
+ "leafwing-input-manager",
  "map_generation",
 ]
 
