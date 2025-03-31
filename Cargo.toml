@@ -28,6 +28,7 @@ menu_screen = { path = "crates/menu_screen"}
 splashscreen = { path = "crates/splashscreen"}
 ui = { path = "crates/ui"}
 bevy = { workspace = true }
+bevy-inspector-egui = { git = "https://github.com/slyedoc/bevy-inspector-egui.git", branch = "bevy_0.16"}
 
 # Enable a small amount of optimization in the dev profile.
 [profile.dev]
