@@ -3,10 +3,16 @@ use std::ops::{Range, RangeInclusive};
 use assets::tileset_asset::{TILE_SIZE, TileType, TilesetAsset};
 use bevy::{platform_support::collections::HashMap, prelude::*};
 use common::{states::AppState, traits::AsVec2};
+use noise::{NoiseFn, OpenSimplex};
 
 pub fn plugin(app: &mut App) {
-    app.add_systems(OnEnter(AppState::MainGame), spawn_world)
-        .add_systems(Update, (request_chunks, delete_chunks).run_if(in_state(AppState::MainGame)))
+    app.register_type::<WorldMap>()
+        .register_type::<ChunkVisualisation>()
+        .add_systems(OnEnter(AppState::MainGame), spawn_world)
+        .add_systems(
+            Update,
+            (request_chunks, delete_chunks).run_if(in_state(AppState::MainGame)),
+        )
         .add_observer(on_add_chunk_visualisation);
 }
 
@@ -14,13 +20,22 @@ pub fn plugin(app: &mut App) {
 #[reflect(Resource)]
 struct WorldMap {
     chunks: HashMap<IVec3, Chunk>,
+    #[reflect(ignore)]
+    noise: OpenSimplex,
 }
 
 impl WorldMap {
     fn new() -> Self {
         WorldMap {
             chunks: HashMap::default(),
+            noise: OpenSimplex::new(0),
         }
+    }
+
+    fn get(&mut self, coordinates: IVec3) -> &Chunk {
+        self.chunks
+            .entry(coordinates)
+            .or_insert(Chunk::new(coordinates, self.noise))
     }
 }
 
@@ -30,42 +45,42 @@ fn spawn_world(mut commands: Commands) {
 
 fn on_add_chunk_visualisation(
     trigger: Trigger<OnAdd, ChunkVisualisation>,
-    world_map: Res<WorldMap>,
+    mut world_map: ResMut<WorldMap>,
     tileset: Res<TilesetAsset>,
     chunks: Query<&ChunkVisualisation>,
     mut commands: Commands,
 ) {
-    let chunk = chunks.get(trigger.target()).unwrap();
-    if let Some(chunk) = world_map.chunks.get(&chunk.0) {
-        commands.entity(trigger.target()).with_children(|parent| {
-            for x in 0..CHUNK_SIZE.x {
-                for y in 0..CHUNK_SIZE.y {
-                    for z in (0..CHUNK_SIZE.z).rev() {
-                        let index = to_index(x, y, z);
-                        if chunk.blocks[index] != TileType::None {
-                            parent.spawn((
-                                Sprite {
-                                    image: tileset.image.clone_weak(),
-                                    texture_atlas: Some(TextureAtlas {
-                                        layout: tileset.layout_handle.clone_weak(),
-                                        index: chunk.blocks[index].into(),
-                                    }),
-                                    ..default()
-                                },
-                                Transform::from_translation(
-                                    ((x, y).as_vec2() * TILE_SIZE).extend(-1.0),
-                                ),
-                            ));
-                            break;
-                        }
+    let chunk_visualisation = chunks.get(trigger.target()).unwrap();
+    let chunk = world_map.get(chunk_visualisation.0);
+    commands.entity(trigger.target()).with_children(|parent| {
+        for x in 0..CHUNK_SIZE.x {
+            for y in 0..CHUNK_SIZE.y {
+                for z in (0..CHUNK_SIZE.z).rev() {
+                    let index = to_index(x, y, z);
+                    if chunk.blocks[index] != TileType::None {
+                        parent.spawn((
+                            Sprite {
+                                image: tileset.image.clone_weak(),
+                                texture_atlas: Some(TextureAtlas {
+                                    layout: tileset.layout_handle.clone_weak(),
+                                    index: chunk.blocks[index].into(),
+                                }),
+                                ..default()
+                            },
+                            Transform::from_translation(
+                                ((x, y).as_vec2() * TILE_SIZE).extend(-1.0),
+                            ),
+                        ));
+                        break;
                     }
                 }
             }
-        });
-    }
+        }
+    });
 }
 
-#[derive(Component)]
+#[derive(Component, Reflect)]
+#[reflect(Component)]
 struct ChunkVisualisation(IVec3);
 
 impl ChunkVisualisation {
@@ -84,7 +99,6 @@ impl ChunkVisualisation {
 }
 
 fn request_chunks(
-    mut world_map: ResMut<WorldMap>,
     camera_transform: Single<(&Transform, &Projection)>,
     chunks: Query<&ChunkVisualisation>,
     mut commands: Commands,
@@ -108,10 +122,6 @@ fn request_chunks(
         if let None = chunks.iter().find(|chunk| chunk.0 == coordinates) {
             // if not, spawn them
             info!("spawning chunk at {:?}", coordinates);
-            let a = world_map
-                .chunks
-                .entry(coordinates)
-                .or_insert(Chunk::new(coordinates));
             commands.spawn(ChunkVisualisation::new(coordinates));
         }
     }
@@ -180,14 +190,31 @@ struct Chunk {
 }
 
 impl Chunk {
-    fn new(coordinates: IVec3) -> Self {
+    fn new(coordinates: IVec3, noise: OpenSimplex) -> Self {
         let mut blocks = [TileType::None; (CHUNK_SIZE.x * CHUNK_SIZE.y * CHUNK_SIZE.z) as usize];
         for x in 0..CHUNK_SIZE.x {
             for y in 0..CHUNK_SIZE.y {
+                let threshold = noise
+                    .get([x as f64, y as f64])
+                    .remap(-1.0, 1.0, -10984.0, 8848.0)
+                    .round() as i32;
                 for z in 0..CHUNK_SIZE.z {
                     let height = coordinates.z * CHUNK_SIZE.z as i32 + z as i32;
-                    if height < 0 {
-                        blocks[to_index(x, y, z)] = TileType::Grass
+                    if height == threshold {
+                        if threshold < 0 {
+                            blocks[to_index(x, y, z)] = TileType::Dirt;
+                        } else {
+                            blocks[to_index(x, y, z)] = TileType::Grass;
+                        }
+                    } else if height > threshold {
+                        if height > 0 {
+                            blocks[to_index(x, y, z)] = TileType::None;
+                        }
+                    } else {
+                        // Everything below threshold and between height and 0 should be water
+                        if height <= 0 {
+                            blocks[to_index(x, y, z)] = TileType::Water;
+                        }
                     }
                 }
             }

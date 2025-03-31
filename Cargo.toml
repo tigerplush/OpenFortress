@@ -17,6 +17,8 @@ default = []
 
 [workspace.dependencies]
 bevy = "=0.16.0-rc.2"
+noise = "0.9"
+leafwing-input-manager = { git = "https://github.com/Leafwing-Studios/leafwing-input-manager.git" }
 
 [dependencies]
 animation = { path = "crates/animation"}
