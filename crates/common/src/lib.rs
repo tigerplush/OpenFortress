@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 pub mod components;
+pub mod constants;
 pub mod states;
 pub mod traits;
 use components::image_node_fade::ImageNodeFade;

@@ -9,8 +9,6 @@ pub struct TilesetAsset {
     pub layout_handle: Handle<TextureAtlasLayout>,
 }
 
-pub const TILE_SIZE: Vec2 = Vec2::new(32.0, 32.0);
-
 #[derive(Clone, Copy, PartialEq, Reflect)]
 pub enum TileType {
     Grass,

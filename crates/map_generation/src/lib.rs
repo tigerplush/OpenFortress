@@ -1,9 +1,9 @@
 use std::ops::{Range, RangeInclusive};
 
-use assets::tileset_asset::{TILE_SIZE, TileType, TilesetAsset};
+use assets::tileset_asset::{TileType, TilesetAsset};
 use bevy::{platform_support::collections::HashMap, prelude::*};
 use camera::CameraLayer;
-use common::{states::AppState, traits::AsVec2};
+use common::{constants::TILE_SIZE, states::AppState, traits::AsVec2};
 use noise::{NoiseFn, OpenSimplex};
 
 pub fn plugin(app: &mut App) {
