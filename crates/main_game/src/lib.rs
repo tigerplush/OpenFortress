@@ -13,12 +13,9 @@ use map_generation::WorldMap;
 pub fn plugin(app: &mut App) {
     app.add_plugins((camera::plugin, dwarf::plugin, map_generation::plugin))
         .add_systems(OnEnter(AppState::MainGame), setup)
-        .register_type::<WorkOrderQueue>()
         .add_plugins(InputManagerPlugin::<MouseControls>::default())
         .add_systems(OnEnter(AppState::MainGame), setup_brush)
         .add_systems(Update, (handle_brush,).run_if(in_state(AppState::MainGame)))
-        .add_observer(register_work_order)
-        .add_observer(unregister_work_order)
         .add_observer(add_vis_to_work_order);
 }
 
@@ -72,50 +69,6 @@ fn handle_brush(
             }
         }
     }
-}
-
-#[derive(Reflect, Resource)]
-#[reflect(Resource)]
-struct WorkOrderQueue(Vec<WorkOrder>);
-
-impl WorkOrderQueue {
-    fn new() -> Self {
-        WorkOrderQueue(Vec::new())
-    }
-}
-
-#[derive(Clone, Component, Copy, PartialEq, Reflect)]
-enum WorkOrder {
-    Dig(IVec3),
-}
-
-impl WorkOrder {
-    fn dig(world_position: Vec3) -> impl Bundle {
-        let tile_coordinates = world_to_tile(world_position);
-        (
-            Name::new(format!("WorkOrder - Dig {}", tile_coordinates)),
-            Transform::from_translation((world_position / TILE_SIZE.extend(1.0)).round() * TILE_SIZE.extend(1.0)),
-            WorkOrder::Dig(tile_coordinates),
-        )
-    }
-}
-
-fn register_work_order(
-    trigger: Trigger<OnAdd, WorkOrder>,
-    mut work_order_queue: ResMut<WorkOrderQueue>,
-    work_orders: Query<&WorkOrder>,
-) {
-    let work_order = work_orders.get(trigger.target()).unwrap();
-    work_order_queue.0.push(*work_order);
-}
-
-fn unregister_work_order(
-    trigger: Trigger<OnRemove, WorkOrder>,
-    mut work_order_queue: ResMut<WorkOrderQueue>,
-    work_orders: Query<&WorkOrder>,
-) {
-    let work_order = work_orders.get(trigger.target()).unwrap();
-    work_order_queue.0.retain(|order| order != work_order);
 }
 
 fn add_vis_to_work_order(
