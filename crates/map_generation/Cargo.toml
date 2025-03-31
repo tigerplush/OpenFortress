@@ -7,4 +7,5 @@ edition = "2024"
 bevy = { workspace = true }
 noise = { workspace = true }
 assets = { path = "../assets" }
+camera = { path = "../camera" }
 common = { path = "../common" }

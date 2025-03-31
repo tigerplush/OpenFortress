@@ -2,6 +2,7 @@ use std::ops::{Range, RangeInclusive};
 
 use assets::tileset_asset::{TILE_SIZE, TileType, TilesetAsset};
 use bevy::{platform_support::collections::HashMap, prelude::*};
+use camera::CameraLayer;
 use common::{states::AppState, traits::AsVec2};
 use noise::{NoiseFn, OpenSimplex};
 
@@ -84,14 +85,14 @@ fn on_add_chunk_visualisation(
 struct ChunkVisualisation(IVec3);
 
 impl ChunkVisualisation {
-    fn new(coordinates: IVec3) -> impl Bundle {
+    fn bundle(coordinates: IVec3) -> impl Bundle {
         (
             Name::new(format!("Chunk {}", coordinates)),
             ChunkVisualisation(coordinates),
             Transform::from_xyz(
                 coordinates.x as f32 * CHUNK_SIZE.x as f32 * TILE_SIZE.x,
                 coordinates.y as f32 * CHUNK_SIZE.y as f32 * TILE_SIZE.y,
-                coordinates.z as f32 * CHUNK_SIZE.z as f32,
+                coordinates.z as f32,
             ),
             Visibility::Inherited,
         )
@@ -99,7 +100,7 @@ impl ChunkVisualisation {
 }
 
 fn request_chunks(
-    camera_transform: Single<(&Transform, &Projection)>,
+    camera_transform: Single<(&Transform, &CameraLayer, &Projection)>,
     chunks: Query<&ChunkVisualisation>,
     mut commands: Commands,
 ) {
@@ -119,16 +120,15 @@ fn request_chunks(
     }
     for coordinates in requested_chunks {
         // are the chunks already there?
-        if let None = chunks.iter().find(|chunk| chunk.0 == coordinates) {
+        if !chunks.iter().any(|chunk| chunk.0 == coordinates) {
             // if not, spawn them
-            info!("spawning chunk at {:?}", coordinates);
-            commands.spawn(ChunkVisualisation::new(coordinates));
+            commands.spawn(ChunkVisualisation::bundle(coordinates));
         }
     }
 }
 
 fn delete_chunks(
-    camera_transform: Single<(&Transform, &Projection)>,
+    camera_transform: Single<(&Transform, &CameraLayer, &Projection)>,
     chunks: Query<(Entity, &ChunkVisualisation)>,
     mut commands: Commands,
 ) {
@@ -143,25 +143,25 @@ fn delete_chunks(
             || !y_range.contains(&coordinates.y)
             || !z_range.contains(&coordinates.z)
         {
-            info!("despawing chunk at {:?}", coordinates);
             commands.entity(entity).despawn();
         }
     }
 }
 
 fn calculate_visible_chunk_ranges_from_single(
-    camera_transform: Single<(&Transform, &Projection)>,
+    camera_transform: Single<(&Transform, &CameraLayer, &Projection)>,
 ) -> Option<(Range<i32>, Range<i32>, RangeInclusive<i32>)> {
-    let (transform, projection) = camera_transform.into_inner();
+    let (transform, layer, projection) = camera_transform.into_inner();
     let Projection::Orthographic(values) = projection else {
         return None;
     };
-    Some(calculate_visible_chunk_ranges(transform, values))
+    Some(calculate_visible_chunk_ranges(transform, layer, values))
 }
 
 /// Calculates which chunks are currently visible
 fn calculate_visible_chunk_ranges(
     transform: &Transform,
+    layer: &CameraLayer,
     projection: &OrthographicProjection,
 ) -> (Range<i32>, Range<i32>, RangeInclusive<i32>) {
     let camera_x = transform.translation.x;
@@ -178,7 +178,11 @@ fn calculate_visible_chunk_ranges(
     let max_chunk_x = (max_x / chunk_size_x).ceil() as i32;
     let min_chunk_y = (min_y / chunk_size_y).floor() as i32;
     let max_chunk_y = (max_y / chunk_size_y).ceil() as i32;
-    (min_chunk_x..max_chunk_x, min_chunk_y..max_chunk_y, -1..=1)
+    (
+        min_chunk_x..max_chunk_x,
+        min_chunk_y..max_chunk_y,
+        (layer.0 - 1)..=(layer.0 + 1),
+    )
 }
 
 const CHUNK_SIZE: UVec3 = UVec3::new(16, 16, 16);
@@ -194,28 +198,24 @@ impl Chunk {
         let mut blocks = [TileType::None; (CHUNK_SIZE.x * CHUNK_SIZE.y * CHUNK_SIZE.z) as usize];
         for x in 0..CHUNK_SIZE.x {
             for y in 0..CHUNK_SIZE.y {
+                let world_x = coordinates.x * CHUNK_SIZE.x as i32 + x as i32;
+                let world_y = coordinates.y * CHUNK_SIZE.y as i32  + y as i32;
                 let threshold = noise
-                    .get([x as f64, y as f64])
+                    .get([world_x as f64, world_y as f64])
                     .remap(-1.0, 1.0, -10984.0, 8848.0)
                     .round() as i32;
                 for z in 0..CHUNK_SIZE.z {
                     let height = coordinates.z * CHUNK_SIZE.z as i32 + z as i32;
-                    if height == threshold {
-                        if threshold < 0 {
-                            blocks[to_index(x, y, z)] = TileType::Dirt;
-                        } else {
-                            blocks[to_index(x, y, z)] = TileType::Grass;
-                        }
-                    } else if height > threshold {
-                        if height > 0 {
-                            blocks[to_index(x, y, z)] = TileType::None;
-                        }
+                    let tile_type = if height == threshold && threshold > 0{
+                        TileType::BrightGrass
+                    } else if height < threshold {
+                        TileType::Dirt
+                    } else if height > threshold && height < 0 {
+                        TileType::Water
                     } else {
-                        // Everything below threshold and between height and 0 should be water
-                        if height <= 0 {
-                            blocks[to_index(x, y, z)] = TileType::Water;
-                        }
-                    }
+                        TileType::None
+                    };
+                    blocks[to_index(x, y, z)] = tile_type;
                 }
             }
         }

@@ -1,15 +1,21 @@
 use std::ops::DerefMut;
 
-use bevy::{math::VectorSpace, prelude::*};
+use bevy::prelude::*;
 use common::states::AppState;
 use leafwing_input_manager::{
-    plugin::InputManagerPlugin, prelude::{ActionState, InputMap, MouseScrollAxis, VirtualAxis, VirtualDPad}, Actionlike, InputManagerBundle
+    Actionlike, InputManagerBundle,
+    plugin::InputManagerPlugin,
+    prelude::{ActionState, InputMap, MouseScrollAxis, VirtualDPad},
 };
 
 pub fn plugin(app: &mut App) {
-    app.add_plugins(InputManagerPlugin::<CameraControls>::default())
+    app.register_type::<CameraLayer>()
+        .add_plugins(InputManagerPlugin::<CameraControls>::default())
         .add_systems(OnEnter(AppState::MainGame), setup)
-        .add_systems(Update, (zoom, pan.after(zoom)).run_if(in_state(AppState::MainGame)));
+        .add_systems(
+            Update,
+            (zoom, scroll, pan.after(zoom)).run_if(in_state(AppState::MainGame)),
+        );
 }
 
 #[derive(Actionlike, Clone, Debug, Eq, Hash, PartialEq, Reflect)]
@@ -18,16 +24,25 @@ enum CameraControls {
     Pan,
     #[actionlike(Axis)]
     Zoom,
-    #[actionlike(Axis)]
-    Scroll,
+    ScrollUp,
+    ScrollDown,
 }
+
+#[derive(Component, Reflect)]
+#[reflect(Component)]
+pub struct CameraLayer(pub i32);
 
 fn setup(mut commands: Commands) {
     let input_map = InputMap::default()
         .with_dual_axis(CameraControls::Pan, VirtualDPad::wasd())
         .with_axis(CameraControls::Zoom, MouseScrollAxis::Y)
-        .with_axis(CameraControls::Scroll, VirtualAxis::vertical_numpad());
-    commands.spawn((InputManagerBundle::with_map(input_map), Camera2d));
+        .with(CameraControls::ScrollUp, KeyCode::Numpad8)
+        .with(CameraControls::ScrollDown, KeyCode::Numpad2);
+    commands.spawn((
+        InputManagerBundle::with_map(input_map),
+        Camera2d,
+        CameraLayer(0),
+    ));
 }
 
 fn zoom(query: Single<(&mut Projection, &ActionState<CameraControls>), With<Camera2d>>) {
@@ -41,6 +56,18 @@ fn zoom(query: Single<(&mut Projection, &ActionState<CameraControls>), With<Came
         }
         _ => unreachable!(),
     }
+}
+
+fn scroll(query: Single<(&mut CameraLayer, &ActionState<CameraControls>), With<Camera2d>>) {
+    let (mut layer, action_state) = query.into_inner();
+    let mut delta = 0;
+    if action_state.just_pressed(&CameraControls::ScrollUp) {
+        delta += 1;
+    }
+    if action_state.just_pressed(&CameraControls::ScrollDown) {
+        delta -= 1;
+    }
+    layer.0 += delta;
 }
 
 fn pan(query: Single<(&mut Transform, &ActionState<CameraControls>), With<Camera2d>>) {
