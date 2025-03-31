@@ -36,9 +36,9 @@ impl From<usize> for TileType {
     }
 }
 
-impl Into<usize> for TileType {
-    fn into(self) -> usize {
-        match self {
+impl From<TileType> for usize {
+    fn from(value: TileType) -> Self {
+        match value {
             TileType::Grass => GRASS,
             TileType::Water => WATER,
             TileType::Lava => LAVA,
@@ -49,9 +49,10 @@ impl Into<usize> for TileType {
         }
     }
 }
-const GRASS: usize = 1 * 14 + 1;
-const WATER: usize = 1 * 14 + 6;
-const LAVA: usize = 1 * 14 + 11;
+
+const GRASS: usize = 14 + 1;
+const WATER: usize = 14 + 6;
+const LAVA: usize = 14 + 11;
 const BRIGHT_GRASS: usize = 10 * 14 + 1;
 const DIRT: usize = 10 * 14 + 6;
 const FIELD: usize = 10 * 14 + 11;
