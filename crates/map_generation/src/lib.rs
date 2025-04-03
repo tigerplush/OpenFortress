@@ -23,13 +23,15 @@ pub struct WorldMap {
     chunks: HashMap<IVec3, Chunk>,
     #[reflect(ignore)]
     noise: OpenSimplex,
+    entity: Entity,
 }
 
 impl WorldMap {
-    fn new() -> Self {
+    fn new(entity: Entity) -> Self {
         WorldMap {
             chunks: HashMap::default(),
             noise: OpenSimplex::new(0),
+            entity,
         }
     }
 
@@ -51,13 +53,20 @@ impl WorldMap {
             .get(&chunk_coordinates)
             .and_then(|chunk| match chunk.blocks[index] {
                 TileType::None => None,
-                _ => Some(chunk.blocks[index])
+                _ => Some(chunk.blocks[index]),
             })
     }
 }
 
 fn spawn_world(mut commands: Commands) {
-    commands.insert_resource(WorldMap::new());
+    let entity = commands
+        .spawn((
+            Name::new("World Map"),
+            Transform::default(),
+            Visibility::Inherited,
+        ))
+        .id();
+    commands.insert_resource(WorldMap::new(entity));
 }
 
 fn on_add_chunk_visualisation(
@@ -69,31 +78,36 @@ fn on_add_chunk_visualisation(
 ) {
     let chunk_visualisation = chunks.get(trigger.target()).unwrap();
     let chunk = world_map.get_chunk(chunk_visualisation.0);
-    commands.entity(trigger.target()).with_children(|parent| {
-        for x in 0..CHUNK_SIZE.x {
-            for y in 0..CHUNK_SIZE.y {
-                for z in (0..CHUNK_SIZE.z).rev() {
-                    let index = to_index(x, y, z);
-                    if chunk.blocks[index] != TileType::None {
-                        parent.spawn((
-                            Sprite {
-                                image: tileset.image.clone_weak(),
-                                texture_atlas: Some(TextureAtlas {
-                                    layout: tileset.layout_handle.clone_weak(),
-                                    index: chunk.blocks[index].into(),
-                                }),
-                                ..default()
-                            },
-                            Transform::from_translation(
-                                ((x, y).as_vec2() * TILE_SIZE).extend(-1.0),
-                            ),
-                        ));
-                        break;
+    commands
+        .entity(trigger.target())
+        .with_children(|parent| {
+            for x in 0..CHUNK_SIZE.x {
+                for y in 0..CHUNK_SIZE.y {
+                    for z in (0..CHUNK_SIZE.z).rev() {
+                        let index = to_index(x, y, z);
+                        if chunk.blocks[index] != TileType::None {
+                            parent.spawn((
+                                Sprite {
+                                    image: tileset.image.clone_weak(),
+                                    texture_atlas: Some(TextureAtlas {
+                                        layout: tileset.layout_handle.clone_weak(),
+                                        index: chunk.blocks[index].into(),
+                                    }),
+                                    ..default()
+                                },
+                                Transform::from_translation(
+                                    ((x, y).as_vec2() * TILE_SIZE).extend(-1.0),
+                                ),
+                            ));
+                            break;
+                        }
                     }
                 }
             }
-        }
-    });
+        })
+        .insert(ChildOf {
+            parent: world_map.entity,
+        });
 }
 
 #[derive(Component, Reflect)]
