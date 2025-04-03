@@ -1,6 +1,7 @@
 use animation::{AnimationConfig, AnimationState, Frames};
 use assets::dwarf_sprite::DwarfSpriteAsset;
 use bevy::prelude::*;
+use work::Worker;
 
 pub fn plugin(app: &mut App) {
     app.add_observer(on_add_dwarf);
@@ -23,6 +24,7 @@ fn on_add_dwarf(
             ..default()
         },
         AnimationState::new(DwarfAnimationState::default()),
+        Worker,
     ));
 }
 
