@@ -66,11 +66,10 @@ fn handle_brush(
             .map(|ray| ray.origin.truncate())
         {
             let tile_coordinates = world_to_tile(world_position.extend(layer.0 as f32));
-            info!("trying to insert dig into queue for {}", tile_coordinates);
             if !work_order_queue
                 .0
                 .iter()
-                .any(|(_, work_order)| work_order != &WorkOrder::Dig(tile_coordinates))
+                .any(|(_, work_order)| work_order == &WorkOrder::Dig(tile_coordinates))
                 && world_map.get_tile(tile_coordinates).is_some()
             {
                 commands.spawn(WorkOrder::dig(world_position.extend(layer.0 as f32)));
