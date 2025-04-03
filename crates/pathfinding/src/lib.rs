@@ -6,7 +6,7 @@ use map_generation::WorldMap;
 use path::Path;
 use priority_queue::PriorityQueue;
 
-mod path;
+pub mod path;
 
 pub fn plugin(app: &mut App) {
     app.register_type::<Pathfinder>()

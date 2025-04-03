@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use common::functions::world_to_tile;
-use pathfinding::Pathfinder;
+use pathfinding::{path::Path, Pathfinder};
+
+use super::Task;
 
 #[derive(Clone, Component, Copy, Debug, Reflect)]
 #[reflect(Component)]
@@ -13,6 +15,12 @@ pub(crate) fn handle_walk_to(query: Query<(Entity, &Transform, &WalkTo)>, mut co
         commands
             .entity(entity)
             .remove::<WalkTo>()
-            .insert(Pathfinder::new(start, walk_to.0));
+            .insert(Pathfinder::new(start, walk_to.0))
+            .observe(on_path_completed);
     }
+}
+
+fn on_path_completed(trigger: Trigger<OnRemove, Path>, mut commands: Commands) {
+    commands.entity(trigger.target()).remove::<Task>();
+    commands.entity(trigger.observer()).despawn();
 }

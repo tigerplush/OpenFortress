@@ -47,5 +47,8 @@ pub(crate) fn check_tasks(
             };
             commands.entity(entity).insert(task);
         }
+        else {
+            //task queue is empty, task is done!
+        }
     }
 }

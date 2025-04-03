@@ -4,7 +4,7 @@ use bevy::prelude::*;
 
 #[derive(Component, Reflect)]
 #[reflect(Component)]
-pub(crate) struct Path {
+pub struct Path {
     set: Vec<Vec3>,
     current_index: usize,
     current_t: f32,
@@ -27,6 +27,10 @@ impl Path {
         }
     }
 
+    fn complete(&self) -> bool {
+        return self.current_index >= self.set.len()
+    }
+
     fn current_position(&self) -> Vec3 {
         if self.current_index + 1 >= self.set.len() {
             return *self.set.last().unwrap();
@@ -37,9 +41,12 @@ impl Path {
     }
 }
 
-pub(crate) fn tick_path(time: Res<Time>, mut query: Query<&mut Path>) {
-    for mut path in &mut query {
+pub(crate) fn tick_path(time: Res<Time>, mut query: Query<(Entity, &mut Path)>, mut commands: Commands) {
+    for (entity, mut path) in &mut query {
         path.tick(time.delta());
+        if path.complete() {
+            commands.entity(entity).remove::<Path>();
+        }
     }
 }
 

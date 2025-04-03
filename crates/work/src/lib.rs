@@ -73,7 +73,7 @@ fn fetch_new_work_order(
 }
 
 fn check_work_orders(
-    workers: Query<(Entity, &CurrentWorkOrder)>,
+    workers: Query<(Entity, &CurrentWorkOrder), Without<TaskQueue>>,
     work_orders: Query<&WorkOrder>,
     mut commands: Commands,
 ) {
