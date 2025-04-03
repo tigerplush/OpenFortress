@@ -6,18 +6,27 @@ use crate::WorkOrder;
 
 pub fn plugin(app: &mut App) {
     app.register_type::<WorkOrderQueue>()
-        .insert_resource(WorkOrderQueue::new())
+        .insert_resource(WorkOrderQueue::default())
         .add_observer(register_work_order)
         .add_observer(unregister_work_order);
 }
 
-#[derive(Reflect, Resource)]
+#[derive(Default, Reflect, Resource)]
 #[reflect(Resource)]
-pub struct WorkOrderQueue(pub VecDeque<(Entity, WorkOrder)>);
+pub struct WorkOrderQueue {
+    pub(crate) pending: VecDeque<(Entity, WorkOrder)>,
+    pub(crate) in_progress: VecDeque<(Entity, WorkOrder)>,
+}
 
 impl WorkOrderQueue {
-    pub fn new() -> Self {
-        WorkOrderQueue(VecDeque::new())
+    pub fn contains(&self, item: &WorkOrder) -> bool {
+        self.pending
+            .iter()
+            .any(|(_, work_order)| work_order == item)
+            || self
+                .in_progress
+                .iter()
+                .any(|(_, work_order)| work_order == item)
     }
 }
 
@@ -28,7 +37,7 @@ fn register_work_order(
 ) {
     let work_order = work_orders.get(trigger.target()).unwrap();
     work_order_queue
-        .0
+        .pending
         .push_back((trigger.target(), *work_order));
 }
 
@@ -38,5 +47,10 @@ fn unregister_work_order(
     work_orders: Query<&WorkOrder>,
 ) {
     let work_order = work_orders.get(trigger.target()).unwrap();
-    work_order_queue.0.retain(|(_, order)| order != work_order);
+    work_order_queue
+        .pending
+        .retain(|(_, order)| order != work_order);
+    work_order_queue
+        .in_progress
+        .retain(|(_, order)| order != work_order);
 }

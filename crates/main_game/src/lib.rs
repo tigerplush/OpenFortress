@@ -16,6 +16,7 @@ pub fn plugin(app: &mut App) {
         camera::plugin,
         dwarf::plugin,
         map_generation::plugin,
+        pathfinding::plugin,
         work::plugin,
     ))
     .add_systems(OnEnter(AppState::MainGame), setup)
@@ -66,10 +67,7 @@ fn handle_brush(
             .map(|ray| ray.origin.truncate())
         {
             let tile_coordinates = world_to_tile(world_position.extend(layer.0 as f32));
-            if !work_order_queue
-                .0
-                .iter()
-                .any(|(_, work_order)| work_order == &WorkOrder::Dig(tile_coordinates))
+            if !work_order_queue.contains(&WorkOrder::Dig(tile_coordinates))
                 && world_map.get_tile(tile_coordinates).is_some()
             {
                 commands.spawn(WorkOrder::dig(world_position.extend(layer.0 as f32)));

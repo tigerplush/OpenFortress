@@ -1,9 +1,10 @@
 [package]
-name = "work"
+name = "pathfinding"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
 bevy = { workspace = true }
+priority-queue = { workspace = true }
 common = { path = "../common" }
-pathfinding = { path = "../pathfinding" }
+map_generation = { path = "../map_generation" }

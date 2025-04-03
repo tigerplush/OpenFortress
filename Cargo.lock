@@ -3340,6 +3340,7 @@ dependencies = [
  "dwarf",
  "leafwing-input-manager",
  "map_generation",
+ "pathfinding",
  "work",
 ]
 
@@ -4046,6 +4047,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
 
 [[package]]
+name = "pathfinding"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "common",
+ "map_generation",
+ "priority-queue",
+]
+
+[[package]]
 name = "percent-encoding"
 version = "2.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4181,6 +4192,17 @@ checksum = "5316f57387668042f561aae71480de936257848f9c43ce528e311d89a07cadeb"
 dependencies = [
  "proc-macro2",
  "syn",
+]
+
+[[package]]
+name = "priority-queue"
+version = "2.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ef08705fa1589a1a59aa924ad77d14722cb0cd97b67dd5004ed5f4a4873fce8d"
+dependencies = [
+ "autocfg",
+ "equivalent",
+ "indexmap",
 ]
 
 [[package]]
@@ -6276,6 +6298,7 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "common",
+ "pathfinding",
 ]
 
 [[package]]

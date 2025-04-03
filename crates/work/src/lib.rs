@@ -1,7 +1,9 @@
 use bevy::prelude::*;
 use common::{constants::TILE_SIZE, functions::world_to_tile};
+use tasks::{Task, TaskQueue, check_tasks};
 use work_order_queue::WorkOrderQueue;
 
+mod tasks;
 pub mod work_order_queue;
 
 pub fn plugin(app: &mut App) {
@@ -13,7 +15,8 @@ pub fn plugin(app: &mut App) {
         .add_systems(
             Update,
             (fetch_new_work_order, check_work_orders, check_tasks),
-        );
+        )
+        .add_systems(Update, tasks::walk_to::handle_walk_to);
 }
 
 #[derive(Clone, Component, Copy, PartialEq, Reflect)]
@@ -35,39 +38,7 @@ impl WorkOrder {
 
     pub fn realise(&self) -> impl Bundle {
         match self {
-            WorkOrder::Dig(pos) => TaskQueue(vec![Task::dig(pos), Task::walk_to(pos)]),
-        }
-    }
-}
-
-/// A task queue
-#[derive(Component, Reflect)]
-#[reflect(Component)]
-struct TaskQueue(Vec<Task>);
-
-#[derive(Component, Debug, Reflect)]
-#[reflect(Component)]
-/// A task is a concrete step taken in order to achieve some greater goal.
-enum Task {
-    WalkTo,
-    Dig,
-}
-
-impl Task {
-    fn dig(pos: &IVec3) -> Task {
-        Task::Dig
-    }
-
-    fn walk_to(pos: &IVec3) -> Task {
-        Task::WalkTo
-    }
-}
-
-fn check_tasks(mut query: Query<(Entity, &mut TaskQueue), Without<Task>>, mut commands: Commands) {
-    for (entity, mut task_queue) in &mut query {
-        if let Some(task) = task_queue.0.pop() {
-            info!("{} is taking on task {:?}", entity, task);
-            commands.entity(entity).insert(task);
+            WorkOrder::Dig(pos) => TaskQueue::new(&[Task::dig(pos), Task::walk_to(pos)]),
         }
     }
 }
@@ -86,11 +57,14 @@ fn fetch_new_work_order(
     mut commands: Commands,
 ) {
     for entity in &query {
-        if let Some((work_order_entity, _)) = work_order_queue.0.pop_front() {
+        if let Some((work_order_entity, work_order)) = work_order_queue.pending.pop_front() {
             info!(
                 "dwarf is taking work order for entity {}",
                 work_order_entity
             );
+            work_order_queue
+                .in_progress
+                .push_back((work_order_entity, work_order));
             commands
                 .entity(entity)
                 .insert(CurrentWorkOrder(work_order_entity));

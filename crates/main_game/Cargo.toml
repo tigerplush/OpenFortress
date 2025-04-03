@@ -11,4 +11,5 @@ camera = { path = "../camera"}
 common = { path = "../common"}
 dwarf = { path = "../dwarf"}
 map_generation = { path = "../map_generation" }
+pathfinding = { path = "../pathfinding" }
 work = { path = "../work" }
