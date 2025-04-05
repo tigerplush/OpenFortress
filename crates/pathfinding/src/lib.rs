@@ -101,7 +101,7 @@ fn calculate_path(
 ) {
     for (entity, mut path) in &mut query {
         match path.calculate_step(&world_map) {
-            PathfindingState::Calculating => info!("pathfinding calculating"),
+            PathfindingState::Calculating => (),
             PathfindingState::Failed => {
                 info!("pathfinding failed");
                 commands.entity(entity).remove::<Pathfinder>();
