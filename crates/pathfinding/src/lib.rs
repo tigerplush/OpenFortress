@@ -115,19 +115,22 @@ fn calculate_path(
 }
 
 trait Neighbors<T> {
-    /// returns all neighbors with their squared cost
+    /// Returns all neighbors with their squared cost.
     fn neighbors(&self) -> Vec<(T, u32)>;
 }
 
+#[rustfmt::skip]
 impl Neighbors<IVec3> for IVec3 {
     fn neighbors(&self) -> Vec<(IVec3, u32)> {
         vec![
-            (self + IVec3::X, 1),
-            (self + IVec3::NEG_X, 1),
-            (self + IVec3::Y, 1),
-            (self + IVec3::NEG_Y, 1),
-            (self + IVec3::Z, 1),
-            (self + IVec3::NEG_Z, 1),
+            (self + IVec3::new( 1,  0,  0), 1),
+            (self + IVec3::new( 1,  1,  0), 2),
+            (self + IVec3::new( 0,  1,  0), 1),
+            (self + IVec3::new(-1,  1,  0), 2),
+            (self + IVec3::new(-1,  0,  0), 1),
+            (self + IVec3::new(-1, -1,  0), 2),
+            (self + IVec3::new( 0, -1,  0), 1),
+            (self + IVec3::new( 1, -1,  0), 2),
         ]
     }
 }

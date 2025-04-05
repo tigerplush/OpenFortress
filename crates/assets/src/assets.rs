@@ -1,5 +1,4 @@
 use crate::background_asset::MenuBackgroundAsset;
-use bevy::prelude::*;
 use crate::dwarf_sprite::DwarfSpriteAsset;
 use crate::font_asset::FontAsset;
 use crate::icon_asset::IconAsset;
@@ -7,6 +6,7 @@ use crate::resource_handles::{ResourceHandles, load_resource_assets};
 use crate::sound_assets::SoundAsset;
 use crate::tileset_asset::TilesetAsset;
 use crate::ui_panel_asset::UiPanelAsset;
+use bevy::prelude::*;
 
 pub fn plugin(app: &mut App) {
     app.init_resource::<ResourceHandles>()
