@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use common::{constants::TILE_SIZE, functions::world_to_tile};
-use tasks::{Task, TaskQueue, check_tasks};
+use tasks::{Task, TaskEvent, TaskQueue};
 use work_order_queue::WorkOrderQueue;
 
 mod tasks;
@@ -8,15 +8,9 @@ pub mod work_order_queue;
 
 pub fn plugin(app: &mut App) {
     app.register_type::<WorkOrder>()
-        .register_type::<TaskQueue>()
-        .register_type::<Task>()
         .register_type::<CurrentWorkOrder>()
-        .add_plugins(work_order_queue::plugin)
-        .add_systems(
-            Update,
-            (fetch_new_work_order, check_work_orders, check_tasks),
-        )
-        .add_systems(Update, tasks::walk_to::handle_walk_to);
+        .add_plugins((tasks::plugin, work_order_queue::plugin))
+        .add_systems(Update, (fetch_new_work_order, check_work_orders));
 }
 
 #[derive(Clone, Component, Copy, PartialEq, Reflect)]
@@ -56,7 +50,7 @@ fn fetch_new_work_order(
     query: Query<Entity, (With<Worker>, Without<CurrentWorkOrder>)>,
     mut commands: Commands,
 ) {
-    for entity in &query {
+    for worker_entity in &query {
         if let Some((work_order_entity, work_order)) = work_order_queue.pending.pop_front() {
             info!(
                 "dwarf is taking work order for entity {}",
@@ -66,8 +60,9 @@ fn fetch_new_work_order(
                 .in_progress
                 .push_back((work_order_entity, work_order));
             commands
-                .entity(entity)
-                .insert(CurrentWorkOrder(work_order_entity));
+                .entity(worker_entity)
+                .insert(CurrentWorkOrder(work_order_entity))
+                .observe(on_task_finished);
         }
     }
 }
@@ -80,5 +75,21 @@ fn check_work_orders(
     for (entity, worker) in &workers {
         let work_order = work_orders.get(worker.0).unwrap();
         commands.entity(entity).insert(work_order.realise());
+    }
+}
+
+fn on_task_finished(trigger: Trigger<TaskEvent>, workers: Query<&CurrentWorkOrder>, mut commands: Commands) {
+    match trigger.event() {
+        TaskEvent::Completed => {
+            // on task completed:
+            // remove CurrentWorkOrder from worker
+            commands.entity(trigger.target()).remove::<CurrentWorkOrder>();
+            // despawn WorkOrder
+            if let Ok(current_work_order) = workers.get(trigger.target()) {
+                commands.entity(current_work_order.0).despawn();
+            }
+            // despawn the observer
+            commands.entity(trigger.observer()).despawn();
+        },
     }
 }

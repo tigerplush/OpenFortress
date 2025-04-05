@@ -24,6 +24,7 @@ pub struct WorldMap {
     #[reflect(ignore)]
     noise: OpenSimplex,
     entity: Entity,
+    block_states: HashMap<IVec3, f32>,
 }
 
 impl WorldMap {
@@ -32,6 +33,7 @@ impl WorldMap {
             chunks: HashMap::default(),
             noise: OpenSimplex::new(0),
             entity,
+            block_states: HashMap::default(),
         }
     }
 
@@ -55,6 +57,16 @@ impl WorldMap {
                 TileType::None => None,
                 _ => Some(chunk.blocks[index]),
             })
+    }
+
+    /// Adds damage to a block. Returns true, if the block is destroyed, false otherwise.
+    pub fn damage_block(&mut self, coordinates: IVec3, damage: f32) -> bool {
+        let remaining_health = self
+            .block_states
+            .entry(coordinates)
+            .and_modify(|block| *block -= damage)
+            .or_insert(1.0);
+        *remaining_health < 0.0
     }
 }
 

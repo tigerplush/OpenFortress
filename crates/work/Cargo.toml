@@ -6,4 +6,5 @@ edition = "2024"
 [dependencies]
 bevy = { workspace = true }
 common = { path = "../common" }
+map_generation = { path = "../map_generation" }
 pathfinding = { path = "../pathfinding" }

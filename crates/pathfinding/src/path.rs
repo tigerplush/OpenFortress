@@ -28,7 +28,7 @@ impl Path {
     }
 
     fn complete(&self) -> bool {
-        return self.current_index >= self.set.len()
+        self.current_index >= self.set.len()
     }
 
     fn current_position(&self) -> Vec3 {
@@ -41,7 +41,11 @@ impl Path {
     }
 }
 
-pub(crate) fn tick_path(time: Res<Time>, mut query: Query<(Entity, &mut Path)>, mut commands: Commands) {
+pub(crate) fn tick_path(
+    time: Res<Time>,
+    mut query: Query<(Entity, &mut Path)>,
+    mut commands: Commands,
+) {
     for (entity, mut path) in &mut query {
         path.tick(time.delta());
         if path.complete() {
