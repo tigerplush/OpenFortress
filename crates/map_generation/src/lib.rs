@@ -1,10 +1,12 @@
 use assets::tileset_asset::BlockType;
 use bevy::{platform_support::collections::HashMap, prelude::*};
-use chunk::{Chunk, ChunkVisualisation, ToChunkAndBlock, to_index};
+use chunk::{Chunk, ToChunkAndBlock, to_index};
+use chunk_visualisation::ChunkVisualisation;
 use common::states::AppState;
 use noise::OpenSimplex;
 
 mod chunk;
+pub mod chunk_visualisation;
 
 pub fn plugin(app: &mut App) {
     app.register_type::<WorldMap>()
@@ -12,9 +14,15 @@ pub fn plugin(app: &mut App) {
         .add_systems(OnEnter(AppState::MainGame), spawn_world)
         .add_systems(
             Update,
-            (chunk::request, chunk::update, chunk::delete).run_if(in_state(AppState::MainGame)),
+            (
+                chunk_visualisation::request,
+                chunk_visualisation::update,
+                chunk_visualisation::delete,
+            )
+                .run_if(in_state(AppState::MainGame)),
         )
-        .add_observer(chunk::on_add_visualisation);
+        .add_observer(chunk_visualisation::on_insert)
+        .add_observer(chunk_visualisation::on_chunk_visualisation_event);
 }
 
 #[derive(Resource, Reflect)]
@@ -35,10 +43,6 @@ impl WorldMap {
             entity,
             block_states: HashMap::default(),
         }
-    }
-
-    fn get_chunk(&self, coordinates: &IVec3) -> Option<&Chunk> {
-        self.chunks.get(coordinates)
     }
 
     /// Returns a chunk for a given coordinate. Will create a new one, if none has been created thus far.

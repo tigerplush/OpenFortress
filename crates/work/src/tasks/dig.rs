@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use map_generation::WorldMap;
+use map_generation::{WorldMap, chunk_visualisation::ChunkVisualisationEvent};
 
 use super::Task;
 
@@ -16,6 +16,7 @@ pub(crate) fn handle(
     for (entity, dig) in &query {
         if world_map.damage_block(dig.0, time.delta_secs()) {
             commands.entity(entity).remove::<Dig>().remove::<Task>();
+            commands.trigger(ChunkVisualisationEvent::SetDirty(dig.0));
         }
     }
 }
