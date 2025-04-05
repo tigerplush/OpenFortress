@@ -1,6 +1,6 @@
 use assets::icon_asset::IconAsset;
 use bevy::{prelude::*, window::PrimaryWindow};
-use camera::CameraLayer;
+use camera::{CameraLayer, CameraPlugin};
 use common::{constants::TILE_SIZE, functions::world_to_tile, states::AppState};
 use dwarf::Dwarf;
 use leafwing_input_manager::{
@@ -13,7 +13,7 @@ use work::{WorkOrder, work_order_queue::WorkOrderQueue};
 
 pub fn plugin(app: &mut App) {
     app.add_plugins((
-        camera::plugin,
+        CameraPlugin::default(),
         dwarf::plugin,
         map_generation::plugin,
         pathfinding::plugin,
