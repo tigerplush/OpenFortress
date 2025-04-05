@@ -59,7 +59,9 @@ pub(crate) fn on_chunk_visualisation_event(
             .iter()
             .find(|(_, chunk_vis)| chunk_vis.0 == chunk_coordinates)
         {
-            commands.entity(entity).insert(IsDirty);
+            commands
+                .entity(entity)
+                .insert(ChunkVisualisation(chunk_coordinates));
         }
     }
 }
@@ -68,9 +70,6 @@ pub(crate) fn on_chunk_visualisation_event(
 pub enum ChunkVisualisationEvent {
     SetDirty(IVec3),
 }
-
-#[derive(Component)]
-pub(crate) struct IsDirty;
 
 #[derive(Component, Reflect)]
 #[reflect(Component)]
@@ -116,18 +115,6 @@ pub(crate) fn request(
             // if not, spawn them
             commands.spawn(ChunkVisualisation::bundle(coordinates));
         }
-    }
-}
-
-pub(crate) fn update(
-    chunks: Query<(Entity, &ChunkVisualisation), With<IsDirty>>,
-    mut commands: Commands,
-) {
-    for (entity, chunk_vis) in &chunks {
-        commands
-            .entity(entity)
-            .insert(ChunkVisualisation(chunk_vis.0))
-            .remove::<IsDirty>();
     }
 }
 

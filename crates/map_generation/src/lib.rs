@@ -14,11 +14,7 @@ pub fn plugin(app: &mut App) {
         .add_systems(OnEnter(AppState::MainGame), spawn_world)
         .add_systems(
             Update,
-            (
-                chunk_visualisation::request,
-                chunk_visualisation::update,
-                chunk_visualisation::delete,
-            )
+            (chunk_visualisation::request, chunk_visualisation::delete)
                 .run_if(in_state(AppState::MainGame)),
         )
         .add_observer(chunk_visualisation::on_insert)
