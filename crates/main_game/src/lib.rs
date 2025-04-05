@@ -1,7 +1,7 @@
 use assets::icon_asset::IconAsset;
 use bevy::{prelude::*, window::PrimaryWindow};
 use camera::CameraLayer;
-use common::{functions::world_to_tile, states::AppState};
+use common::{constants::TILE_SIZE, functions::world_to_tile, states::AppState};
 use dwarf::Dwarf;
 use leafwing_input_manager::{
     Actionlike, InputManagerBundle,
@@ -27,9 +27,9 @@ pub fn plugin(app: &mut App) {
 }
 
 fn setup(mut commands: Commands) {
-    // for _ in 0..7 {
-    commands.spawn(Dwarf);
-    // }
+    for i in 0..7 {
+        commands.spawn((Dwarf, Transform::from_xyz(i as f32 * TILE_SIZE.x, 0.0, 0.0)));
+    }
 }
 
 #[derive(Actionlike, Clone, Debug, Eq, Hash, PartialEq, Reflect)]
