@@ -1,9 +1,9 @@
-use std::ops::{Range, RangeInclusive};
 use assets::tileset_asset::{BlockType, TilesetAsset};
 use bevy::prelude::*;
 use camera::CameraLayer;
 use common::{constants::TILE_SIZE, traits::AsVec2};
 use noise::{NoiseFn, OpenSimplex};
+use std::ops::{Range, RangeInclusive};
 
 use crate::WorldMap;
 

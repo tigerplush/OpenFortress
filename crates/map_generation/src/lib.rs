@@ -1,6 +1,6 @@
 use assets::tileset_asset::BlockType;
 use bevy::{platform_support::collections::HashMap, prelude::*};
-use chunk::{to_index, Chunk, ChunkVisualisation, ToChunkAndBlock};
+use chunk::{Chunk, ChunkVisualisation, ToChunkAndBlock, to_index};
 use common::states::AppState;
 use noise::OpenSimplex;
 
