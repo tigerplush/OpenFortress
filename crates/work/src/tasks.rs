@@ -11,7 +11,14 @@ pub(crate) fn plugin(app: &mut App) {
         .register_type::<Task>()
         .register_type::<Dig>()
         .register_type::<WalkTo>()
-        .add_systems(Update, (check_tasks, dig::handle.run_if(resource_exists::<WorldMap>), walk_to::handle));
+        .add_systems(
+            Update,
+            (
+                check_tasks,
+                dig::handle.run_if(resource_exists::<WorldMap>),
+                walk_to::handle,
+            ),
+        );
 }
 
 /// A task queue
@@ -65,7 +72,10 @@ pub(crate) fn check_tasks(
             };
             commands.entity(entity).insert(task);
         } else {
-            commands.entity(entity).remove::<TaskQueue>().trigger(TaskEvent::Completed);
+            commands
+                .entity(entity)
+                .remove::<TaskQueue>()
+                .trigger(TaskEvent::Completed);
         }
     }
 }

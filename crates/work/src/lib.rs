@@ -78,18 +78,24 @@ fn check_work_orders(
     }
 }
 
-fn on_task_finished(trigger: Trigger<TaskEvent>, workers: Query<&CurrentWorkOrder>, mut commands: Commands) {
+fn on_task_finished(
+    trigger: Trigger<TaskEvent>,
+    workers: Query<&CurrentWorkOrder>,
+    mut commands: Commands,
+) {
     match trigger.event() {
         TaskEvent::Completed => {
             // on task completed:
             // remove CurrentWorkOrder from worker
-            commands.entity(trigger.target()).remove::<CurrentWorkOrder>();
+            commands
+                .entity(trigger.target())
+                .remove::<CurrentWorkOrder>();
             // despawn WorkOrder
             if let Ok(current_work_order) = workers.get(trigger.target()) {
                 commands.entity(current_work_order.0).despawn();
             }
             // despawn the observer
             commands.entity(trigger.observer()).despawn();
-        },
+        }
     }
 }
