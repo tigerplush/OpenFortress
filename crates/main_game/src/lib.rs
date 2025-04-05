@@ -68,7 +68,7 @@ fn handle_brush(
         {
             let tile_coordinates = world_to_tile(world_position.extend(layer.0 as f32));
             if !work_order_queue.contains(&WorkOrder::Dig(tile_coordinates))
-                && world_map.get_tile(tile_coordinates).is_some()
+                && world_map.get_block(tile_coordinates).is_some()
             {
                 commands.spawn(WorkOrder::dig(world_position.extend(layer.0 as f32)));
             }

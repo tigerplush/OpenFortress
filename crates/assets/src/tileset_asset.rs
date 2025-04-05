@@ -10,7 +10,7 @@ pub struct TilesetAsset {
 }
 
 #[derive(Clone, Copy, PartialEq, Reflect)]
-pub enum TileType {
+pub enum BlockType {
     Grass,
     Water,
     Lava,
@@ -20,29 +20,29 @@ pub enum TileType {
     None,
 }
 
-impl From<usize> for TileType {
+impl From<usize> for BlockType {
     fn from(value: usize) -> Self {
         match value {
-            GRASS => TileType::Grass,
-            WATER => TileType::Water,
-            LAVA => TileType::Lava,
-            BRIGHT_GRASS => TileType::BrightGrass,
-            DIRT => TileType::Dirt,
-            FIELD => TileType::Field,
-            _ => TileType::None,
+            GRASS => BlockType::Grass,
+            WATER => BlockType::Water,
+            LAVA => BlockType::Lava,
+            BRIGHT_GRASS => BlockType::BrightGrass,
+            DIRT => BlockType::Dirt,
+            FIELD => BlockType::Field,
+            _ => BlockType::None,
         }
     }
 }
 
-impl From<TileType> for usize {
-    fn from(value: TileType) -> Self {
+impl From<BlockType> for usize {
+    fn from(value: BlockType) -> Self {
         match value {
-            TileType::Grass => GRASS,
-            TileType::Water => WATER,
-            TileType::Lava => LAVA,
-            TileType::BrightGrass => BRIGHT_GRASS,
-            TileType::Dirt => DIRT,
-            TileType::Field => FIELD,
+            BlockType::Grass => GRASS,
+            BlockType::Water => WATER,
+            BlockType::Lava => LAVA,
+            BlockType::BrightGrass => BRIGHT_GRASS,
+            BlockType::Dirt => DIRT,
+            BlockType::Field => FIELD,
             _ => NONE,
         }
     }
