@@ -1,7 +1,11 @@
 use assets::tileset_asset::{BlockType, TilesetAsset};
 use bevy::prelude::*;
 use camera::CameraLayer;
-use common::{constants::TILE_SIZE, traits::AsVec2};
+use common::{
+    constants::TILE_SIZE,
+    traits::AsVec2,
+    types::{ChunkCoordinates, WorldCoordinates},
+};
 use std::ops::{Range, RangeInclusive};
 
 use crate::{ToChunkAndBlock, WorldMap, chunk::CHUNK_SIZE, to_index};
@@ -22,17 +26,11 @@ pub(crate) fn on_insert(
                 for y in 0..CHUNK_SIZE.y {
                     for z in (0..CHUNK_SIZE.z).rev() {
                         let index = to_index((x, y, z));
-                        if chunk.blocks[index] != BlockType::None {
+                        let current_block = chunk.blocks[index];
+                        if current_block != BlockType::None {
                             parent.spawn((
                                 Name::new(format!("Block [{}, {}, {}]", x, y, z)),
-                                Sprite {
-                                    image: tileset.image.clone_weak(),
-                                    texture_atlas: Some(TextureAtlas {
-                                        layout: tileset.layout_handle.clone_weak(),
-                                        index: chunk.blocks[index].into(),
-                                    }),
-                                    ..default()
-                                },
+                                current_block.sprite(&tileset, 0),
                                 Transform::from_translation(
                                     ((x, y).as_vec2() * TILE_SIZE).extend(-1.0),
                                 ),
@@ -54,7 +52,7 @@ pub(crate) fn on_chunk_visualisation_event(
     mut commands: Commands,
 ) {
     if let ChunkVisualisationEvent::SetDirty(coordinates) = trigger.event() {
-        let (chunk_coordinates, _) = coordinates.to_chunk_and_block();
+        let (chunk_coordinates, _) = coordinates.0.to_chunk_and_block();
         if let Some((entity, _)) = query
             .iter()
             .find(|(_, chunk_vis)| chunk_vis.0 == chunk_coordinates)
@@ -68,22 +66,22 @@ pub(crate) fn on_chunk_visualisation_event(
 
 #[derive(Event)]
 pub enum ChunkVisualisationEvent {
-    SetDirty(IVec3),
+    SetDirty(WorldCoordinates),
 }
 
 #[derive(Component, Reflect)]
 #[reflect(Component)]
-pub(crate) struct ChunkVisualisation(IVec3);
+pub(crate) struct ChunkVisualisation(ChunkCoordinates);
 
 impl ChunkVisualisation {
-    fn bundle(coordinates: IVec3) -> impl Bundle {
+    fn bundle(coordinates: ChunkCoordinates) -> impl Bundle {
         (
-            Name::new(format!("Chunk {}", coordinates)),
+            Name::new(format!("Chunk {}", coordinates.0)),
             ChunkVisualisation(coordinates),
             Transform::from_xyz(
-                coordinates.x as f32 * CHUNK_SIZE.x as f32 * TILE_SIZE.x,
-                coordinates.y as f32 * CHUNK_SIZE.y as f32 * TILE_SIZE.y,
-                coordinates.z as f32,
+                coordinates.0.x as f32 * CHUNK_SIZE.x as f32 * TILE_SIZE.x,
+                coordinates.0.y as f32 * CHUNK_SIZE.y as f32 * TILE_SIZE.y,
+                coordinates.0.z as f32,
             ),
             Visibility::Inherited,
         )
@@ -105,7 +103,7 @@ pub(crate) fn request(
     for x in x_range {
         for y in y_range.clone() {
             for z in z_range.clone() {
-                requested_chunks.push(IVec3::new(x, y, z));
+                requested_chunks.push(ChunkCoordinates(IVec3::new(x, y, z)));
             }
         }
     }
@@ -130,9 +128,9 @@ pub(crate) fn delete(
     };
     for (entity, chunk) in &chunks {
         let coordinates = chunk.0;
-        if !x_range.contains(&coordinates.x)
-            || !y_range.contains(&coordinates.y)
-            || !z_range.contains(&coordinates.z)
+        if !x_range.contains(&coordinates.0.x)
+            || !y_range.contains(&coordinates.0.y)
+            || !z_range.contains(&coordinates.0.z)
         {
             commands.entity(entity).despawn();
         }

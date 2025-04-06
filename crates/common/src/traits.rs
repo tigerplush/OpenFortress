@@ -33,7 +33,7 @@ impl AsVec2 for (u32, u32) {
 
 pub trait Neighbors<T> {
     /// Returns all neighbors with their squared cost.
-    /// 
+    ///
     /// The order is:
     /// ```
     /// NW, N, NE,

@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use common::types::WorldCoordinates;
 use dig::Dig;
 use map_generation::WorldMap;
 use walk_to::WalkTo;
@@ -41,12 +42,12 @@ pub(crate) enum Task {
 }
 
 impl Task {
-    pub(crate) fn dig(pos: &IVec3) -> Task {
-        Task::Dig(Dig(*pos))
+    pub(crate) fn dig(pos: WorldCoordinates) -> Task {
+        Task::Dig(Dig(pos))
     }
 
-    pub(crate) fn walk_to(pos: &IVec3) -> Task {
-        Task::WalkTo(WalkTo(*pos))
+    pub(crate) fn walk_to(pos: WorldCoordinates) -> Task {
+        Task::WalkTo(WalkTo(pos))
     }
 }
 

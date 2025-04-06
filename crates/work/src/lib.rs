@@ -1,5 +1,7 @@
 use bevy::prelude::*;
-use common::{constants::TILE_SIZE, functions::world_to_tile};
+use common::{
+    constants::TILE_SIZE, functions::world_position_to_world_coordinates, types::WorldCoordinates,
+};
 use tasks::{Task, TaskEvent, TaskQueue};
 use work_order_queue::WorkOrderQueue;
 
@@ -15,24 +17,24 @@ pub fn plugin(app: &mut App) {
 
 #[derive(Clone, Component, Copy, PartialEq, Reflect)]
 pub enum WorkOrder {
-    Dig(IVec3),
+    Dig(WorldCoordinates),
 }
 
 impl WorkOrder {
     pub fn dig(world_position: Vec3) -> impl Bundle {
-        let tile_coordinates = world_to_tile(world_position);
+        let world_coordinates = world_position_to_world_coordinates(world_position);
         (
-            Name::new(format!("WorkOrder - Dig {}", tile_coordinates)),
+            Name::new(format!("WorkOrder - Dig {}", world_coordinates.0)),
             Transform::from_translation(
                 (world_position / TILE_SIZE.extend(1.0)).round() * TILE_SIZE.extend(1.0),
             ),
-            WorkOrder::Dig(tile_coordinates),
+            WorkOrder::Dig(world_coordinates),
         )
     }
 
     pub fn realise(&self) -> impl Bundle {
         match self {
-            WorkOrder::Dig(pos) => TaskQueue::new(&[Task::dig(pos), Task::walk_to(pos)]),
+            WorkOrder::Dig(pos) => TaskQueue::new(&[Task::dig(*pos), Task::walk_to(*pos)]),
         }
     }
 }

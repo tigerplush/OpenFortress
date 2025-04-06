@@ -1,7 +1,9 @@
 use std::cmp::Reverse;
 
 use bevy::{platform_support::collections::HashMap, prelude::*};
-use common::{functions::tile_to_world, traits::Neighbors};
+use common::{
+    functions::world_coordinates_to_world_position, traits::Neighbors, types::WorldCoordinates,
+};
 use map_generation::WorldMap;
 use path::Path;
 use priority_queue::PriorityQueue;
@@ -16,6 +18,8 @@ pub fn plugin(app: &mut App) {
 }
 
 /// Attach this to calculate and ultimately follow a path.
+///
+/// Internally, Pathfinder uses IVec3 but these represent WorldCoordinates.
 #[derive(Component, Reflect)]
 #[reflect(Component)]
 pub struct Pathfinder {
@@ -28,14 +32,14 @@ pub struct Pathfinder {
 }
 
 impl Pathfinder {
-    pub fn new(start: IVec3, target: IVec3) -> Self {
-        let frontier = PriorityQueue::from(vec![(start, Reverse(0))]);
+    pub fn new(start: WorldCoordinates, target: WorldCoordinates) -> Self {
+        let frontier = PriorityQueue::from(vec![(start.0, Reverse(0))]);
         let mut came_from = HashMap::default();
-        came_from.insert(start, None);
+        came_from.insert(start.0, None);
         let mut cost_so_far = HashMap::default();
-        cost_so_far.insert(start, 0);
+        cost_so_far.insert(start.0, 0);
         Pathfinder {
-            target,
+            target: target.0,
             frontier,
             came_from,
             cost_so_far,
@@ -70,10 +74,12 @@ impl Pathfinder {
     fn to_path(&self) -> Vec<Vec3> {
         let mut points = vec![];
         let mut next = self.target;
-        points.push(tile_to_world(next));
+        points.push(world_coordinates_to_world_position(WorldCoordinates(next)));
         while let Some(point_option) = self.came_from.get(&next) {
             if let Some(point) = point_option {
-                points.push(tile_to_world(*point));
+                points.push(world_coordinates_to_world_position(WorldCoordinates(
+                    *point,
+                )));
                 next = *point;
             } else {
                 break;
