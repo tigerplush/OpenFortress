@@ -1,7 +1,7 @@
 use std::cmp::Reverse;
 
 use bevy::{platform_support::collections::HashMap, prelude::*};
-use common::functions::tile_to_world;
+use common::{functions::tile_to_world, traits::Neighbors};
 use map_generation::WorldMap;
 use path::Path;
 use priority_queue::PriorityQueue;
@@ -111,26 +111,5 @@ fn calculate_path(
                 commands.entity(entity).remove::<Pathfinder>().insert(path);
             }
         }
-    }
-}
-
-trait Neighbors<T> {
-    /// Returns all neighbors with their squared cost.
-    fn neighbors(&self) -> Vec<(T, u32)>;
-}
-
-#[rustfmt::skip]
-impl Neighbors<IVec3> for IVec3 {
-    fn neighbors(&self) -> Vec<(IVec3, u32)> {
-        vec![
-            (self + IVec3::new( 1,  0,  0), 1),
-            (self + IVec3::new( 1,  1,  0), 2),
-            (self + IVec3::new( 0,  1,  0), 1),
-            (self + IVec3::new(-1,  1,  0), 2),
-            (self + IVec3::new(-1,  0,  0), 1),
-            (self + IVec3::new(-1, -1,  0), 2),
-            (self + IVec3::new( 0, -1,  0), 1),
-            (self + IVec3::new( 1, -1,  0), 2),
-        ]
     }
 }
