@@ -44,7 +44,7 @@ impl Chunk {
     }
 
     pub(crate) fn remove_block(&mut self, block_coordinates: BlockCoordinates) {
-        let index = to_index(block_coordinates.0.into());
+        let index = to_index(block_coordinates);
         self.blocks[index] = BlockType::None;
     }
 }
@@ -63,10 +63,11 @@ impl ToChunkAndBlock for WorldCoordinates {
 }
 
 /// returns the index of a tile in it's block array by coordinates
-pub(crate) fn to_index(block_coordinates: (u32, u32, u32)) -> usize {
-    (block_coordinates.0 * CHUNK_SIZE.y * CHUNK_SIZE.z
-        + block_coordinates.1 * CHUNK_SIZE.z
-        + block_coordinates.2) as usize
+pub(crate) fn to_index(coordinates: impl Into<BlockCoordinates>) -> usize {
+    let block_coordinates: BlockCoordinates = coordinates.into();
+    (block_coordinates.0.x * CHUNK_SIZE.y * CHUNK_SIZE.z
+        + block_coordinates.0.y * CHUNK_SIZE.z
+        + block_coordinates.0.z) as usize
 }
 
 #[test]

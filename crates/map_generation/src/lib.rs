@@ -53,7 +53,7 @@ impl WorldMap {
 
     pub fn get_block(&self, coordinates: WorldCoordinates) -> Option<BlockType> {
         let (chunk_coordinates, block_coordinates) = coordinates.to_chunk_and_block();
-        let index = to_index(block_coordinates.0.into());
+        let index = to_index(block_coordinates);
         self.chunks
             .get(&chunk_coordinates.0)
             .and_then(|chunk| match chunk.blocks[index] {
