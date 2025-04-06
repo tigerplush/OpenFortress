@@ -2,7 +2,10 @@ use assets::tileset_asset::BlockType;
 use bevy::{platform_support::collections::HashMap, prelude::*};
 use chunk::{Chunk, ToChunkAndBlock, to_index};
 use chunk_visualisation::ChunkVisualisation;
-use common::states::AppState;
+use common::{
+    states::AppState,
+    types::{ChunkCoordinates, WorldCoordinates},
+};
 use noise::OpenSimplex;
 
 mod chunk;
@@ -42,17 +45,17 @@ impl WorldMap {
     }
 
     /// Returns a chunk for a given coordinate. Will create a new one, if none has been created thus far.
-    fn get_or_insert_chunk_mut(&mut self, coordinates: IVec3) -> &mut Chunk {
+    fn get_or_insert_chunk_mut(&mut self, coordinates: ChunkCoordinates) -> &mut Chunk {
         self.chunks
-            .entry(coordinates)
-            .or_insert(Chunk::new(coordinates, self.noise))
+            .entry(coordinates.0)
+            .or_insert(Chunk::new(coordinates.0, self.noise))
     }
 
-    pub fn get_block(&self, coordinates: IVec3) -> Option<BlockType> {
-        let (chunk_coordinates, block_coordinates) = coordinates.to_chunk_and_block();
-        let index = to_index(block_coordinates.into());
+    pub fn get_block(&self, coordinates: WorldCoordinates) -> Option<BlockType> {
+        let (chunk_coordinates, block_coordinates) = coordinates.0.to_chunk_and_block();
+        let index = to_index(block_coordinates.0.into());
         self.chunks
-            .get(&chunk_coordinates)
+            .get(&chunk_coordinates.0)
             .and_then(|chunk| match chunk.blocks[index] {
                 BlockType::None => None,
                 _ => Some(chunk.blocks[index]),
@@ -60,16 +63,16 @@ impl WorldMap {
     }
 
     /// Adds damage to a block. Returns true, if the block is destroyed, false otherwise.
-    pub fn damage_block(&mut self, coordinates: IVec3, damage: f32) -> bool {
+    pub fn damage_block(&mut self, coordinates: WorldCoordinates, damage: f32) -> bool {
         let remaining_health = {
             *self
                 .block_states
-                .entry(coordinates)
+                .entry(coordinates.0)
                 .and_modify(|block| *block -= damage)
                 .or_insert(1.0)
         };
         if remaining_health < 0.0 {
-            let (chunk_coordinates, block_coordinates) = coordinates.to_chunk_and_block();
+            let (chunk_coordinates, block_coordinates) = coordinates.0.to_chunk_and_block();
             self.get_or_insert_chunk_mut(chunk_coordinates)
                 .remove_block(block_coordinates);
         }

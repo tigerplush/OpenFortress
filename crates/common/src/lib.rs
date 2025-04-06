@@ -6,6 +6,7 @@ pub mod functions;
 pub mod resources;
 pub mod states;
 pub mod traits;
+pub mod types;
 use components::image_node_fade::ImageNodeFade;
 use states::AppState;
 

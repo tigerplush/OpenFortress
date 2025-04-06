@@ -1,11 +1,12 @@
 use bevy::prelude::*;
+use common::types::WorldCoordinates;
 use map_generation::{WorldMap, chunk_visualisation::ChunkVisualisationEvent};
 
 use super::Task;
 
 #[derive(Clone, Component, Copy, Debug, Reflect)]
 #[reflect(Component)]
-pub(crate) struct Dig(pub(crate) IVec3);
+pub(crate) struct Dig(pub(crate) WorldCoordinates);
 
 pub(crate) fn handle(
     time: Res<Time>,

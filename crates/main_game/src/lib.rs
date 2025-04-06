@@ -1,7 +1,9 @@
 use assets::icon_asset::IconAsset;
 use bevy::{prelude::*, window::PrimaryWindow};
 use camera::{CameraLayer, CameraPlugin};
-use common::{constants::TILE_SIZE, functions::world_to_tile, states::AppState};
+use common::{
+    constants::TILE_SIZE, functions::world_position_to_world_coordinates, states::AppState,
+};
 use dwarf::Dwarf;
 use leafwing_input_manager::{
     Actionlike, InputManagerBundle,
@@ -66,9 +68,10 @@ fn handle_brush(
             .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor).ok())
             .map(|ray| ray.origin.truncate())
         {
-            let tile_coordinates = world_to_tile(world_position.extend(layer.0 as f32));
-            if !work_order_queue.contains(&WorkOrder::Dig(tile_coordinates))
-                && world_map.get_block(tile_coordinates).is_some()
+            let world_coordinates =
+                world_position_to_world_coordinates(world_position.extend(layer.0 as f32));
+            if !work_order_queue.contains(&WorkOrder::Dig(world_coordinates))
+                && world_map.get_block(world_coordinates).is_some()
             {
                 commands.spawn(WorkOrder::dig(world_position.extend(layer.0 as f32)));
             }
