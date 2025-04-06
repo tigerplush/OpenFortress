@@ -52,7 +52,7 @@ impl WorldMap {
     }
 
     pub fn get_block(&self, coordinates: WorldCoordinates) -> Option<BlockType> {
-        let (chunk_coordinates, block_coordinates) = coordinates.0.to_chunk_and_block();
+        let (chunk_coordinates, block_coordinates) = coordinates.to_chunk_and_block();
         let index = to_index(block_coordinates.0.into());
         self.chunks
             .get(&chunk_coordinates.0)
@@ -72,7 +72,7 @@ impl WorldMap {
                 .or_insert(1.0)
         };
         if remaining_health < 0.0 {
-            let (chunk_coordinates, block_coordinates) = coordinates.0.to_chunk_and_block();
+            let (chunk_coordinates, block_coordinates) = coordinates.to_chunk_and_block();
             self.get_or_insert_chunk_mut(chunk_coordinates)
                 .remove_block(block_coordinates);
         }
