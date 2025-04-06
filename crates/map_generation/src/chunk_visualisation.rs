@@ -52,7 +52,7 @@ pub(crate) fn on_chunk_visualisation_event(
     mut commands: Commands,
 ) {
     if let ChunkVisualisationEvent::SetDirty(coordinates) = trigger.event() {
-        let (chunk_coordinates, _) = coordinates.0.to_chunk_and_block();
+        let (chunk_coordinates, _) = coordinates.to_chunk_and_block();
         if let Some((entity, _)) = query
             .iter()
             .find(|(_, chunk_vis)| chunk_vis.0 == chunk_coordinates)

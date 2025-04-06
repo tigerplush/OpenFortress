@@ -1,6 +1,6 @@
 use assets::tileset_asset::BlockType;
 use bevy::prelude::*;
-use common::types::{BlockCoordinates, ChunkCoordinates};
+use common::types::{BlockCoordinates, ChunkCoordinates, WorldCoordinates};
 use noise::{NoiseFn, OpenSimplex};
 
 pub(crate) const CHUNK_SIZE: UVec3 = UVec3::new(16, 16, 1);
@@ -53,11 +53,11 @@ pub(crate) trait ToChunkAndBlock {
     fn to_chunk_and_block(&self) -> (ChunkCoordinates, BlockCoordinates);
 }
 
-impl ToChunkAndBlock for IVec3 {
+impl ToChunkAndBlock for WorldCoordinates {
     fn to_chunk_and_block(&self) -> (ChunkCoordinates, BlockCoordinates) {
         (
-            ChunkCoordinates(self.div_euclid(CHUNK_SIZE.as_ivec3())),
-            BlockCoordinates(self.rem_euclid(CHUNK_SIZE.as_ivec3()).as_uvec3()),
+            ChunkCoordinates(self.0.div_euclid(CHUNK_SIZE.as_ivec3())),
+            BlockCoordinates(self.0.rem_euclid(CHUNK_SIZE.as_ivec3()).as_uvec3()),
         )
     }
 }
