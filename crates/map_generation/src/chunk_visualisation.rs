@@ -1,14 +1,18 @@
-use assets::tileset_asset::{BlockType, TilesetAsset};
+use assets::tileset_asset::TilesetAsset;
 use bevy::prelude::*;
 use camera::CameraLayer;
 use common::{
     constants::TILE_SIZE,
-    traits::AsVec2,
+    traits::{AsVec2, Neighbors},
     types::{ChunkCoordinates, WorldCoordinates},
 };
 use std::ops::{Range, RangeInclusive};
 
-use crate::{ToChunkAndBlock, WorldMap, chunk::CHUNK_SIZE, to_index};
+use crate::{
+    ToChunkAndBlock, WorldMap,
+    chunk::{CHUNK_SIZE, to_world_coordinates},
+};
+
 pub(crate) fn on_insert(
     trigger: Trigger<OnInsert, ChunkVisualisation>,
     mut world_map: ResMut<WorldMap>,
@@ -17,7 +21,7 @@ pub(crate) fn on_insert(
     mut commands: Commands,
 ) {
     let chunk_visualisation = chunks.get(trigger.target()).unwrap();
-    let chunk = world_map.get_or_insert_chunk_mut(chunk_visualisation.0);
+    world_map.get_chunk(chunk_visualisation.0);
     commands
         .entity(trigger.target())
         .despawn_related::<Children>()
@@ -25,17 +29,30 @@ pub(crate) fn on_insert(
             for x in 0..CHUNK_SIZE.x {
                 for y in 0..CHUNK_SIZE.y {
                     for z in (0..CHUNK_SIZE.z).rev() {
-                        let index = to_index((x, y, z));
-                        let current_block = chunk.blocks[index];
-                        if current_block != BlockType::None {
+                        // fetch world coordinates for current block
+                        let current_world_coordinates =
+                            to_world_coordinates(chunk_visualisation.0, (x, y, z));
+                        if let Some(current_block) = world_map.get_block(current_world_coordinates)
+                        {
+                            // init flags
+                            let mut flags = 0;
+                            //iterate over every neighbor
+                            for (index, (neighbor, _)) in
+                                current_world_coordinates.neighbors().iter().enumerate()
+                            {
+                                // fetch the block
+                                // check if its solid
+                                let solid: u8 = world_map.solidness(*neighbor).into();
+                                // add its state to the flag
+                                flags |= solid << index;
+                            }
                             parent.spawn((
                                 Name::new(format!("Block [{}, {}, {}]", x, y, z)),
-                                current_block.sprite(&tileset, 0),
+                                current_block.sprite(&tileset, flags),
                                 Transform::from_translation(
                                     ((x, y).as_vec2() * TILE_SIZE).extend(-1.0),
                                 ),
                             ));
-                            break;
                         }
                     }
                 }
