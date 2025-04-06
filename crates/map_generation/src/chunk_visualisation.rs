@@ -30,6 +30,7 @@ pub(crate) fn on_insert(
                 for y in 0..CHUNK_SIZE.y {
                     for z in (0..CHUNK_SIZE.z).rev() {
                         // fetch world coordinates for current block
+                        todo!("add layer underneath current layer");
                         let current_world_coordinates =
                             to_world_coordinates(chunk_visualisation.0, (x, y, z));
                         if let Some(current_block) = world_map.get_block(current_world_coordinates)
@@ -70,6 +71,7 @@ pub(crate) fn on_chunk_visualisation_event(
 ) {
     if let ChunkVisualisationEvent::SetDirty(coordinates) = trigger.event() {
         let (chunk_coordinates, _) = coordinates.to_chunk_and_block();
+        todo!("check surrounding chunks");
         if let Some((entity, _)) = query
             .iter()
             .find(|(_, chunk_vis)| chunk_vis.0 == chunk_coordinates)
@@ -184,6 +186,7 @@ fn calculate_visible_chunk_ranges(
     let max_chunk_x = (max_x / chunk_size_x).ceil() as i32;
     let min_chunk_y = (min_y / chunk_size_y).floor() as i32;
     let max_chunk_y = (max_y / chunk_size_y).ceil() as i32;
+
     (
         min_chunk_x..max_chunk_x,
         min_chunk_y..max_chunk_y,
