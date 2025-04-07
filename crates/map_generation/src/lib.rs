@@ -44,11 +44,15 @@ impl WorldMap {
         }
     }
 
+    fn get_chunk(&mut self, coordinates: ChunkCoordinates) -> &Chunk {
+        self.get_or_insert_chunk_mut(coordinates)
+    }
+
     /// Returns a chunk for a given coordinate. Will create a new one, if none has been created thus far.
     fn get_or_insert_chunk_mut(&mut self, coordinates: ChunkCoordinates) -> &mut Chunk {
         self.chunks
             .entry(coordinates.0)
-            .or_insert(Chunk::new(coordinates.0, self.noise))
+            .or_insert(Chunk::new(coordinates, self.noise))
     }
 
     pub fn get_block(&self, coordinates: WorldCoordinates) -> Option<BlockType> {
@@ -60,6 +64,14 @@ impl WorldMap {
                 BlockType::None => None,
                 _ => Some(chunk.blocks[index]),
             })
+    }
+
+    pub fn solidness(&self, coordinates: WorldCoordinates) -> bool {
+        let (chunk_coordinates, block_coordinates) = coordinates.to_chunk_and_block();
+        let index = to_index(block_coordinates);
+        self.chunks
+            .get(&chunk_coordinates.0)
+            .is_none_or(|chunk| chunk.blocks[index].is_solid())
     }
 
     /// Adds damage to a block. Returns true, if the block is destroyed, false otherwise.

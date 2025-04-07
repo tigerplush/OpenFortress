@@ -3,8 +3,20 @@ use bevy::{
     reflect::Reflect,
 };
 
+use crate::traits::Neighbors;
+
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, Reflect)]
 pub struct WorldCoordinates(pub IVec3);
+
+impl Neighbors<WorldCoordinates> for WorldCoordinates {
+    fn neighbors(&self) -> Vec<(WorldCoordinates, u32)> {
+        self.0
+            .neighbors()
+            .iter()
+            .map(|(vec, cost)| (WorldCoordinates(*vec), *cost))
+            .collect()
+    }
+}
 
 /// Coordinates of a chunk within the world
 #[derive(Clone, Copy, PartialEq, Reflect)]
