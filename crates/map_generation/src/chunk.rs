@@ -70,6 +70,17 @@ pub(crate) fn to_index(coordinates: impl Into<BlockCoordinates>) -> usize {
         + block_coordinates.0.z) as usize
 }
 
+pub(crate) fn to_world_coordinates(
+    chunk_coordinates: ChunkCoordinates,
+    block_coordinates: impl Into<BlockCoordinates>,
+) -> WorldCoordinates {
+    let block_coordinates: BlockCoordinates = block_coordinates.into();
+    let x = chunk_coordinates.0.x * CHUNK_SIZE.x as i32 + block_coordinates.0.x as i32;
+    let y = chunk_coordinates.0.y * CHUNK_SIZE.y as i32 + block_coordinates.0.y as i32;
+    let z = chunk_coordinates.0.z * CHUNK_SIZE.z as i32 + block_coordinates.0.z as i32;
+    WorldCoordinates(IVec3::new(x, y, z))
+}
+
 #[test]
 fn test_to_index() {
     let mut index = 0;

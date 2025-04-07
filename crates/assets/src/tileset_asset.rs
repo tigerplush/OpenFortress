@@ -307,10 +307,7 @@ impl BlockType {
     }
 
     pub fn is_solid(&self) -> bool {
-        match self {
-            BlockType::BrightGrass | BlockType::Dirt | BlockType::Field | BlockType::Grass => true,
-            _ => false,
-        }
+        matches!(self, BlockType::BrightGrass | BlockType::Dirt | BlockType::Field | BlockType::Grass)
     }
 }
 

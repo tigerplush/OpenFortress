@@ -30,7 +30,6 @@ pub(crate) fn on_insert(
                 for y in 0..CHUNK_SIZE.y {
                     for z in (0..CHUNK_SIZE.z).rev() {
                         // fetch world coordinates for current block
-                        todo!("add layer underneath current layer");
                         let current_world_coordinates =
                             to_world_coordinates(chunk_visualisation.0, (x, y, z));
                         if let Some(current_block) = world_map.get_block(current_world_coordinates)
@@ -69,17 +68,15 @@ pub(crate) fn on_chunk_visualisation_event(
     query: Query<(Entity, &ChunkVisualisation)>,
     mut commands: Commands,
 ) {
-    if let ChunkVisualisationEvent::SetDirty(coordinates) = trigger.event() {
-        let (chunk_coordinates, _) = coordinates.to_chunk_and_block();
-        todo!("check surrounding chunks");
-        if let Some((entity, _)) = query
-            .iter()
-            .find(|(_, chunk_vis)| chunk_vis.0 == chunk_coordinates)
-        {
-            commands
-                .entity(entity)
-                .insert(ChunkVisualisation(chunk_coordinates));
-        }
+    let ChunkVisualisationEvent::SetDirty(coordinates) = trigger.event();
+    let (chunk_coordinates, _) = coordinates.to_chunk_and_block();
+    if let Some((entity, _)) = query
+        .iter()
+        .find(|(_, chunk_vis)| chunk_vis.0 == chunk_coordinates)
+    {
+        commands
+            .entity(entity)
+            .insert(ChunkVisualisation(chunk_coordinates));
     }
 }
 

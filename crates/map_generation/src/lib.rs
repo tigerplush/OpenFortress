@@ -71,7 +71,7 @@ impl WorldMap {
         let index = to_index(block_coordinates);
         self.chunks
             .get(&chunk_coordinates.0)
-            .map_or(true, |chunk| chunk.blocks[index].is_solid())
+            .is_none_or(|chunk| chunk.blocks[index].is_solid())
     }
 
     /// Adds damage to a block. Returns true, if the block is destroyed, false otherwise.
