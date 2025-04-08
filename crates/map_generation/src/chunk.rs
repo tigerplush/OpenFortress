@@ -1,7 +1,8 @@
-use assets::tileset_asset::BlockType;
 use bevy::prelude::*;
 use common::types::{BlockCoordinates, ChunkCoordinates, WorldCoordinates};
 use noise::{NoiseFn, OpenSimplex};
+
+use crate::block_type::BlockType;
 
 pub(crate) const CHUNK_SIZE: UVec3 = UVec3::new(16, 16, 1);
 

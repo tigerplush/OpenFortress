@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use common::types::WorldCoordinates;
 use dig::Dig;
-use map_generation::WorldMap;
+use map_generation::map_generation::WorldMap;
 use walk_to::WalkTo;
 
 pub mod dig;

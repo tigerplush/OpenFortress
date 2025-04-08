@@ -4,7 +4,7 @@ use bevy::{platform_support::collections::HashMap, prelude::*};
 use common::{
     functions::world_coordinates_to_world_position, traits::Neighbors, types::WorldCoordinates,
 };
-use map_generation::WorldMap;
+use map_generation::map_generation::WorldMap;
 use path::Path;
 use priority_queue::PriorityQueue;
 
