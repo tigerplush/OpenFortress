@@ -2,7 +2,7 @@ use assets::background_asset::MenuBackgroundAsset;
 use bevy::prelude::*;
 use common::{
     states::AppState,
-    traits::{AddNamedObserver, SpawnNamedObserver, UiRoot},
+    traits::{SpawnNamedObserver, UiRoot},
 };
 
 pub fn plugin(app: &mut App) {

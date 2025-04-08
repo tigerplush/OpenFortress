@@ -73,7 +73,11 @@ fn trigger_interaction_sound_effect(
             Interaction::Pressed => sound_assets.press.clone_weak(),
             _ => continue,
         };
-        commands.spawn((AudioPlayer::new(source), PlaybackSettings::DESPAWN));
+        commands.spawn((
+            Name::new("Button Sound"),
+            AudioPlayer::new(source),
+            PlaybackSettings::DESPAWN,
+        ));
     }
 }
 

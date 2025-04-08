@@ -1,9 +1,7 @@
 use bevy::prelude::*;
 use common::{
-    constants::TILE_SIZE,
-    functions::world_position_to_world_coordinates,
-    traits::{AddNamedObserver, SpawnNamedObserver},
-    types::WorldCoordinates,
+    constants::TILE_SIZE, functions::world_position_to_world_coordinates,
+    traits::SpawnNamedObserver, types::WorldCoordinates,
 };
 use tasks::{Task, TaskEvent, TaskQueue};
 use work_order_queue::WorkOrderQueue;
