@@ -1,10 +1,11 @@
 use animation::{AnimationConfig, AnimationState, Frames};
 use assets::dwarf_sprite::DwarfSpriteAsset;
 use bevy::prelude::*;
+use common::traits::AddNamedObserver;
 use work::Worker;
 
 pub fn plugin(app: &mut App) {
-    app.add_observer(on_add_dwarf);
+    app.add_named_observer(on_add_dwarf, "on_add_dwarf");
 }
 
 #[derive(Component)]

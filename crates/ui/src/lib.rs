@@ -3,6 +3,7 @@ use bevy::{
     color::palettes::css::{BLACK, WHITE},
     prelude::*,
 };
+use common::traits::AddNamedObserver;
 
 #[derive(Component)]
 pub enum UiButton {
@@ -16,13 +17,14 @@ impl UiButton {
 }
 
 pub fn plugin(app: &mut App) {
-    app.add_observer(add_button).add_systems(
+    app.add_systems(
         Update,
         (
             trigger_interaction_sound_effect.run_if(resource_exists::<SoundAsset>),
             trigger_interaction_color_change,
         ),
-    );
+    )
+    .add_named_observer(add_button, "add_button");
 }
 
 fn add_button(

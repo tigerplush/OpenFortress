@@ -4,5 +4,6 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-assets = { path = "../assets" }
 bevy = { workspace = true }
+assets = { path = "../assets" }
+common = { path = "../common" }

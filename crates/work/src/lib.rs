@@ -1,6 +1,9 @@
 use bevy::prelude::*;
 use common::{
-    constants::TILE_SIZE, functions::world_position_to_world_coordinates, types::WorldCoordinates,
+    constants::TILE_SIZE,
+    functions::world_position_to_world_coordinates,
+    traits::{AddNamedObserver, SpawnNamedObserver},
+    types::WorldCoordinates,
 };
 use tasks::{Task, TaskEvent, TaskQueue};
 use work_order_queue::WorkOrderQueue;
@@ -61,10 +64,11 @@ fn fetch_new_work_order(
             work_order_queue
                 .in_progress
                 .push_back((work_order_entity, work_order));
-            commands
+            let target = commands
                 .entity(worker_entity)
                 .insert(CurrentWorkOrder(work_order_entity))
-                .observe(on_task_finished);
+                .id();
+            commands.spawn_named_observer(target, on_task_finished, "on_task_finished");
         }
     }
 }

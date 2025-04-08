@@ -1,14 +1,15 @@
 use std::collections::VecDeque;
 
 use bevy::prelude::*;
+use common::traits::AddNamedObserver;
 
 use crate::WorkOrder;
 
 pub fn plugin(app: &mut App) {
     app.register_type::<WorkOrderQueue>()
         .insert_resource(WorkOrderQueue::default())
-        .add_observer(register_work_order)
-        .add_observer(unregister_work_order);
+        .add_named_observer(register_work_order, "register_work_order")
+        .add_named_observer(unregister_work_order, "unregister_work_order");
 }
 
 #[derive(Default, Reflect, Resource)]

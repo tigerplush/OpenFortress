@@ -3,6 +3,7 @@ use bevy::{prelude::*, window::PrimaryWindow};
 use camera::{CameraLayer, CameraPlugin};
 use common::{
     constants::TILE_SIZE, functions::world_position_to_world_coordinates, states::AppState,
+    traits::AddNamedObserver,
 };
 use dwarf::Dwarf;
 use leafwing_input_manager::{
@@ -25,7 +26,7 @@ pub fn plugin(app: &mut App) {
     .add_plugins(InputManagerPlugin::<MouseControls>::default())
     .add_systems(OnEnter(AppState::MainGame), setup_brush)
     .add_systems(Update, (handle_brush,).run_if(in_state(AppState::MainGame)))
-    .add_observer(add_vis_to_work_order);
+    .add_named_observer(add_vis_to_work_order, "add_vis_to_work_order");
 }
 
 fn setup(mut commands: Commands) {

@@ -1,4 +1,9 @@
-use bevy::prelude::*;
+use std::borrow::Cow;
+
+use bevy::{
+    ecs::{relationship::RelatedSpawnerCommands, system::IntoObserverSystem},
+    prelude::*,
+};
 
 pub trait UiRoot {
     fn ui_root(&mut self) -> EntityCommands;
@@ -51,5 +56,59 @@ impl Neighbors<IVec3> for IVec3 {
             (self + IVec3::new(-1,  0,  0), 1),                                     (self + IVec3::new( 1,  0,  0), 1),
             (self + IVec3::new(-1, -1,  0), 2), (self + IVec3::new( 0, -1,  0), 1), (self + IVec3::new( 1, -1,  0), 2),
         ]
+    }
+}
+
+pub trait AddNamedObserver {
+    fn add_named_observer<E: Event, B: Bundle, M>(
+        &mut self,
+        observer: impl IntoObserverSystem<E, B, M>,
+        name: impl Into<Cow<'static, str>>,
+    ) -> &mut Self;
+}
+
+impl AddNamedObserver for App {
+    fn add_named_observer<E: Event, B: Bundle, M>(
+        &mut self,
+        observer: impl IntoObserverSystem<E, B, M>,
+        name: impl Into<Cow<'static, str>>,
+    ) -> &mut Self {
+        self.world_mut()
+            .add_observer(observer)
+            .insert(Name::new(name));
+        self
+    }
+}
+
+pub trait SpawnNamedObserver {
+    fn spawn_named_observer<E: Event, B: Bundle, M>(
+        &mut self,
+        target: Entity,
+        observer: impl IntoObserverSystem<E, B, M>,
+        name: impl Into<Cow<'static, str>>,
+    ) -> &mut Self;
+}
+
+impl SpawnNamedObserver for Commands<'_, '_> {
+    fn spawn_named_observer<E: Event, B: Bundle, M>(
+        &mut self,
+        target: Entity,
+        observer: impl IntoObserverSystem<E, B, M>,
+        name: impl Into<Cow<'static, str>>,
+    ) -> &mut Self {
+        self.spawn((Observer::new(observer).with_entity(target), Name::new(name)));
+        self
+    }
+}
+
+impl SpawnNamedObserver for RelatedSpawnerCommands<'_, ChildOf> {
+    fn spawn_named_observer<E: Event, B: Bundle, M>(
+        &mut self,
+        target: Entity,
+        observer: impl IntoObserverSystem<E, B, M>,
+        name: impl Into<Cow<'static, str>>,
+    ) -> &mut Self {
+        self.spawn((Observer::new(observer).with_entity(target), Name::new(name)));
+        self
     }
 }

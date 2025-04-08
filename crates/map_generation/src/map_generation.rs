@@ -1,6 +1,7 @@
 use bevy::{platform_support::collections::HashMap, prelude::*};
 use common::{
     states::AppState,
+    traits::AddNamedObserver,
     types::{ChunkCoordinates, WorldCoordinates},
 };
 use noise::OpenSimplex;
@@ -19,8 +20,11 @@ pub fn plugin(app: &mut App) {
             (chunk_visualisation::request, chunk_visualisation::delete)
                 .run_if(in_state(AppState::MainGame)),
         )
-        .add_observer(chunk_visualisation::on_insert)
-        .add_observer(chunk_visualisation::on_chunk_visualisation_event);
+        .add_named_observer(chunk_visualisation::on_insert, "on_chunk_vis_insert")
+        .add_named_observer(
+            chunk_visualisation::on_chunk_visualisation_event,
+            "on_chunk_vis_event",
+        );
 }
 
 #[derive(Resource, Reflect)]

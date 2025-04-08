@@ -1,6 +1,9 @@
 use assets::background_asset::MenuBackgroundAsset;
 use bevy::prelude::*;
-use common::{states::AppState, traits::UiRoot};
+use common::{
+    states::AppState,
+    traits::{AddNamedObserver, SpawnNamedObserver, UiRoot},
+};
 
 pub fn plugin(app: &mut App) {
     app.add_systems(OnEnter(AppState::MainMenu), setup);
@@ -17,8 +20,8 @@ fn setup(background: Res<MenuBackgroundAsset>, mut commands: Commands) {
             },
         ))
         .with_children(|root| {
-            root.spawn(ui::UiButton::menu("START"))
-                .observe(on_press_start);
+            let target = root.spawn(ui::UiButton::menu("START")).id();
+            root.spawn_named_observer(target, on_press_start, "on_press_start");
         });
 
     commands.spawn((Camera2d, StateScoped(AppState::MainMenu)));
