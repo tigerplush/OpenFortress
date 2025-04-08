@@ -9,8 +9,9 @@ use common::{
 use std::ops::{Range, RangeInclusive};
 
 use crate::{
-    ToChunkAndBlock, WorldMap,
+    ToChunkAndBlock,
     chunk::{CHUNK_SIZE, to_world_coordinates},
+    map_generation::WorldMap,
 };
 
 pub(crate) fn on_insert(

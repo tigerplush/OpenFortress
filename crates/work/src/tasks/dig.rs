@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use common::types::WorldCoordinates;
-use map_generation::{WorldMap, chunk_visualisation::ChunkVisualisationEvent};
+use map_generation::{chunk_visualisation::ChunkVisualisationEvent, map_generation::WorldMap};
 
 use super::Task;
 
