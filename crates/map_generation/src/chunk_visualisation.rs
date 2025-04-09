@@ -70,14 +70,31 @@ pub(crate) fn on_chunk_visualisation_event(
     mut commands: Commands,
 ) {
     let ChunkVisualisationEvent::SetDirty(coordinates) = trigger.event();
-    let (chunk_coordinates, _) = coordinates.to_chunk_and_block();
-    if let Some((entity, _)) = query
-        .iter()
-        .find(|(_, chunk_vis)| chunk_vis.0 == chunk_coordinates)
+    let (chunk_coordinates, block_coordinates) = coordinates.to_chunk_and_block();
+
+    let mut all = vec![chunk_coordinates];
+    if block_coordinates.0.x == 0
+        || block_coordinates.0.y == 0
+        || block_coordinates.0.x == CHUNK_SIZE.x - 1
+        || block_coordinates.0.y == CHUNK_SIZE.y - 1
     {
-        commands
-            .entity(entity)
-            .insert(ChunkVisualisation(chunk_coordinates));
+        let neighbors: Vec<ChunkCoordinates> = chunk_coordinates
+            .0
+            .neighbors()
+            .iter()
+            .map(|(coordinate, _)| ChunkCoordinates(*coordinate))
+            .collect();
+        all.extend(neighbors);
+    }
+    for coordinates in all {
+        if let Some((entity, _)) = query
+            .iter()
+            .find(|(_, chunk_vis)| chunk_vis.0 == coordinates)
+        {
+            commands
+                .entity(entity)
+                .insert(ChunkVisualisation(coordinates));
+        }
     }
 }
 
