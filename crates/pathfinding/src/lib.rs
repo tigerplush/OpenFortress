@@ -32,6 +32,7 @@ pub struct Pathfinder {
 }
 
 impl Pathfinder {
+    /// Creates a new pathfinder that will try to find a path via A* from start to target
     pub fn new(start: WorldCoordinates, target: WorldCoordinates) -> Self {
         let frontier = PriorityQueue::from(vec![(start.0, Reverse(0))]);
         let mut came_from = HashMap::default();

@@ -22,7 +22,9 @@ pub(crate) fn plugin(app: &mut App) {
         );
 }
 
-/// A task queue
+/// A queue of tasks that a worker will try to fulfill
+/// 
+/// These are in reverse order and will be popped of the stack.
 #[derive(Component, Reflect)]
 #[reflect(Component)]
 pub(crate) struct TaskQueue(Vec<Task>);

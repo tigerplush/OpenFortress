@@ -16,12 +16,14 @@ pub fn plugin(app: &mut App) {
         .add_systems(Update, (fetch_new_work_order, check_work_orders));
 }
 
+/// Represents work orders that can be created by the player
 #[derive(Clone, Component, Copy, PartialEq, Reflect)]
 pub enum WorkOrder {
     Dig(WorldCoordinates),
 }
 
 impl WorkOrder {
+    /// Creates a digging work order for the given world position
     pub fn dig(world_position: Vec3) -> impl Bundle {
         let world_coordinates = world_position_to_world_coordinates(world_position);
         (
@@ -33,7 +35,8 @@ impl WorkOrder {
         )
     }
 
-    pub fn realise(&self) -> impl Bundle {
+    /// Creates a TaskQueue from work order
+    fn realise(&self) -> impl Bundle {
         match self {
             WorkOrder::Dig(pos) => TaskQueue::new(&[Task::dig(*pos), Task::walk_to(*pos)]),
         }
@@ -41,6 +44,8 @@ impl WorkOrder {
 }
 
 /// Marks an entity as a worker, i.e. someone who can fulfill work orders
+/// 
+/// This probably has to be expanded later because not all workers can do all tasks
 #[derive(Component)]
 pub struct Worker;
 
