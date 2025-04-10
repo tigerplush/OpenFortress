@@ -39,7 +39,7 @@ pub(crate) fn on_insert(
                             let mut flags = 0;
                             //iterate over every neighbor
                             for (index, (neighbor, _)) in
-                                current_world_coordinates.neighbors().iter().enumerate()
+                                current_world_coordinates.same_layer_neighbors().iter().enumerate()
                             {
                                 // fetch the block
                                 // check if its solid
@@ -80,7 +80,7 @@ pub(crate) fn on_chunk_visualisation_event(
     {
         let neighbors: Vec<ChunkCoordinates> = chunk_coordinates
             .0
-            .neighbors()
+            .same_layer_neighbors()
             .iter()
             .map(|(coordinate, _)| ChunkCoordinates(*coordinate))
             .collect();

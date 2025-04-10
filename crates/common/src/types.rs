@@ -9,12 +9,16 @@ use crate::traits::Neighbors;
 pub struct WorldCoordinates(pub IVec3);
 
 impl Neighbors<WorldCoordinates> for WorldCoordinates {
-    fn neighbors(&self) -> Vec<(WorldCoordinates, u32)> {
+    fn same_layer_neighbors(&self) -> Vec<(WorldCoordinates, u32)> {
         self.0
-            .neighbors()
+            .same_layer_neighbors()
             .iter()
             .map(|(vec, cost)| (WorldCoordinates(*vec), *cost))
             .collect()
+    }
+
+    fn all_neighbors(&self) -> Vec<(WorldCoordinates, u32)> {
+        todo!("not implemented")
     }
 }
 

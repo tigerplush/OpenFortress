@@ -56,7 +56,7 @@ impl Pathfinder {
             return PathfindingState::Complete(Path::new(self.to_path()));
         }
 
-        for (neighbor, neighbor_cost) in current_coordinates.neighbors() {
+        for (neighbor, neighbor_cost) in current_coordinates.all_neighbors() {
             let new_cost = self.cost_so_far.get(&current_coordinates).unwrap() + neighbor_cost;
             let current_cost = self.cost_so_far.get(&neighbor);
             if current_cost.is_none() || new_cost < *current_cost.unwrap() {
