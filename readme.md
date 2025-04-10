@@ -5,6 +5,10 @@ This is an attempt of a Dwarf Fortress clone implemented in Rust
 Run with `cargo run`
 
 ## Controls
+* Use WASD to move the camera around
+* Use Mouse Wheel to zoom in and out
+* Use LMB to issue digging work orders
+* Use NUMPAD2 and NUMPAD8 to switch between layers
 
 # How to Contribute
 * Add new crates with `cargo new --lib  ./crates/new_crate --vcs none`
