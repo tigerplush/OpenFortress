@@ -49,7 +49,7 @@ impl Pathfinder {
 
     fn calculate_step(&mut self, world_map: &WorldMap) -> PathfindingState {
         let Some((current_coordinates, _current_priority)) = self.frontier.pop() else {
-            return PathfindingState::Failed;
+            return PathfindingState::Failed(PathfindingErrors::Unreachable);
         };
 
         if current_coordinates == self.target {
@@ -57,6 +57,10 @@ impl Pathfinder {
         }
 
         for (neighbor, neighbor_cost) in current_coordinates.all_neighbors() {
+            // check if the next block is passable
+            // if the chunk isn't loaded, return current coords to back to the frontier
+            // return PathfindingError
+
             let new_cost = self.cost_so_far.get(&current_coordinates).unwrap() + neighbor_cost;
             let current_cost = self.cost_so_far.get(&neighbor);
             if current_cost.is_none() || new_cost < *current_cost.unwrap() {
@@ -95,9 +99,14 @@ fn heuristic(_world_map: &WorldMap) -> u32 {
 }
 
 enum PathfindingState {
-    Failed,
+    Failed(PathfindingErrors),
     Calculating,
     Complete(Path),
+}
+
+enum PathfindingErrors {
+    NotEnoughChunks,
+    Unreachable,
 }
 
 fn calculate_path(
@@ -108,9 +117,16 @@ fn calculate_path(
     for (entity, mut path) in &mut query {
         match path.calculate_step(&world_map) {
             PathfindingState::Calculating => (),
-            PathfindingState::Failed => {
+            PathfindingState::Failed(err) => {
                 info!("pathfinding failed");
-                commands.entity(entity).remove::<Pathfinder>();
+                match err {
+                    PathfindingErrors::NotEnoughChunks => {
+
+                    }
+                    PathfindingErrors::Unreachable => {
+                        commands.entity(entity).remove::<Pathfinder>();
+                    }
+                }
             }
             PathfindingState::Complete(path) => {
                 info!("pathfinding done");
