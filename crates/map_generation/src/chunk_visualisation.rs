@@ -3,13 +3,13 @@ use bevy::prelude::*;
 use bevy_ecs_tilemap::{
     TilemapBundle,
     anchor::TilemapAnchor,
-    map::{TilemapId, TilemapSize, TilemapTexture, TilemapTileSize, TilemapType},
-    tiles::{TileBundle, TilePos, TileStorage},
+    map::{TilemapSize, TilemapTexture, TilemapTileSize, TilemapType},
+    tiles::TileStorage,
 };
 use camera::CameraLayer;
 use common::{
     constants::TILE_SIZE,
-    traits::{AsVec2, Neighbors},
+    traits::Neighbors,
     types::{ChunkCoordinates, WorldCoordinates},
 };
 use std::ops::{Range, RangeInclusive};
@@ -132,7 +132,7 @@ impl ChunkVisualisation {
             Transform::from_xyz(
                 coordinates.0.x as f32 * CHUNK_SIZE.x as f32 * TILE_SIZE.x,
                 coordinates.0.y as f32 * CHUNK_SIZE.y as f32 * TILE_SIZE.y,
-                coordinates.0.z as f32,
+                0.0,
             ),
             Visibility::Inherited,
         )
@@ -142,7 +142,7 @@ impl ChunkVisualisation {
         Transform::from_xyz(
             self.0.0.x as f32 * CHUNK_SIZE.x as f32 * TILE_SIZE.x,
             self.0.0.y as f32 * CHUNK_SIZE.y as f32 * TILE_SIZE.y,
-            self.0.0.z as f32,
+            0.0,
         )
     }
 }
