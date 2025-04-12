@@ -4,7 +4,7 @@ use noise::{NoiseFn, OpenSimplex};
 
 use crate::block_type::{BlockType, SolidMaterial};
 
-pub(crate) const CHUNK_SIZE: UVec3 = UVec3::new(16, 16, 1);
+pub(crate) const CHUNK_SIZE: UVec3 = UVec3::new(16, 16, 16);
 
 #[derive(Reflect)]
 pub(crate) struct Chunk {

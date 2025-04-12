@@ -1,10 +1,10 @@
 use assets::tileset_asset::TilesetAsset;
-use bevy::prelude::*;
+use bevy::{color::palettes::css::WHITE, platform_support::collections::HashMap, prelude::*};
 use bevy_ecs_tilemap::{
     TilemapBundle,
     anchor::TilemapAnchor,
-    map::{TilemapSize, TilemapTexture, TilemapTileSize, TilemapType},
-    tiles::TileStorage,
+    map::{TilemapId, TilemapSize, TilemapTexture, TilemapTileSize, TilemapType},
+    tiles::{TileBundle, TileColor, TilePos, TileStorage},
 };
 use camera::CameraLayer;
 use common::{
@@ -24,12 +24,13 @@ pub(crate) fn on_insert(
     trigger: Trigger<OnInsert, ChunkVisualisation>,
     mut world_map: ResMut<WorldMap>,
     tileset: Res<TilesetAsset>,
+    camera_layer: Single<&CameraLayer>,
     chunks: Query<&ChunkVisualisation>,
     mut commands: Commands,
 ) {
     let target = trigger.target();
     let chunk_visualisation = chunks.get(target).unwrap();
-    world_map.get_chunk(chunk_visualisation.0);
+    world_map.ensure_surrounding_exist(chunk_visualisation.0);
 
     let map_size = TilemapSize::from(CHUNK_SIZE.truncate() * 2);
     let mut tile_storage = TileStorage::empty(map_size);
@@ -41,12 +42,22 @@ pub(crate) fn on_insert(
     commands
         .entity(target)
         .despawn_related::<Children>()
+        .insert(ChildOf(world_map.entity));
+
+    let mut fog_tiles = HashMap::new();
+
+    let tilemap_entity = commands.spawn(Name::new("Tilemap")).id();
+    commands
+        .entity(tilemap_entity)
         .with_children(|parent| {
             for x in 0..CHUNK_SIZE.x {
                 for y in 0..CHUNK_SIZE.y {
-                    for z in (0..11).rev() {
+                    for z in 0..11 {
                         let current_world_coordinates =
-                            to_world_coordinates(chunk_visualisation.0, (x, y, z));
+                            to_world_coordinates(chunk_visualisation.0, (x, y, 0))
+                                // we begin at the camera layer. If we don't find a block, we step down a layer until we either find one
+                                // or the opacity of the fog is too high to see
+                                .with_z_offset(camera_layer.0 - z);
                         if let Some(block) = world_map.get_block(current_world_coordinates) {
                             let mut flags = 0;
                             for (index, (neighbor, _)) in current_world_coordinates
@@ -60,8 +71,10 @@ pub(crate) fn on_insert(
                                 // add its state to the flag
                                 flags |= solid << index;
                             }
-                            block.spawn(parent, x, y, target, &mut tile_storage, flags);
+                            block.spawn(parent, x, y, tilemap_entity, &mut tile_storage, flags);
                             break;
+                        } else if z != 0 {
+                            fog_tiles.insert(TilePos::new(x, y), z);
                         }
                     }
                 }
@@ -75,10 +88,44 @@ pub(crate) fn on_insert(
             texture: TilemapTexture::Single(tileset.soil_tileset.clone_weak()),
             tile_size,
             anchor: TilemapAnchor::BottomLeft,
-            transform: chunk_visualisation.transform(),
             ..default()
         })
-        .insert(ChildOf(world_map.entity));
+        .insert(ChildOf(target));
+
+    if !fog_tiles.is_empty() {
+        let fog_map_size = TilemapSize::from(CHUNK_SIZE.truncate());
+        let mut fog_tile_storage = TileStorage::empty(fog_map_size);
+        let fog_tile_size = TilemapTileSize::from(TILE_SIZE);
+        let fog_grid_size = fog_tile_size.into();
+        let fog_tilemap_entity = commands.spawn(Name::new("Fog Tilemap")).id();
+        commands
+            .entity(fog_tilemap_entity)
+            .with_children(|parent| {
+                for (tile_pos, opacity) in fog_tiles.iter() {
+                    let tile_entity = parent
+                        .spawn(TileBundle {
+                            position: *tile_pos,
+                            tilemap_id: TilemapId(fog_tilemap_entity),
+                            color: TileColor(WHITE.with_alpha(*opacity as f32 / 10.0).into()),
+                            ..default()
+                        })
+                        .id();
+                    fog_tile_storage.set(tile_pos, tile_entity);
+                }
+            })
+            .insert(TilemapBundle {
+                grid_size: fog_grid_size,
+                map_type,
+                size: fog_map_size,
+                storage: fog_tile_storage,
+                texture: TilemapTexture::Single(tileset.fog_tileset.clone_weak()),
+                tile_size: fog_tile_size,
+                anchor: TilemapAnchor::BottomLeft,
+                transform: Transform::from_xyz(0.0, 0.0, 1.0),
+                ..default()
+            })
+            .insert(ChildOf(target));
+    }
 }
 
 pub(crate) fn on_chunk_visualisation_event(
@@ -135,14 +182,6 @@ impl ChunkVisualisation {
                 0.0,
             ),
             Visibility::Inherited,
-        )
-    }
-
-    fn transform(&self) -> Transform {
-        Transform::from_xyz(
-            self.0.0.x as f32 * CHUNK_SIZE.x as f32 * TILE_SIZE.x,
-            self.0.0.y as f32 * CHUNK_SIZE.y as f32 * TILE_SIZE.y,
-            0.0,
         )
     }
 }

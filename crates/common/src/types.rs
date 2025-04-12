@@ -8,6 +8,14 @@ use crate::traits::Neighbors;
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, Reflect)]
 pub struct WorldCoordinates(pub IVec3);
 
+impl WorldCoordinates {
+    /// Manually overrides the z value of the coordinates.
+    pub fn with_z_offset(mut self, z_offset: i32) -> WorldCoordinates {
+        self.0.z = z_offset;
+        self
+    }
+}
+
 impl Neighbors<WorldCoordinates> for WorldCoordinates {
     fn same_layer_neighbors(&self) -> Vec<(WorldCoordinates, u32)> {
         self.0

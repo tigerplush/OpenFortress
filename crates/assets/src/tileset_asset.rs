@@ -7,12 +7,14 @@ use bevy::{
 pub struct TilesetAsset {
     pub image: Handle<Image>,
     pub soil_tileset: Handle<Image>,
+    pub fog_tileset: Handle<Image>,
     pub layout_handle: Handle<TextureAtlasLayout>,
 }
 
 impl TilesetAsset {
     const PATH: &'static str = "tilesets/tileset.png";
     const SOIL_PATH: &'static str = "tilesets/tileset_soil.png";
+    const FOG_PATH: &'static str = "tilesets/tileset_fog.png";
 }
 
 impl FromWorld for TilesetAsset {
@@ -32,6 +34,12 @@ impl FromWorld for TilesetAsset {
             ),
             soil_tileset: assets.load_with_settings(
                 TilesetAsset::SOIL_PATH,
+                |settings: &mut ImageLoaderSettings| {
+                    settings.sampler = ImageSampler::nearest();
+                },
+            ),
+            fog_tileset: assets.load_with_settings(
+                TilesetAsset::FOG_PATH,
                 |settings: &mut ImageLoaderSettings| {
                     settings.sampler = ImageSampler::nearest();
                 },

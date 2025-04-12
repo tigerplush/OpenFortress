@@ -2,7 +2,7 @@ use bevy::{platform_support::collections::HashMap, prelude::*};
 use bevy_ecs_tilemap::TilemapPlugin;
 use common::{
     states::AppState,
-    traits::AddNamedObserver,
+    traits::{AddNamedObserver, Neighbors},
     types::{ChunkCoordinates, WorldCoordinates},
 };
 use noise::OpenSimplex;
@@ -50,8 +50,12 @@ impl WorldMap {
         }
     }
 
-    pub(crate) fn get_chunk(&mut self, coordinates: ChunkCoordinates) -> &Chunk {
-        self.get_or_insert_chunk_mut(coordinates)
+    /// Checks every surrounding chunk. If it doesn't exist, it will be created.
+    pub(crate) fn ensure_surrounding_exist(&mut self, coordinates: ChunkCoordinates) {
+        self.get_or_insert_chunk_mut(coordinates);
+        for (neighbor, _) in coordinates.0.all_neighbors() {
+            self.get_or_insert_chunk_mut(ChunkCoordinates(neighbor));
+        }
     }
 
     /// Returns a chunk for a given coordinate. Will create a new one, if none has been created thus far.
