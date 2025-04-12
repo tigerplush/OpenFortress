@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use common::types::{BlockCoordinates, ChunkCoordinates, WorldCoordinates};
 use noise::{NoiseFn, OpenSimplex};
 
-use crate::block_type::BlockType;
+use crate::block_type::{BlockType, SolidMaterial};
 
 pub(crate) const CHUNK_SIZE: UVec3 = UVec3::new(16, 16, 1);
 
@@ -26,11 +26,11 @@ impl Chunk {
                 for z in 0..CHUNK_SIZE.z {
                     let height = coordinates.0.z * CHUNK_SIZE.z as i32 + z as i32;
                     let tile_type = if height == threshold && threshold > 0 {
-                        BlockType::BrightGrass
+                        BlockType::Solid(SolidMaterial::Grass)
                     } else if height < threshold {
-                        BlockType::Dirt
+                        BlockType::Solid(SolidMaterial::Dirt)
                     } else if height > threshold && height < 0 {
-                        BlockType::Water
+                        BlockType::Liquid
                     } else {
                         BlockType::None
                     };
