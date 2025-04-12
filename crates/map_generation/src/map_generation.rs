@@ -15,6 +15,7 @@ use crate::{
 pub fn plugin(app: &mut App) {
     app.register_type::<WorldMap>()
         .register_type::<ChunkVisualisation>()
+        .insert_resource(ClearColor(Color::srgb_u8(50, 45, 52)))
         .add_plugins(TilemapPlugin)
         .add_systems(OnEnter(AppState::MainGame), spawn_world)
         .add_systems(
