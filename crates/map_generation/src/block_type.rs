@@ -1,5 +1,8 @@
-use assets::tileset_asset::TilesetAsset;
-use bevy::prelude::*;
+use bevy::{color::palettes::css::{RED, WHITE}, ecs::relationship::RelatedSpawnerCommands, prelude::*};
+use bevy_ecs_tilemap::{
+    map::TilemapId,
+    tiles::{TileBundle, TileColor, TileFlip, TilePos, TileStorage, TileTextureIndex},
+};
 
 #[derive(Clone, Copy, PartialEq, Reflect)]
 pub enum BlockType {
@@ -13,236 +16,6 @@ pub enum BlockType {
 }
 
 impl BlockType {
-    /// Tile is surrounded by nothing
-    /// ```
-    /// ?.?
-    /// .O.
-    /// ?.?
-    /// ```
-    const NONE: usize = 0;
-    /// Tile is only adjacent to N
-    /// ```
-    /// ?O?
-    /// .O.
-    /// ?.?
-    /// ```
-    const N: usize = 1;
-    /// Tile is only adjacent to E
-    /// ```
-    /// ?.?
-    /// .OO
-    /// ?.?
-    /// ```
-    const E: usize = 5;
-    /// Tile is only adjacent to S
-    /// ```
-    /// ?.?
-    /// .O.
-    /// ?O?
-    /// ```
-    const S: usize = 13;
-    /// Tile is only adjacent to W
-    /// ```
-    /// ?.?
-    /// OO.
-    /// ?.?
-    /// ```
-    const W: usize = 2;
-
-    /// Tile is adjacent to N and E
-    /// ```
-    /// ?O.
-    /// .OO
-    /// ?.?
-    /// ```
-    const N_TO_E: usize = 6;
-    /// Tile is adjacent to N and E
-    /// ```
-    /// .O?
-    /// OO.
-    /// ?.?
-    /// ```
-    const N_TO_W: usize = 3;
-    /// Tile is adjacent to S and E
-    /// ```
-    /// ?.?
-    /// .OO
-    /// ?O.
-    /// ```
-    const S_TO_E: usize = 18;
-    /// Tile is adjacent to N and E
-    /// ```
-    /// ?.?
-    /// OO.
-    /// .O?
-    /// ```
-    const S_TO_W: usize = 15;
-
-    /// Tile is surrounded by W, N and E
-    /// ```
-    /// .O.
-    /// OOO
-    /// ?.?
-    /// ```
-    const T_UP: usize = 9;
-
-    /// Tile is surrounded by N, E and S
-    /// ```
-    /// ?O.
-    /// .OO
-    /// ?O.
-    /// ```
-    const T_RIGHT: usize = 19;
-    const T_DOWN: usize = 22;
-    const T_LEFT: usize = 16;
-
-    const TOP: usize = 42;
-    const RIGHT: usize = 29;
-    const BOTTOM: usize = 12;
-    const LEFT: usize = 36;
-
-    /// Tile is adjacent to W, NW and N
-    const UPPER_LEFT_L: usize = 4;
-    /// Tile is adjacent to N, NE, and E
-    const UPPER_RIGHT_L: usize = 7;
-    /// Tile is adjacent to E, SE and S
-    const BOTTOM_RIGHT_L: usize = 35;
-    /// Tile is adjacent to S, SW and W
-    const BOTTOM_LEFT_L: usize = 27;
-
-    const UPPER_LEFT_L_WITH_E: usize = 10;
-    const UPPER_LEFT_L_WITH_S: usize = 17;
-    const UPPER_RIGHT_L_WITH_S: usize = 21;
-    const UPPER_RIGHT_L_WITH_W: usize = 11;
-    const BOTTOM_LEFT_L_WITH_N: usize = 28;
-    const BOTTOM_LEFT_L_WITH_E: usize = 30;
-    const BOTTOM_RIGHT_L_WITH_W: usize = 37;
-
-    /// ```
-    /// OO.
-    /// OOO
-    /// .O.
-    /// ```
-    const UPPER_LEFT_L_WITH_E_AND_S: usize = 24;
-    const UPPER_RIGHT_L_WITH_W_AND_S: usize = 25;
-    const BOTTOM_RIGHT_L_WITH_W_AND_N: usize = 38;
-    const BOTTOM_LEFT_L_WITH_E_AND_N: usize = 31;
-
-    const TOP_WITH_N_EXIT: usize = 45;
-    const BOTTOM_WITH_S_EXIT: usize = 26;
-    const RIGHT_WITH_E_EXIT: usize = 32;
-    const LEFT_WITH_W_EXIT: usize = 40;
-    const UPPER_RIGHT_AND_BOTTOM_LEFT_L: usize = 33;
-    const UPPER_LEFT_AND_BOTTOM_RIGHT_L: usize = 39;
-    /// Tile is adjacent to N and S
-    /// ```
-    /// ?.?
-    /// OOO
-    /// ?.?
-    /// ```
-    const HORIZONTAL: usize = 8;
-    /// Tile is adjacent to W and E
-    /// ```
-    /// ?O?
-    /// .O.
-    /// ?O?
-    /// ```
-    const VERTICAL: usize = 14;
-
-    /// Tile is adjacent to cardinal directions
-    /// ```
-    /// ?O?
-    /// OOO
-    /// ?O?
-    /// ```
-    const CROSS: usize = 23;
-    const NO_UPPER_LEFT_CORNER: usize = 44;
-    const NO_UPPER_RIGHT_CORNER: usize = 43;
-    const NO_BOTTOM_LEFT_CORNER: usize = 41;
-    /// Tile is surrounded everywhere except bottom right
-    /// ```
-    /// OOO
-    /// OOO
-    /// OO.
-    /// ```
-    const NO_BOTTOM_RIGHT_CORNER: usize = 34;
-    /// Tile is fully surrounded
-    /// ```
-    /// OOO
-    /// OOO
-    /// OOO
-    /// ```
-    const ALL: usize = 47;
-
-    const MASKS: [(u8, u8, usize); 46] = [
-        (0b01011010, 0b00000000, BlockType::NONE),
-        (0b01011010, 0b00000010, BlockType::N),
-        (0b01011010, 0b00010000, BlockType::E),
-        (0b01011010, 0b00001000, BlockType::W),
-        (0b01011010, 0b01000000, BlockType::S),
-        (0b01011010, 0b00011000, BlockType::HORIZONTAL),
-        (0b01011010, 0b01000010, BlockType::VERTICAL),
-        (0b01011011, 0b00001010, BlockType::N_TO_W),
-        (0b01011110, 0b00010010, BlockType::N_TO_E),
-        (0b01111010, 0b01001000, BlockType::S_TO_W),
-        (0b11011010, 0b01010000, BlockType::S_TO_E),
-        (0b01011011, 0b00001011, BlockType::UPPER_LEFT_L),
-        (0b01011110, 0b00010110, BlockType::UPPER_RIGHT_L),
-        (0b11011010, 0b11010000, BlockType::BOTTOM_RIGHT_L),
-        (0b01111010, 0b01101000, BlockType::BOTTOM_LEFT_L),
-        (0b11111010, 0b11111000, BlockType::TOP),
-        (0b01011111, 0b00011111, BlockType::BOTTOM),
-        (0b01111011, 0b01101011, BlockType::RIGHT),
-        (0b11011010, 0b11010010, BlockType::LEFT),
-        (0b01111011, 0b01001011, BlockType::UPPER_LEFT_L_WITH_S),
-        (0b11011110, 0b01010110, BlockType::UPPER_RIGHT_L_WITH_S),
-        (0b01011111, 0b00011110, BlockType::UPPER_RIGHT_L_WITH_W),
-        (0b01011111, 0b00011011, BlockType::UPPER_LEFT_L_WITH_E),
-        (0b01111011, 0b01101010, BlockType::BOTTOM_LEFT_L_WITH_N),
-        (0b11111010, 0b01111000, BlockType::BOTTOM_LEFT_L_WITH_E),
-        (0b11111010, 0b11011000, BlockType::BOTTOM_RIGHT_L_WITH_W),
-        (0b01011111, 0b00011010, BlockType::T_UP),
-        (0b11011110, 0b01010010, BlockType::T_RIGHT),
-        (0b11111010, 0b01011000, BlockType::T_DOWN),
-        (0b01111011, 0b01001010, BlockType::T_LEFT),
-        (0b11111111, 0b01011010, BlockType::CROSS),
-        (0b11111111, 0b01011011, BlockType::UPPER_LEFT_L_WITH_E_AND_S),
-        (
-            0b11111111,
-            0b01011110,
-            BlockType::UPPER_RIGHT_L_WITH_W_AND_S,
-        ),
-        (
-            0b11111111,
-            0b11011010,
-            BlockType::BOTTOM_RIGHT_L_WITH_W_AND_N,
-        ),
-        (
-            0b11111111,
-            0b01111010,
-            BlockType::BOTTOM_LEFT_L_WITH_E_AND_N,
-        ),
-        (
-            0b11111111,
-            0b01111110,
-            BlockType::UPPER_RIGHT_AND_BOTTOM_LEFT_L,
-        ),
-        (
-            0b11111111,
-            0b11011011,
-            BlockType::UPPER_LEFT_AND_BOTTOM_RIGHT_L,
-        ),
-        (0b11111111, 0b11111010, BlockType::TOP_WITH_N_EXIT),
-        (0b11111111, 0b01111011, BlockType::RIGHT_WITH_E_EXIT),
-        (0b11111111, 0b01011111, BlockType::BOTTOM_WITH_S_EXIT),
-        (0b11111111, 0b11011110, BlockType::LEFT_WITH_W_EXIT),
-        (0b11111111, 0b11111110, BlockType::NO_UPPER_LEFT_CORNER),
-        (0b11111111, 0b11111011, BlockType::NO_UPPER_RIGHT_CORNER),
-        (0b11111111, 0b11011111, BlockType::NO_BOTTOM_LEFT_CORNER),
-        (0b11111111, 0b01111111, BlockType::NO_BOTTOM_RIGHT_CORNER),
-        (0b11111111, 0b11111111, BlockType::ALL),
-    ];
-
     pub(crate) fn is_solid(&self) -> bool {
         matches!(
             self,
@@ -250,31 +23,135 @@ impl BlockType {
         )
     }
 
-    pub(crate) fn sprite(&self, tileset: &TilesetAsset, flags: u8) -> Sprite {
-        Sprite {
-            image: tileset.image.clone_weak(),
-            texture_atlas: Some(TextureAtlas {
-                layout: tileset.layout_handle.clone_weak(),
-                index: self.index(flags),
-            }),
-            ..default()
-        }
-    }
-
-    fn index(&self, flag: u8) -> usize {
-        for mask in Self::MASKS {
-            let masked = flag & mask.0;
-            if masked == mask.1 {
-                return mask.2;
+    pub(crate) fn spawn(
+        &self,
+        parent: &mut RelatedSpawnerCommands<'_, ChildOf>,
+        x: u32,
+        y: u32,
+        target: Entity,
+        tile_storage: &mut TileStorage,
+        flags: u8,
+    ) {
+        for x_offset in 0..=1 {
+            for y_offset in 0..=1 {
+                let tile_pos = TilePos::new(x * 2 + x_offset, y * 2 + y_offset);
+                let color = if tile_pos.x == 1 && tile_pos.y == 0 {
+                    TileColor(RED.into())
+                }
+                else {
+                    TileColor(self.color())
+                };
+                if let Some((texture_index, flip)) = self.texture_index(x_offset, y_offset, flags) {
+                    let tile_entity = parent
+                    .spawn(TileBundle {
+                        position: tile_pos,
+                        tilemap_id: TilemapId(target),
+                        color,
+                        texture_index,
+                        flip,
+                        ..default()
+                    })
+                    .id();
+                tile_storage.set(&tile_pos, tile_entity);
+                }
             }
         }
-        panic!("flag {:08b} has no mapped index!", flag);
+    }
+
+    fn color(&self) -> Color {
+        match self {
+            BlockType::Dirt => Color::srgb_u8(223, 157, 117),
+            _ => WHITE.into(),
+        }
+    }
+
+    /// Finds the texture index and the flippage of a sprite
+    /// 
+    /// ```
+    ///    SE S SW E W NE N NW
+    /// 0b  0 0  0 0 0  0 0  0
+    /// ```
+    fn texture_index(&self, x_offset: u32, y_offset: u32, flags: u8) -> Option<(TileTextureIndex, TileFlip)> {
+        assert!( x_offset == 0 || x_offset == 1);
+        assert!( y_offset == 0 || y_offset == 1);
+        if x_offset == 0 && y_offset == 0 {
+            // bottom left
+            // we are interested in: W, SW and S
+            if flags & BOTTOM_LEFT_MASK == ISOLATED || flags & BOTTOM_LEFT_MASK == SOUTH_WEST {
+                return Some((TileTextureIndex(3), TileFlip { x: false, y: true, d: false }));
+            }
+            else if flags & BOTTOM_LEFT_MASK == WEST || flags & BOTTOM_LEFT_MASK == WEST | SOUTH_WEST {
+                return Some((TileTextureIndex(2), TileFlip { x: false, y: true, d: false}));
+            }
+            else if flags & BOTTOM_LEFT_MASK == SOUTH || flags & BOTTOM_LEFT_MASK == SOUTH | SOUTH_WEST {
+                return Some((TileTextureIndex(1), TileFlip { x: false, y: true, d: false}));
+            }
+            else if flags & BOTTOM_LEFT_MASK == SOUTH | WEST {
+                return Some((TileTextureIndex(0), TileFlip { x: false, y: true, d: false}));
+            }
+        }
+        else if x_offset == 1 && y_offset == 0 {
+            // bottom right
+            // we are interested in: E, S and SE
+            if flags & BOTTOM_RIGHT_MASK == ISOLATED || flags & BOTTOM_RIGHT_MASK == SOUTH_EAST {
+                return Some((TileTextureIndex(3), TileFlip { x: true, y: true, d: false }));
+            }
+            else if flags & BOTTOM_RIGHT_MASK == EAST || flags & BOTTOM_RIGHT_MASK == EAST | SOUTH_EAST {
+                return Some((TileTextureIndex(2), TileFlip { x: true, y: true, d: false}));
+            }
+            else if flags & BOTTOM_RIGHT_MASK == SOUTH || flags & BOTTOM_RIGHT_MASK == SOUTH | SOUTH_EAST {
+                return Some((TileTextureIndex(1), TileFlip { x: true, y: true, d: false}));
+            }
+            else if flags & BOTTOM_RIGHT_MASK == SOUTH | EAST {
+                return Some((TileTextureIndex(0), TileFlip { x: true, y: true, d: false}));
+            }
+        }
+        else if x_offset == 0 && y_offset == 1 {
+            // upper left
+            // we are interested in NW, N and W
+            if flags & UPPER_LEFT_MASK == ISOLATED || flags & UPPER_LEFT_MASK == NORTH_WEST {
+                return Some((TileTextureIndex(3), TileFlip { x: false, y: false, d: false }));
+            }
+            else if flags & UPPER_LEFT_MASK == WEST || flags & UPPER_LEFT_MASK == WEST | NORTH_WEST {
+                return Some((TileTextureIndex(2), TileFlip { x: false, y: false, d: false}));
+            }
+            else if flags & UPPER_LEFT_MASK == NORTH || flags & UPPER_LEFT_MASK == NORTH | NORTH_WEST {
+                return Some((TileTextureIndex(1), TileFlip { x: false, y: false, d: false}));
+            }
+            else if flags & UPPER_LEFT_MASK == WEST | NORTH {
+                return Some((TileTextureIndex(0), TileFlip { x: false, y: false, d: false}));
+            }
+        }
+        else if x_offset == 1 && y_offset == 1 {
+            // upper right
+            // we are interested in N, NE and E
+            if flags & UPPER_RIGHT_MASK == ISOLATED || flags & UPPER_LEFT_MASK == NORTH_EAST {
+                return Some((TileTextureIndex(3), TileFlip { x: true, y: false, d: false }));
+            }
+            else if flags & UPPER_RIGHT_MASK == EAST || flags & UPPER_RIGHT_MASK == EAST | NORTH_EAST {
+                return Some((TileTextureIndex(2), TileFlip { x: true, y: false, d: false}));
+            }
+            else if flags & UPPER_RIGHT_MASK == NORTH || flags & UPPER_RIGHT_MASK == NORTH | NORTH_EAST {
+                return Some((TileTextureIndex(1), TileFlip { x: true, y: false, d: false}));
+            }
+            else if flags & UPPER_RIGHT_MASK == EAST | NORTH {
+                return Some((TileTextureIndex(0), TileFlip { x: true, y: false, d: false}));
+            }
+        }
+        None
     }
 }
 
-#[test]
-fn test_index_mapping() {
-    for i in 0..255 {
-        BlockType::Dirt.index(i);
-    }
-}
+const ISOLATED: u8 = 0b00000000;
+const NORTH_WEST: u8 = 0b00000001;
+const NORTH: u8 = 0b00000010;
+const NORTH_EAST: u8 = 0b00000100;
+const WEST: u8 = 0b00001000;
+const EAST: u8 = 0b00010000;
+const SOUTH_WEST: u8 = 0b00100000;
+const SOUTH: u8 = 0b01000000;
+const SOUTH_EAST: u8 = 0b10000000;
+const BOTTOM_LEFT_MASK: u8 =  SOUTH | SOUTH_WEST | WEST;
+const BOTTOM_RIGHT_MASK: u8 = SOUTH_EAST | SOUTH | EAST;
+const UPPER_LEFT_MASK: u8 =  WEST | NORTH | NORTH_WEST;
+const UPPER_RIGHT_MASK: u8 = EAST | NORTH_EAST | NORTH;

@@ -1,5 +1,11 @@
 use assets::tileset_asset::TilesetAsset;
 use bevy::prelude::*;
+use bevy_ecs_tilemap::{
+    TilemapBundle,
+    anchor::TilemapAnchor,
+    map::{TilemapId, TilemapSize, TilemapTexture, TilemapTileSize, TilemapType},
+    tiles::{TileBundle, TilePos, TileStorage},
+};
 use camera::CameraLayer;
 use common::{
     constants::TILE_SIZE,
@@ -21,23 +27,28 @@ pub(crate) fn on_insert(
     chunks: Query<&ChunkVisualisation>,
     mut commands: Commands,
 ) {
-    let chunk_visualisation = chunks.get(trigger.target()).unwrap();
+    let target = trigger.target();
+    let chunk_visualisation = chunks.get(target).unwrap();
     world_map.get_chunk(chunk_visualisation.0);
+
+    let map_size = TilemapSize::from(CHUNK_SIZE.truncate() * 2);
+    let mut tile_storage = TileStorage::empty(map_size);
+
+    let tile_size = TilemapTileSize::from(TILE_SIZE / 2.0);
+    let grid_size = tile_size.into();
+    let map_type = TilemapType::Square;
+
     commands
-        .entity(trigger.target())
+        .entity(target)
         .despawn_related::<Children>()
         .with_children(|parent| {
             for x in 0..CHUNK_SIZE.x {
                 for y in 0..CHUNK_SIZE.y {
-                    for z in (0..CHUNK_SIZE.z).rev() {
-                        // fetch world coordinates for current block
+                    for z in (0..11).rev() {
                         let current_world_coordinates =
                             to_world_coordinates(chunk_visualisation.0, (x, y, z));
-                        if let Some(current_block) = world_map.get_block(current_world_coordinates)
-                        {
-                            // init flags
+                        if let Some(block) = world_map.get_block(current_world_coordinates) {
                             let mut flags = 0;
-                            //iterate over every neighbor
                             for (index, (neighbor, _)) in current_world_coordinates
                                 .same_layer_neighbors()
                                 .iter()
@@ -49,17 +60,23 @@ pub(crate) fn on_insert(
                                 // add its state to the flag
                                 flags |= solid << index;
                             }
-                            parent.spawn((
-                                Name::new(format!("Block [{}, {}, {}]", x, y, z)),
-                                current_block.sprite(&tileset, flags),
-                                Transform::from_translation(
-                                    ((x, y).as_vec2() * TILE_SIZE).extend(-1.0),
-                                ),
-                            ));
+                            block.spawn(parent, x, y, target, &mut tile_storage, flags);
+                            break;
                         }
                     }
                 }
             }
+        })
+        .insert(TilemapBundle {
+            grid_size,
+            map_type,
+            size: map_size,
+            storage: tile_storage,
+            texture: TilemapTexture::Single(tileset.soil_tileset.clone_weak()),
+            tile_size,
+            anchor: TilemapAnchor::BottomLeft,
+            transform: chunk_visualisation.transform(),
+            ..default()
         })
         .insert(ChildOf(world_map.entity));
 }
@@ -118,6 +135,14 @@ impl ChunkVisualisation {
                 coordinates.0.z as f32,
             ),
             Visibility::Inherited,
+        )
+    }
+
+    fn transform(&self) -> Transform {
+        Transform::from_xyz(
+            self.0.0.x as f32 * CHUNK_SIZE.x as f32 * TILE_SIZE.x,
+            self.0.0.y as f32 * CHUNK_SIZE.y as f32 * TILE_SIZE.y,
+            self.0.0.z as f32,
         )
     }
 }

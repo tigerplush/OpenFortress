@@ -6,11 +6,13 @@ use bevy::{
 #[derive(Asset, Clone, Resource, TypePath)]
 pub struct TilesetAsset {
     pub image: Handle<Image>,
+    pub soil_tileset: Handle<Image>,
     pub layout_handle: Handle<TextureAtlasLayout>,
 }
 
 impl TilesetAsset {
     const PATH: &'static str = "tilesets/tileset.png";
+    const SOIL_PATH: &'static str = "tilesets/tileset_soil.png";
 }
 
 impl FromWorld for TilesetAsset {
@@ -24,6 +26,12 @@ impl FromWorld for TilesetAsset {
         TilesetAsset {
             image: assets.load_with_settings(
                 TilesetAsset::PATH,
+                |settings: &mut ImageLoaderSettings| {
+                    settings.sampler = ImageSampler::nearest();
+                },
+            ),
+            soil_tileset: assets.load_with_settings(
+                TilesetAsset::SOIL_PATH,
                 |settings: &mut ImageLoaderSettings| {
                     settings.sampler = ImageSampler::nearest();
                 },

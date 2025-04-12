@@ -1,4 +1,5 @@
 use bevy::{platform_support::collections::HashMap, prelude::*};
+use bevy_ecs_tilemap::TilemapPlugin;
 use common::{
     states::AppState,
     traits::AddNamedObserver,
@@ -14,6 +15,7 @@ use crate::{
 pub fn plugin(app: &mut App) {
     app.register_type::<WorldMap>()
         .register_type::<ChunkVisualisation>()
+        .add_plugins(TilemapPlugin)
         .add_systems(OnEnter(AppState::MainGame), spawn_world)
         .add_systems(
             Update,
