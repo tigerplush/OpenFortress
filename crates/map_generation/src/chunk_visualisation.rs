@@ -59,9 +59,7 @@ pub(crate) fn on_insert(
                 }
             }
         })
-        .insert(ChildOf {
-            parent: world_map.entity,
-        });
+        .insert(ChildOf(world_map.entity));
 }
 
 pub(crate) fn on_chunk_visualisation_event(
