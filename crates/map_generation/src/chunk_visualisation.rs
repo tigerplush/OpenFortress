@@ -38,8 +38,10 @@ pub(crate) fn on_insert(
                             // init flags
                             let mut flags = 0;
                             //iterate over every neighbor
-                            for (index, (neighbor, _)) in
-                                current_world_coordinates.same_layer_neighbors().iter().enumerate()
+                            for (index, (neighbor, _)) in current_world_coordinates
+                                .same_layer_neighbors()
+                                .iter()
+                                .enumerate()
                             {
                                 // fetch the block
                                 // check if its solid
