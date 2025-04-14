@@ -123,7 +123,7 @@ impl BlockType {
         } else if x_offset == 1 && y_offset == 1 {
             // upper right
             // we are interested in N, NE and E
-            if flags & UPPER_RIGHT_MASK == ISOLATED || flags & UPPER_LEFT_MASK == NORTH_EAST {
+            if flags & UPPER_RIGHT_MASK == ISOLATED || flags & UPPER_RIGHT_MASK == NORTH_EAST {
                 return Some((TileTextureIndex(3), tile_flip));
             } else if flags & UPPER_RIGHT_MASK == EAST
                 || flags & UPPER_RIGHT_MASK == EAST | NORTH_EAST
