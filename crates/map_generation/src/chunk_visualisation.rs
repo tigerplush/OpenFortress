@@ -1,9 +1,5 @@
 use assets::tileset_asset::TilesetAsset;
-use bevy::{
-    color::palettes::css::WHITE,
-    platform_support::collections::{HashMap, HashSet},
-    prelude::*,
-};
+use bevy::{color::palettes::css::WHITE, platform_support::collections::HashMap, prelude::*};
 use bevy_ecs_tilemap::{
     TilemapBundle,
     anchor::TilemapAnchor,
@@ -40,7 +36,7 @@ pub(crate) fn on_insert(
     let chunk_visualisation = chunks.get(target).unwrap();
     world_map.ensure_surrounding_exist(chunk_visualisation.0);
 
-    /// First we  remove all children
+    // First we  remove all children
     commands
         .entity(target)
         .despawn_related::<Children>()
@@ -218,7 +214,7 @@ fn spawn_tile_map(
                         .spawn(TileBundle {
                             position: *tile_pos,
                             tilemap_id: TilemapId(tilemap_entity),
-                            ..block.full_tile()
+                            ..block.floor_tile()
                         })
                         .id(),
                 };

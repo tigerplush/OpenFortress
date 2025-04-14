@@ -22,7 +22,13 @@ pub enum SolidMaterial {
 impl SolidMaterial {
     fn color(&self) -> Color {
         match self {
-            SolidMaterial::Dirt => Color::srgb_u8(223, 157, 117),
+            SolidMaterial::Dirt | SolidMaterial::Grass => Color::srgb_u8(223, 157, 117),
+        }
+    }
+
+    fn floor_color(&self) -> Color {
+        match self {
+            SolidMaterial::Dirt => self.color(),
             _ => WHITE.into(),
         }
     }
@@ -69,10 +75,10 @@ impl BlockType {
         }
     }
 
-    pub(crate) fn full_tile(&self) -> TileBundle {
+    pub(crate) fn floor_tile(&self) -> TileBundle {
         TileBundle {
             texture_index: self.tile_texture_index(),
-            color: TileColor(self.color()),
+            color: TileColor(self.floor_color()),
             ..default()
         }
     }
@@ -80,6 +86,13 @@ impl BlockType {
     fn color(&self) -> Color {
         match self {
             BlockType::Solid(material) => material.color(),
+            _ => WHITE.into(),
+        }
+    }
+
+    fn floor_color(&self) -> Color {
+        match self {
+            BlockType::Solid(material) => material.floor_color(),
             _ => WHITE.into(),
         }
     }
