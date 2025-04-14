@@ -37,98 +37,155 @@ pub(crate) fn on_insert(
     let chunk_visualisation = chunks.get(target).unwrap();
     world_map.ensure_surrounding_exist(chunk_visualisation.0);
 
-    let map_size = TilemapSize::from(CHUNK_SIZE.truncate() * 2);
-    let mut tile_storage = TileStorage::empty(map_size);
-
-    let tile_size = TilemapTileSize::from(TILE_SIZE / 2.0);
-    let grid_size = tile_size.into();
-    let map_type = TilemapType::Square;
-
     commands
         .entity(target)
         .despawn_related::<Children>()
         .insert(ChildOf(world_map.entity));
 
+    let map_type = TilemapType::Square;
+
     let mut fog_tiles = HashMap::new();
+    let mut water_tiles = HashMap::new();
+    let mut full_tiles = HashMap::new();
+    let mut half_tiles = HashMap::new();
 
-    let mut water_tiles = HashSet::new();
+    for x in 0..CHUNK_SIZE.x {
+        for y in 0..CHUNK_SIZE.y {
+            for z in 0..11 {
+                let current_world_coordinates =
+                    to_world_coordinates(chunk_visualisation.0, (x, y, 0))
+                        // we begin at the camera layer. If we don't find a block, we step down a layer until we either find one
+                        // or the opacity of the fog is too high to see
+                        .with_z_offset(camera_layer.0 - z);
+                if let Some(block) = world_map.get_block(current_world_coordinates) {
+                    match block {
+                        BlockType::Solid(_) => {
+                            if z == 0 {
+                                // add half tiles
+                                let mut flags = 0;
+                                for (index, (neighbor, _)) in current_world_coordinates
+                                    .same_layer_neighbors()
+                                    .iter()
+                                    .enumerate()
+                                {
+                                    // fetch the block
+                                    // check if its solid
+                                    let solid: u8 = world_map.solidness(*neighbor).into();
+                                    // add its state to the flag
+                                    flags |= solid << index;
+                                }
+                                half_tiles.insert((x, y), (block, flags));
+                            } else {
+                                full_tiles.insert(TilePos::new(x, y), TileWrapper::Floor(block));
+                            }
+                        }
+                        BlockType::Liquid => {
+                            water_tiles.insert(TilePos::new(x, y), TileWrapper::Water);
+                        }
+                        _ => (),
+                    }
+                    break;
+                } else if z != 0 {
+                    fog_tiles.insert(TilePos::new(x, y), TileWrapper::Fog(z as f32 / 10.0));
+                }
+            }
+        }
+    }
 
-    let tilemap_entity = commands.spawn(Name::new("Tilemap")).id();
+    if !half_tiles.is_empty() {
+        let map_size = TilemapSize::from(CHUNK_SIZE.truncate() * 2);
+        let mut tile_storage = TileStorage::empty(map_size);
+
+        let tile_size = TilemapTileSize::from(TILE_SIZE / 2.0);
+        let grid_size = tile_size.into();
+        let tilemap_entity = commands.spawn(Name::new("Tilemap")).id();
+        commands
+            .entity(tilemap_entity)
+            .with_children(|parent| {
+                for ((x, y), (block_type, flags)) in half_tiles.iter() {
+                    block_type.spawn_half_tile(
+                        parent,
+                        *x,
+                        *y,
+                        tilemap_entity,
+                        &mut tile_storage,
+                        *flags,
+                    );
+                }
+            })
+            .insert(TilemapBundle {
+                grid_size,
+                map_type,
+                size: map_size,
+                storage: tile_storage,
+                texture: TilemapTexture::Single(tileset.soil_tileset.clone_weak()),
+                tile_size,
+                anchor: TilemapAnchor::BottomLeft,
+                ..default()
+            })
+            .insert(ChildOf(target));
+    }
+
+    if !full_tiles.is_empty() {
+        spawn_tile_map(
+            &mut commands,
+            &full_tiles,
+            target,
+            &tileset.floor_tileset,
+            -0.5,
+        );
+    }
+
+    if !water_tiles.is_empty() {
+        spawn_tile_map(
+            &mut commands,
+            &water_tiles,
+            target,
+            &tileset.water_tileset,
+            -0.5,
+        );
+    }
+
+    if !fog_tiles.is_empty() {
+        spawn_tile_map(&mut commands, &fog_tiles, target, &tileset.fog_tileset, 1.0);
+    }
+}
+enum TileWrapper {
+    Fog(f32),
+    Water,
+    Floor(BlockType),
+}
+
+fn spawn_tile_map(
+    commands: &mut Commands,
+    fog_tiles: &HashMap<TilePos, TileWrapper>,
+    target: Entity,
+    tileset: &Handle<Image>,
+    z_offset: f32,
+) {
+    let size = TilemapSize::from(CHUNK_SIZE.truncate());
+    let mut storage = TileStorage::empty(size);
+    let tile_size = TilemapTileSize::from(TILE_SIZE);
+    let grid_size = tile_size.into();
+    let tilemap_entity = commands.spawn(Name::new("Fog Tilemap")).id();
     commands
         .entity(tilemap_entity)
         .with_children(|parent| {
-            for x in 0..CHUNK_SIZE.x {
-                for y in 0..CHUNK_SIZE.y {
-                    for z in 0..11 {
-                        let current_world_coordinates =
-                            to_world_coordinates(chunk_visualisation.0, (x, y, 0))
-                                // we begin at the camera layer. If we don't find a block, we step down a layer until we either find one
-                                // or the opacity of the fog is too high to see
-                                .with_z_offset(camera_layer.0 - z);
-                        if let Some(block) = world_map.get_block(current_world_coordinates) {
-                            match block {
-                                BlockType::Solid(_) => {
-                                    let mut flags = 0;
-                                    for (index, (neighbor, _)) in current_world_coordinates
-                                        .same_layer_neighbors()
-                                        .iter()
-                                        .enumerate()
-                                    {
-                                        // fetch the block
-                                        // check if its solid
-                                        let solid: u8 = world_map.solidness(*neighbor).into();
-                                        // add its state to the flag
-                                        flags |= solid << index;
-                                    }
-                                    block.spawn(
-                                        parent,
-                                        x,
-                                        y,
-                                        tilemap_entity,
-                                        &mut tile_storage,
-                                        flags,
-                                    );
-                                }
-                                BlockType::Liquid => {
-                                    water_tiles.insert(TilePos::new(x, y));
-                                }
-                                _ => (),
-                            }
-                            break;
-                        } else if z != 0 {
-                            fog_tiles.insert(TilePos::new(x, y), z);
-                        }
-                    }
-                }
-            }
-        })
-        .insert(TilemapBundle {
-            grid_size,
-            map_type,
-            size: map_size,
-            storage: tile_storage,
-            texture: TilemapTexture::Single(tileset.soil_tileset.clone_weak()),
-            tile_size,
-            anchor: TilemapAnchor::BottomLeft,
-            ..default()
-        })
-        .insert(ChildOf(target));
-
-    if !water_tiles.is_empty() {
-        let water_map_size = TilemapSize::from(CHUNK_SIZE.truncate());
-        let mut water_tile_storage = TileStorage::empty(water_map_size);
-        let water_tile_size = TilemapTileSize::from(TILE_SIZE);
-        let water_grid_size = water_tile_size.into();
-        let water_tilemap_entity = commands.spawn(Name::new("Water Tilemap")).id();
-        commands
-            .entity(water_tilemap_entity)
-            .with_children(|parent| {
-                for tile_pos in water_tiles.iter() {
-                    let tile_entity = parent
+            for (tile_pos, opacity) in fog_tiles.iter() {
+                let tile_entity = match opacity {
+                    TileWrapper::Fog(opacity) => parent
+                        .spawn(TileBundle {
+                            position: *tile_pos,
+                            tilemap_id: TilemapId(tilemap_entity),
+                            color: TileColor(WHITE.with_alpha(*opacity).into()),
+                            ..default()
+                        })
+                        .id(),
+                    TileWrapper::Water => parent
                         .spawn((
                             TileBundle {
                                 position: *tile_pos,
-                                tilemap_id: TilemapId(water_tilemap_entity),
+                                tilemap_id: TilemapId(tilemap_entity),
                                 texture_index: TileTextureIndex(0),
                                 ..default()
                             },
@@ -138,57 +195,30 @@ pub(crate) fn on_insert(
                                 speed: 0.1,
                             },
                         ))
-                        .id();
-                    water_tile_storage.set(tile_pos, tile_entity);
-                }
-            })
-            .insert(TilemapBundle {
-                grid_size: water_grid_size,
-                map_type,
-                size: water_map_size,
-                storage: water_tile_storage,
-                texture: TilemapTexture::Single(tileset.water_tileset.clone_weak()),
-                tile_size: water_tile_size,
-                anchor: TilemapAnchor::BottomLeft,
-                ..default()
-            })
-            .insert(ChildOf(target));
-    }
-
-    if !fog_tiles.is_empty() {
-        let fog_map_size = TilemapSize::from(CHUNK_SIZE.truncate());
-        let mut fog_tile_storage = TileStorage::empty(fog_map_size);
-        let fog_tile_size = TilemapTileSize::from(TILE_SIZE);
-        let fog_grid_size = fog_tile_size.into();
-        let fog_tilemap_entity = commands.spawn(Name::new("Fog Tilemap")).id();
-        commands
-            .entity(fog_tilemap_entity)
-            .with_children(|parent| {
-                for (tile_pos, opacity) in fog_tiles.iter() {
-                    let tile_entity = parent
+                        .id(),
+                    TileWrapper::Floor(block) => parent
                         .spawn(TileBundle {
                             position: *tile_pos,
-                            tilemap_id: TilemapId(fog_tilemap_entity),
-                            color: TileColor(WHITE.with_alpha(*opacity as f32 / 10.0).into()),
-                            ..default()
+                            tilemap_id: TilemapId(tilemap_entity),
+                            ..block.full_tile()
                         })
-                        .id();
-                    fog_tile_storage.set(tile_pos, tile_entity);
-                }
-            })
-            .insert(TilemapBundle {
-                grid_size: fog_grid_size,
-                map_type,
-                size: fog_map_size,
-                storage: fog_tile_storage,
-                texture: TilemapTexture::Single(tileset.fog_tileset.clone_weak()),
-                tile_size: fog_tile_size,
-                anchor: TilemapAnchor::BottomLeft,
-                transform: Transform::from_xyz(0.0, 0.0, 1.0),
-                ..default()
-            })
-            .insert(ChildOf(target));
-    }
+                        .id(),
+                };
+                storage.set(tile_pos, tile_entity);
+            }
+        })
+        .insert(TilemapBundle {
+            grid_size,
+            map_type: TilemapType::Square,
+            size,
+            storage,
+            texture: TilemapTexture::Single(tileset.clone_weak()),
+            tile_size,
+            anchor: TilemapAnchor::BottomLeft,
+            transform: Transform::from_xyz(0.0, 0.0, z_offset),
+            ..default()
+        })
+        .insert(ChildOf(target));
 }
 
 pub(crate) fn on_chunk_visualisation_event(

@@ -8,12 +8,14 @@ pub struct TilesetAsset {
     pub soil_tileset: Handle<Image>,
     pub fog_tileset: Handle<Image>,
     pub water_tileset: Handle<Image>,
+    pub floor_tileset: Handle<Image>,
 }
 
 impl TilesetAsset {
     const SOIL_PATH: &'static str = "tilesets/tileset_soil.png";
     const FOG_PATH: &'static str = "tilesets/tileset_fog.png";
     const WATER_PATH: &'static str = "tilesets/tileset_water.png";
+    const FLOOR_PATH: &'static str = "tilesets/tileset_floors.png";
 }
 
 impl FromWorld for TilesetAsset {
@@ -34,6 +36,12 @@ impl FromWorld for TilesetAsset {
             ),
             water_tileset: assets.load_with_settings(
                 TilesetAsset::WATER_PATH,
+                |settings: &mut ImageLoaderSettings| {
+                    settings.sampler = ImageSampler::nearest();
+                },
+            ),
+            floor_tileset: assets.load_with_settings(
+                TilesetAsset::FLOOR_PATH,
                 |settings: &mut ImageLoaderSettings| {
                     settings.sampler = ImageSampler::nearest();
                 },

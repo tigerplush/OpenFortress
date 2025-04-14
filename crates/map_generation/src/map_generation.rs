@@ -1,6 +1,7 @@
 use bevy::{platform_support::collections::HashMap, prelude::*};
 use bevy_ecs_tilemap::TilemapPlugin;
 use common::{
+    constants::TILE_SIZE,
     states::AppState,
     traits::{AddNamedObserver, Neighbors},
     types::{ChunkCoordinates, WorldCoordinates},
@@ -106,7 +107,9 @@ fn spawn_world(mut commands: Commands) {
     let entity = commands
         .spawn((
             Name::new("World Map"),
-            Transform::default(),
+            // Transform::default(),
+            // due to an issue with bevy_ecs_tilemap, we have to move the whole world by half a tile
+            Transform::from_translation((-TILE_SIZE / 2.0).extend(0.0)),
             Visibility::Inherited,
         ))
         .id();

@@ -1,3 +1,5 @@
+use core::panic;
+
 use bevy::{color::palettes::css::WHITE, ecs::relationship::RelatedSpawnerCommands, prelude::*};
 use bevy_ecs_tilemap::{
     map::TilemapId,
@@ -17,12 +19,28 @@ pub enum SolidMaterial {
     Grass,
 }
 
+impl SolidMaterial {
+    fn color(&self) -> Color {
+        match self {
+            SolidMaterial::Dirt => Color::srgb_u8(223, 157, 117),
+            _ => WHITE.into(),
+        }
+    }
+
+    fn tile_texture_index(&self) -> TileTextureIndex {
+        match self {
+            SolidMaterial::Dirt => TileTextureIndex(0),
+            SolidMaterial::Grass => TileTextureIndex(1),
+        }
+    }
+}
+
 impl BlockType {
     pub(crate) fn is_solid(&self) -> bool {
         matches!(self, BlockType::Solid(_))
     }
 
-    pub(crate) fn spawn(
+    pub(crate) fn spawn_half_tile(
         &self,
         parent: &mut RelatedSpawnerCommands<'_, ChildOf>,
         x: u32,
@@ -51,10 +69,25 @@ impl BlockType {
         }
     }
 
+    pub(crate) fn full_tile(&self) -> TileBundle {
+        TileBundle {
+            texture_index: self.tile_texture_index(),
+            color: TileColor(self.color()),
+            ..default()
+        }
+    }
+
     fn color(&self) -> Color {
         match self {
-            BlockType::Solid(_) => Color::srgb_u8(223, 157, 117),
+            BlockType::Solid(material) => material.color(),
             _ => WHITE.into(),
+        }
+    }
+
+    fn tile_texture_index(&self) -> TileTextureIndex {
+        match self {
+            BlockType::Solid(material) => material.tile_texture_index(),
+            _ => panic!("tile_texture_index should only be called on BlockType::Solid"),
         }
     }
 
