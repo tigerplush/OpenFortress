@@ -5,33 +5,21 @@ use bevy::{
 
 #[derive(Asset, Clone, Resource, TypePath)]
 pub struct TilesetAsset {
-    pub image: Handle<Image>,
     pub soil_tileset: Handle<Image>,
     pub fog_tileset: Handle<Image>,
-    pub layout_handle: Handle<TextureAtlasLayout>,
+    pub water_tileset: Handle<Image>,
 }
 
 impl TilesetAsset {
-    const PATH: &'static str = "tilesets/tileset.png";
     const SOIL_PATH: &'static str = "tilesets/tileset_soil.png";
     const FOG_PATH: &'static str = "tilesets/tileset_fog.png";
+    const WATER_PATH: &'static str = "tilesets/tileset_water.png";
 }
 
 impl FromWorld for TilesetAsset {
     fn from_world(world: &mut World) -> Self {
-        let layout_handle = {
-            let layout = TextureAtlasLayout::from_grid(UVec2::new(32, 32), 48, 1, None, None);
-            let mut layouts = world.resource_mut::<Assets<TextureAtlasLayout>>();
-            layouts.add(layout)
-        };
         let assets = world.resource::<AssetServer>();
         TilesetAsset {
-            image: assets.load_with_settings(
-                TilesetAsset::PATH,
-                |settings: &mut ImageLoaderSettings| {
-                    settings.sampler = ImageSampler::nearest();
-                },
-            ),
             soil_tileset: assets.load_with_settings(
                 TilesetAsset::SOIL_PATH,
                 |settings: &mut ImageLoaderSettings| {
@@ -44,7 +32,12 @@ impl FromWorld for TilesetAsset {
                     settings.sampler = ImageSampler::nearest();
                 },
             ),
-            layout_handle,
+            water_tileset: assets.load_with_settings(
+                TilesetAsset::WATER_PATH,
+                |settings: &mut ImageLoaderSettings| {
+                    settings.sampler = ImageSampler::nearest();
+                },
+            ),
         }
     }
 }

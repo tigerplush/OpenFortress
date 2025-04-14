@@ -1,8 +1,4 @@
-use bevy::{
-    color::palettes::css::WHITE,
-    ecs::relationship::RelatedSpawnerCommands,
-    prelude::*,
-};
+use bevy::{color::palettes::css::WHITE, ecs::relationship::RelatedSpawnerCommands, prelude::*};
 use bevy_ecs_tilemap::{
     map::TilemapId,
     tiles::{TileBundle, TileColor, TileFlip, TilePos, TileStorage, TileTextureIndex},
