@@ -25,6 +25,9 @@ use crate::{
     map_generation::WorldMap,
 };
 
+/// actually spawns chunk visualisations
+///
+/// Is called when a [`ChunkVisualisation`]` is inserted into an entity
 pub(crate) fn on_insert(
     trigger: Trigger<OnInsert, ChunkVisualisation>,
     mut world_map: ResMut<WorldMap>,
@@ -37,18 +40,19 @@ pub(crate) fn on_insert(
     let chunk_visualisation = chunks.get(target).unwrap();
     world_map.ensure_surrounding_exist(chunk_visualisation.0);
 
+    /// First we  remove all children
     commands
         .entity(target)
         .despawn_related::<Children>()
         .insert(ChildOf(world_map.entity));
 
-    let map_type = TilemapType::Square;
-
+    // Setup hashmaps for tilemaps
     let mut fog_tiles = HashMap::new();
     let mut water_tiles = HashMap::new();
     let mut full_tiles = HashMap::new();
     let mut half_tiles = HashMap::new();
 
+    // we iterate over every x and y coordinate of the current chunk and go from the current camera layer downwards 11 layers
     for x in 0..CHUNK_SIZE.x {
         for y in 0..CHUNK_SIZE.y {
             for z in 0..11 {
@@ -61,6 +65,7 @@ pub(crate) fn on_insert(
                     match block {
                         BlockType::Solid(_) => {
                             if z == 0 {
+                                // if the current block is solid and at the current camera z layer, we add it to the half tiles
                                 // add half tiles
                                 let mut flags = 0;
                                 for (index, (neighbor, _)) in current_world_coordinates
@@ -76,22 +81,26 @@ pub(crate) fn on_insert(
                                 }
                                 half_tiles.insert((x, y), (block, flags));
                             } else {
+                                // if the current block is solid and not at the current camera z layer, we add it to the full floor tiles
                                 full_tiles.insert(TilePos::new(x, y), TileWrapper::Floor(block));
                             }
                         }
                         BlockType::Liquid => {
+                            // if the current block is liquid, we add it to the animated water tiles
                             water_tiles.insert(TilePos::new(x, y), TileWrapper::Water);
                         }
                         _ => (),
                     }
                     break;
                 } else if z != 0 {
+                    // for every z layer from current camera layer -1 to current camera layer -10, we add fog with the respecting opacity
                     fog_tiles.insert(TilePos::new(x, y), TileWrapper::Fog(z as f32 / 10.0));
                 }
             }
         }
     }
 
+    // if the half tiles aren't empty, spawn the tilemap for the half tiles
     if !half_tiles.is_empty() {
         let map_size = TilemapSize::from(CHUNK_SIZE.truncate() * 2);
         let mut tile_storage = TileStorage::empty(map_size);
@@ -115,7 +124,7 @@ pub(crate) fn on_insert(
             })
             .insert(TilemapBundle {
                 grid_size,
-                map_type,
+                map_type: TilemapType::Square,
                 size: map_size,
                 storage: tile_storage,
                 texture: TilemapTexture::Single(tileset.soil_tileset.clone_weak()),
@@ -126,6 +135,7 @@ pub(crate) fn on_insert(
             .insert(ChildOf(target));
     }
 
+    // if the full (floor tiles) aren't empty, spawn the tilemap for floors
     if !full_tiles.is_empty() {
         spawn_tile_map(
             &mut commands,
@@ -136,6 +146,7 @@ pub(crate) fn on_insert(
         );
     }
 
+    // if the liquid tiles aren't empty, spawn the tilemap for animated liquids
     if !water_tiles.is_empty() {
         spawn_tile_map(
             &mut commands,
@@ -146,19 +157,26 @@ pub(crate) fn on_insert(
         );
     }
 
+    // if the fog tiles aren't empty, spawn the tilemap for fog
     if !fog_tiles.is_empty() {
         spawn_tile_map(&mut commands, &fog_tiles, target, &tileset.fog_tileset, 1.0);
     }
 }
+
+/// Wrapper to wrap the contents of a full-tile tilemap
 enum TileWrapper {
+    /// Wrapper for a fog type, carries the opacity in percent (ranging 0.0 to 1.0)
     Fog(f32),
+    /// Wrapper for a water type
     Water,
+    /// Wrapper for a block type
     Floor(BlockType),
 }
 
+/// spawns a full-tile tilemap
 fn spawn_tile_map(
     commands: &mut Commands,
-    fog_tiles: &HashMap<TilePos, TileWrapper>,
+    tiles: &HashMap<TilePos, TileWrapper>,
     target: Entity,
     tileset: &Handle<Image>,
     z_offset: f32,
@@ -171,7 +189,7 @@ fn spawn_tile_map(
     commands
         .entity(tilemap_entity)
         .with_children(|parent| {
-            for (tile_pos, opacity) in fog_tiles.iter() {
+            for (tile_pos, opacity) in tiles.iter() {
                 let tile_entity = match opacity {
                     TileWrapper::Fog(opacity) => parent
                         .spawn(TileBundle {
