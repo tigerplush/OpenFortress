@@ -121,9 +121,7 @@ fn calculate_path(
             PathfindingState::Failed(err) => {
                 info!("pathfinding failed");
                 match err {
-                    PathfindingErrors::NotEnoughChunks => {
-
-                    }
+                    PathfindingErrors::NotEnoughChunks => {}
                     PathfindingErrors::Unreachable => {
                         commands.entity(entity).remove::<Pathfinder>();
                     }

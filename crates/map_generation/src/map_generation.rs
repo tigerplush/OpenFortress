@@ -1,7 +1,9 @@
 use bevy::{platform_support::collections::HashMap, prelude::*};
+use bevy_ecs_tilemap::TilemapPlugin;
 use common::{
+    constants::TILE_SIZE,
     states::AppState,
-    traits::AddNamedObserver,
+    traits::{AddNamedObserver, Neighbors},
     types::{ChunkCoordinates, WorldCoordinates},
 };
 use noise::OpenSimplex;
@@ -14,6 +16,8 @@ use crate::{
 pub fn plugin(app: &mut App) {
     app.register_type::<WorldMap>()
         .register_type::<ChunkVisualisation>()
+        .insert_resource(ClearColor(Color::srgb_u8(50, 45, 52)))
+        .add_plugins(TilemapPlugin)
         .add_systems(OnEnter(AppState::MainGame), spawn_world)
         .add_systems(
             Update,
@@ -47,8 +51,12 @@ impl WorldMap {
         }
     }
 
-    pub(crate) fn get_chunk(&mut self, coordinates: ChunkCoordinates) -> &Chunk {
-        self.get_or_insert_chunk_mut(coordinates)
+    /// Checks every surrounding chunk. If it doesn't exist, it will be created.
+    pub(crate) fn ensure_surrounding_exist(&mut self, coordinates: ChunkCoordinates) {
+        self.get_or_insert_chunk_mut(coordinates);
+        for (neighbor, _) in coordinates.0.all_neighbors() {
+            self.get_or_insert_chunk_mut(ChunkCoordinates(neighbor));
+        }
     }
 
     /// Returns a chunk for a given coordinate. Will create a new one, if none has been created thus far.
@@ -99,7 +107,9 @@ fn spawn_world(mut commands: Commands) {
     let entity = commands
         .spawn((
             Name::new("World Map"),
-            Transform::default(),
+            // Transform::default(),
+            // due to an issue with bevy_ecs_tilemap, we have to move the whole world by half a tile
+            Transform::from_translation((-TILE_SIZE / 2.0).extend(0.0)),
             Visibility::Inherited,
         ))
         .id();

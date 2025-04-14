@@ -44,7 +44,7 @@ impl WorkOrder {
 }
 
 /// Marks an entity as a worker, i.e. someone who can fulfill work orders
-/// 
+///
 /// This probably has to be expanded later because not all workers can do all tasks
 #[derive(Component)]
 pub struct Worker;

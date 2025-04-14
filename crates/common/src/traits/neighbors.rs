@@ -11,6 +11,8 @@ pub trait Neighbors<T> {
     /// ```
     fn same_layer_neighbors(&self) -> Vec<(T, u32)>;
 
+    /// Returns all neighbors with their squared cost.
+    /// Order is like in [`Self::same_layer_neighbors`] but first on the layer above, then the same layer, then the layer below.
     fn all_neighbors(&self) -> Vec<(T, u32)>;
 }
 
