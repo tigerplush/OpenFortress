@@ -106,7 +106,7 @@ enum PathfindingState {
 }
 
 enum PathfindingErrors {
-    NotEnoughChunks,
+    // NotEnoughChunks,
     Unreachable,
 }
 
@@ -121,7 +121,7 @@ fn calculate_path(
             PathfindingState::Failed(err) => {
                 info!("pathfinding failed");
                 match err {
-                    PathfindingErrors::NotEnoughChunks => {}
+                    // PathfindingErrors::NotEnoughChunks => {}
                     PathfindingErrors::Unreachable => {
                         commands.entity(entity).remove::<Pathfinder>();
                     }

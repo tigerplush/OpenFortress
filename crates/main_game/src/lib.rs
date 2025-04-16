@@ -31,7 +31,10 @@ pub fn plugin(app: &mut App) {
 
 fn setup(mut commands: Commands) {
     for i in 0..7 {
-        commands.spawn((Dwarf, Transform::from_xyz(i as f32 * TILE_SIZE.x, 0.0, 0.0)));
+        commands.spawn((
+            Dwarf,
+            Transform::from_xyz((i - 4) as f32 * TILE_SIZE.x, 0.0, 0.0),
+        ));
     }
 }
 
