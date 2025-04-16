@@ -32,7 +32,9 @@ fn calculate_path(
                 }
                 PathfindingErrors::Unreachable => {
                     info!("pathfinding failed");
-                    commands.entity(entity).trigger(PathfindingEvent::Failed);
+                    commands
+                        .entity(entity)
+                        .trigger(PathfindingCalculationEvent::Failed);
                 }
             },
             PathfindingState::Complete(path) => {
@@ -40,34 +42,37 @@ fn calculate_path(
                 // commands.entity(entity).remove::<Pathfinder>().insert(path);
                 commands
                     .entity(entity)
-                    .trigger(PathfindingEvent::Succeeded(path));
+                    .trigger(PathfindingCalculationEvent::Succeeded(path));
             }
         }
     }
 }
 
 #[derive(Event)]
-pub struct PathfindingFailedEvent;
+pub enum PathEvent {
+    CalculationFailed,
+    Completed,
+}
 
 #[derive(Debug, PartialEq)]
-enum PathfindingEvent {
+enum PathfindingCalculationEvent {
     Failed,
     Succeeded(Path),
 }
 
-impl Event for PathfindingEvent {
+impl Event for PathfindingCalculationEvent {
     type Traversal = &'static ChildOf;
     const AUTO_PROPAGATE: bool = true;
 }
 
 fn listen_for_path(
-    trigger: Trigger<PathfindingEvent>,
+    trigger: Trigger<PathfindingCalculationEvent>,
     pathfinders: Query<Entity, With<Pathfinder>>,
     listeners: Query<&Children, With<PathfinderListener>>,
     mut commands: Commands,
 ) {
     // if the event is triggered on a listener, we insert the path
-    if let PathfindingEvent::Succeeded(path) = trigger.event() {
+    if let PathfindingCalculationEvent::Succeeded(path) = trigger.event() {
         // if this is a successful path, we don't care about any other paths, so:
         // add path to the listener entity, remove listener and kill all children
         if let Ok(children) = listeners.get(trigger.target()) {
@@ -107,7 +112,7 @@ fn check_pathfinder(
             commands
                 .entity(parent)
                 .remove::<PathfinderListener>()
-                .trigger(PathfindingFailedEvent);
+                .trigger(PathEvent::CalculationFailed);
         }
     }
 }

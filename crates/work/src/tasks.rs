@@ -65,6 +65,7 @@ impl Task {
 #[derive(Event)]
 pub enum TaskEvent {
     Completed,
+    Failed,
 }
 
 pub(crate) fn check_tasks(

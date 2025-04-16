@@ -2,6 +2,8 @@ use std::time::Duration;
 
 use bevy::prelude::*;
 
+use crate::PathEvent;
+
 #[derive(Clone, Component, Debug, PartialEq, Reflect)]
 #[reflect(Component)]
 pub struct Path {
@@ -50,6 +52,7 @@ pub(crate) fn tick_path(
         path.tick(time.delta());
         if path.complete() {
             commands.entity(entity).remove::<Path>();
+            commands.entity(entity).trigger(PathEvent::Completed);
         }
     }
 }

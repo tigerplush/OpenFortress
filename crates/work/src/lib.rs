@@ -106,5 +106,8 @@ fn on_task_finished(
             // despawn the observer
             commands.entity(trigger.observer()).despawn();
         }
+        TaskEvent::Failed => {
+            info!("task failed");
+        }
     }
 }
