@@ -11,7 +11,10 @@ pub fn plugin(app: &mut App) {
     app.register_type::<Pathfinder>()
         .register_type::<Path>()
         .add_systems(Update, calculate_path.run_if(resource_exists::<WorldMap>))
-        .add_systems(Update, (path::tick_path, path::follow_path).chain())
+        .add_systems(
+            Update,
+            (path::tick_path, path::follow_path, check_pathfinder).chain(),
+        )
         .add_named_observer(listen_for_path, "listen_for_path");
 }
 
@@ -43,8 +46,11 @@ fn calculate_path(
     }
 }
 
+#[derive(Event)]
+pub struct PathfindingFailedEvent;
+
 #[derive(Debug, PartialEq)]
-pub enum PathfindingEvent {
+enum PathfindingEvent {
     Failed,
     Succeeded(Path),
 }
@@ -56,19 +62,52 @@ impl Event for PathfindingEvent {
 
 fn listen_for_path(
     trigger: Trigger<PathfindingEvent>,
-    pathfinders: Query<&Pathfinder>,
-    listeners: Query<&PathfinderListener>,
+    pathfinders: Query<Entity, With<Pathfinder>>,
+    listeners: Query<&Children, With<PathfinderListener>>,
     mut commands: Commands,
 ) {
     // if the event is triggered on a listener, we insert the path
     if let PathfindingEvent::Succeeded(path) = trigger.event() {
-        if listeners.contains(trigger.target()) {
-            commands.entity(trigger.target()).insert(path.clone());
+        // if this is a successful path, we don't care about any other paths, so:
+        // add path to the listener entity, remove listener and kill all children
+        if let Ok(children) = listeners.get(trigger.target()) {
+            commands
+                .entity(trigger.target())
+                .remove::<PathfinderListener>()
+                .insert(path.clone());
+            for child in pathfinders
+                .iter()
+                .filter(|element| children.contains(element))
+            {
+                commands.entity(child).despawn();
+            }
+        }
+    } else {
+        // if this event is on the actual pathfinder object, we remove the pathfinder object since it's no longer needed
+        if pathfinders.contains(trigger.target()) {
+            commands.entity(trigger.target()).despawn();
         }
     }
+}
 
-    // if this event is on the actual pathfinder object, we remove the pathfinder object since it's no longer needed
-    if pathfinders.contains(trigger.target()) {
-        commands.entity(trigger.target()).despawn();
+fn check_pathfinder(
+    listeners: Query<(Entity, Option<&Children>), With<PathfinderListener>>,
+    pathfinders: Query<Entity, With<Pathfinder>>,
+    mut commands: Commands,
+) {
+    for (parent, children) in listeners {
+        if children.is_none_or(|x| {
+            pathfinders
+                .iter()
+                .filter(|element| x.contains(element))
+                .count()
+                == 0
+        }) {
+            // no children, so remove dis shit
+            commands
+                .entity(parent)
+                .remove::<PathfinderListener>()
+                .trigger(PathfindingFailedEvent);
+        }
     }
 }

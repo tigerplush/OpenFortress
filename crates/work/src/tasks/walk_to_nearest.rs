@@ -3,7 +3,7 @@ use common::{
     functions::world_position_to_world_coordinates, traits::SpawnNamedObserver,
     types::WorldCoordinates,
 };
-use pathfinding::{path::Path, pathfinder::Pathfinder, PathfindingEvent};
+use pathfinding::{PathfindingFailedEvent, path::Path, pathfinder::Pathfinder};
 
 use super::Task;
 
@@ -20,8 +20,9 @@ pub(crate) fn handle(query: Query<(Entity, &Transform, &WalkToNearest)>, mut com
             .remove::<WalkToNearest>()
             .insert(Pathfinder::nearest(start, walk_to.0))
             .id();
-        commands.spawn_named_observer(target, on_path_completed, "on_path_complete")
-        .spawn_named_observer(target, on_pathfinding_failed, "on_pathfinding_failed");
+        commands
+            .spawn_named_observer(target, on_path_completed, "on_path_complete")
+            .spawn_named_observer(target, on_pathfinding_failed, "on_pathfinding_failed");
     }
 }
 
@@ -30,8 +31,6 @@ fn on_path_completed(trigger: Trigger<OnRemove, Path>, mut commands: Commands) {
     commands.entity(trigger.observer()).despawn();
 }
 
-fn on_pathfinding_failed(trigger: Trigger<PathfindingEvent>) {
-    if &PathfindingEvent::Failed == trigger.event() {
-
-    }
+fn on_pathfinding_failed(trigger: Trigger<PathfindingFailedEvent>) {
+    info!("pathfinding failed");
 }
