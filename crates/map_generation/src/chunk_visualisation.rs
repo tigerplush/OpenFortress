@@ -337,6 +337,7 @@ pub(crate) fn delete(
             || !y_range.contains(&coordinates.0.y)
             || !z_range.contains(&coordinates.0.z)
         {
+            debug!("despawning chunk {}", entity);
             commands.entity(entity).despawn();
         }
     }

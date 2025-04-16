@@ -2,7 +2,9 @@ use std::time::Duration;
 
 use bevy::prelude::*;
 
-#[derive(Component, Reflect)]
+use crate::PathEvent;
+
+#[derive(Clone, Component, Debug, PartialEq, Reflect)]
 #[reflect(Component)]
 pub struct Path {
     set: Vec<Vec3>,
@@ -49,7 +51,9 @@ pub(crate) fn tick_path(
     for (entity, mut path) in &mut query {
         path.tick(time.delta());
         if path.complete() {
+            debug!("path complete, removing path from {}", entity);
             commands.entity(entity).remove::<Path>();
+            commands.entity(entity).trigger(PathEvent::Completed);
         }
     }
 }

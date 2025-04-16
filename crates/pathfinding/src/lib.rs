@@ -1,113 +1,21 @@
-use std::cmp::Reverse;
-
-use bevy::{platform_support::collections::HashMap, prelude::*};
-use common::{
-    functions::world_coordinates_to_world_position, traits::Neighbors, types::WorldCoordinates,
-};
+use bevy::prelude::*;
+use common::traits::AddNamedObserver;
 use map_generation::map_generation::WorldMap;
 use path::Path;
-use priority_queue::PriorityQueue;
+use pathfinder::{Pathfinder, PathfinderListener, PathfindingErrors, PathfindingState};
 
 pub mod path;
+pub mod pathfinder;
 
 pub fn plugin(app: &mut App) {
     app.register_type::<Pathfinder>()
         .register_type::<Path>()
         .add_systems(Update, calculate_path.run_if(resource_exists::<WorldMap>))
-        .add_systems(Update, (path::tick_path, path::follow_path).chain());
-}
-
-/// Attach this to calculate and ultimately follow a path.
-///
-/// Internally, Pathfinder uses IVec3 but these represent WorldCoordinates.
-#[derive(Component, Reflect)]
-#[reflect(Component)]
-pub struct Pathfinder {
-    target: IVec3,
-    #[reflect(ignore)]
-    frontier: PriorityQueue<IVec3, Reverse<u32>>,
-    came_from: HashMap<IVec3, Option<IVec3>>,
-    cost_so_far: HashMap<IVec3, u32>,
-    steps: u32,
-}
-
-impl Pathfinder {
-    /// Creates a new pathfinder that will try to find a path via A* from start to target
-    pub fn new(start: WorldCoordinates, target: WorldCoordinates) -> Self {
-        let frontier = PriorityQueue::from(vec![(start.0, Reverse(0))]);
-        let mut came_from = HashMap::default();
-        came_from.insert(start.0, None);
-        let mut cost_so_far = HashMap::default();
-        cost_so_far.insert(start.0, 0);
-        Pathfinder {
-            target: target.0,
-            frontier,
-            came_from,
-            cost_so_far,
-            steps: 0,
-        }
-    }
-
-    fn calculate_step(&mut self, world_map: &WorldMap) -> PathfindingState {
-        let Some((current_coordinates, _current_priority)) = self.frontier.pop() else {
-            return PathfindingState::Failed(PathfindingErrors::Unreachable);
-        };
-
-        if current_coordinates == self.target {
-            return PathfindingState::Complete(Path::new(self.to_path()));
-        }
-
-        for (neighbor, neighbor_cost) in current_coordinates.all_neighbors() {
-            // check if the next block is passable
-            // if the chunk isn't loaded, return current coords to back to the frontier
-            // return PathfindingError
-
-            let new_cost = self.cost_so_far.get(&current_coordinates).unwrap() + neighbor_cost;
-            let current_cost = self.cost_so_far.get(&neighbor);
-            if current_cost.is_none() || new_cost < *current_cost.unwrap() {
-                self.cost_so_far.insert(neighbor, new_cost);
-                let priority =
-                    new_cost + heuristic(world_map) + neighbor.distance_squared(self.target) as u32;
-                self.frontier.push(neighbor, Reverse(priority));
-                self.came_from.insert(neighbor, Some(current_coordinates));
-            }
-        }
-        self.steps += 1;
-        PathfindingState::Calculating
-    }
-
-    fn to_path(&self) -> Vec<Vec3> {
-        let mut points = vec![];
-        let mut next = self.target;
-        points.push(world_coordinates_to_world_position(WorldCoordinates(next)));
-        while let Some(point_option) = self.came_from.get(&next) {
-            if let Some(point) = point_option {
-                points.push(world_coordinates_to_world_position(WorldCoordinates(
-                    *point,
-                )));
-                next = *point;
-            } else {
-                break;
-            }
-        }
-        points.reverse();
-        points
-    }
-}
-
-fn heuristic(_world_map: &WorldMap) -> u32 {
-    1
-}
-
-enum PathfindingState {
-    Failed(PathfindingErrors),
-    Calculating,
-    Complete(Path),
-}
-
-enum PathfindingErrors {
-    // NotEnoughChunks,
-    Unreachable,
+        .add_systems(
+            Update,
+            (path::tick_path, path::follow_path, check_pathfinder).chain(),
+        )
+        .add_named_observer(listen_for_path, "listen_for_path");
 }
 
 fn calculate_path(
@@ -118,19 +26,92 @@ fn calculate_path(
     for (entity, mut path) in &mut query {
         match path.calculate_step(&world_map) {
             PathfindingState::Calculating => (),
-            PathfindingState::Failed(err) => {
-                info!("pathfinding failed");
-                match err {
-                    // PathfindingErrors::NotEnoughChunks => {}
-                    PathfindingErrors::Unreachable => {
-                        commands.entity(entity).remove::<Pathfinder>();
-                    }
+            PathfindingState::Failed(err) => match err {
+                PathfindingErrors::NotEnoughChunks => {
+                    info!("not enough chunks");
                 }
-            }
+                PathfindingErrors::Unreachable => {
+                    info!("pathfinding failed");
+                    commands
+                        .entity(entity)
+                        .trigger(PathfindingCalculationEvent::Failed);
+
+                    commands.entity(entity).despawn();
+                }
+            },
             PathfindingState::Complete(path) => {
-                info!("pathfinding done");
-                commands.entity(entity).remove::<Pathfinder>().insert(path);
+                info!("patfhinder {} done", entity);
+                // commands.entity(entity).remove::<Pathfinder>().insert(path);
+                commands
+                    .entity(entity)
+                    .trigger(PathfindingCalculationEvent::Succeeded(path));
+                commands.entity(entity).despawn();
             }
+        }
+    }
+}
+
+#[derive(Event)]
+pub enum PathEvent {
+    CalculationFailed,
+    Completed,
+}
+
+#[derive(Debug, PartialEq)]
+enum PathfindingCalculationEvent {
+    Failed,
+    Succeeded(Path),
+}
+
+impl Event for PathfindingCalculationEvent {
+    type Traversal = &'static ChildOf;
+    const AUTO_PROPAGATE: bool = true;
+}
+
+fn listen_for_path(
+    trigger: Trigger<PathfindingCalculationEvent>,
+    listeners: Query<&PathfinderListener>,
+    mut commands: Commands,
+) {
+    // if the event is triggered on a listener, we insert the path
+    if let PathfindingCalculationEvent::Succeeded(path) = trigger.event() {
+        // if this is a successful path, we don't care about any other paths, so:
+        // add path to the listener entity and remove listener
+        if listeners.contains(trigger.target()) {
+            debug!(
+                "entity {} has found a successful path, removing all pathfinding children",
+                trigger.target()
+            );
+            commands
+                .entity(trigger.target())
+                .remove::<PathfinderListener>()
+                .insert(path.clone());
+        }
+    }
+}
+
+fn check_pathfinder(
+    listeners: Query<(Entity, Option<&Children>), With<PathfinderListener>>,
+    pathfinders: Query<Entity, With<Pathfinder>>,
+    mut commands: Commands,
+) {
+    for (parent, children) in listeners {
+        if children.is_none_or(|x| {
+            pathfinders
+                .iter()
+                .filter(|element| x.contains(element))
+                .count()
+                == 0
+        }) {
+            // no children, so remove dis shit
+            debug!(
+                "entity {} has no more Pathfinder children, removing listener...",
+                parent
+            );
+            commands
+                .entity(parent)
+                .remove::<PathfinderListener>()
+                .trigger(PathEvent::CalculationFailed);
         }
     }
 }

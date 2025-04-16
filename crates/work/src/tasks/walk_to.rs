@@ -3,7 +3,7 @@ use common::{
     functions::world_position_to_world_coordinates, traits::SpawnNamedObserver,
     types::WorldCoordinates,
 };
-use pathfinding::{Pathfinder, path::Path};
+use pathfinding::{path::Path, pathfinder::Pathfinder};
 
 use super::Task;
 
@@ -18,7 +18,7 @@ pub(crate) fn handle(query: Query<(Entity, &Transform, &WalkTo)>, mut commands: 
         let target = commands
             .entity(entity)
             .remove::<WalkTo>()
-            .insert(Pathfinder::new(start, walk_to.0))
+            .insert(Pathfinder::exact(start, walk_to.0))
             .id();
         commands.spawn_named_observer(target, on_path_completed, "on_path_complete");
     }
@@ -26,5 +26,6 @@ pub(crate) fn handle(query: Query<(Entity, &Transform, &WalkTo)>, mut commands: 
 
 fn on_path_completed(trigger: Trigger<OnRemove, Path>, mut commands: Commands) {
     commands.entity(trigger.target()).remove::<Task>();
+    debug!("despawning observer {}", trigger.observer());
     commands.entity(trigger.observer()).despawn();
 }
