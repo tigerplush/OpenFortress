@@ -3,7 +3,7 @@ use common::{
     functions::world_position_to_world_coordinates, traits::SpawnNamedObserver,
     types::WorldCoordinates,
 };
-use pathfinding::{Pathfinder, path::Path};
+use pathfinding::{path::Path, pathfinder::Pathfinder};
 
 use super::Task;
 
