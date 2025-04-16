@@ -33,5 +33,6 @@ fn on_path_event(trigger: Trigger<PathEvent>, mut commands: Commands) {
             commands.entity(trigger.target()).remove::<Task>();
         }
     }
+    debug!("despawning observer {}", trigger.observer());
     commands.entity(trigger.observer()).despawn();
 }

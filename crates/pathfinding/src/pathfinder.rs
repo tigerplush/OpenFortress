@@ -108,9 +108,9 @@ impl Pathfinder {
 
         for (neighbor, neighbor_cost) in current_coordinates.all_neighbors() {
             match self.is_floor_block(world_map, neighbor) {
-                Ok(true) => debug!("block is floor"),
+                Ok(true) => trace!("block is floor"),
                 Ok(false) => {
-                    debug!("block is NOT floor");
+                    trace!("block is NOT floor");
                     continue;
                 }
                 Err(e) => {
@@ -148,7 +148,7 @@ impl Pathfinder {
             }
         })?;
 
-        debug!("checking {}, is {:?}", neighbor, neighbor_block);
+        trace!("checking {}, is {:?}", neighbor, neighbor_block);
         let block_below = world_map
             .get_raw_block(WorldCoordinates(neighbor - IVec3::Z))
             .ok_or({
@@ -158,7 +158,7 @@ impl Pathfinder {
                     PathfindingErrors::NotEnoughChunks
                 }
             })?;
-        debug!("below {}, is {:?}", neighbor - IVec3::Z, block_below);
+        trace!("below {}, is {:?}", neighbor - IVec3::Z, block_below);
         Ok(neighbor_block == BlockType::None && matches!(block_below, BlockType::Solid(_)))
     }
 

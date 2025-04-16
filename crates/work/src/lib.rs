@@ -102,9 +102,11 @@ fn on_task_finished(
                 .remove::<CurrentWorkOrder>();
             // despawn WorkOrder
             if let Ok(current_work_order) = workers.get(trigger.target()) {
+                debug!("despawning work order {}", current_work_order.0);
                 commands.entity(current_work_order.0).despawn();
             }
             // despawn the observer
+            debug!("despawning observer {}", trigger.observer());
             commands.entity(trigger.observer()).despawn();
         }
         TaskEvent::Failed => {
@@ -117,14 +119,19 @@ fn on_task_finished(
                 .remove::<Task>()
                 .remove::<TaskQueue>();
             // move the work order back onto the queue
-            
+
             if let Ok(current_work_order) = workers.get(trigger.target()) {
-                if let Some(index) = work_order_queue.in_progress.iter().position(|element| element.0 == current_work_order.0) {
+                if let Some(index) = work_order_queue
+                    .in_progress
+                    .iter()
+                    .position(|element| element.0 == current_work_order.0)
+                {
                     let work_order = work_order_queue.in_progress.remove(index).unwrap();
                     work_order_queue.pending.push_back(work_order);
                 }
             }
             // despawn the observer
+            debug!("despawning observer {}", trigger.observer());
             commands.entity(trigger.observer()).despawn();
         }
     }
