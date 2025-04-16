@@ -89,6 +89,7 @@ fn check_work_orders(
 
 fn on_task_finished(
     trigger: Trigger<TaskEvent>,
+    mut work_order_queue: ResMut<WorkOrderQueue>,
     workers: Query<&CurrentWorkOrder>,
     mut commands: Commands,
 ) {
@@ -107,7 +108,24 @@ fn on_task_finished(
             commands.entity(trigger.observer()).despawn();
         }
         TaskEvent::Failed => {
-            info!("task failed");
+            // on task completed:
+            // remove CurrentWorkOrder from worker
+            // remove task queue from worker
+            commands
+                .entity(trigger.target())
+                .remove::<CurrentWorkOrder>()
+                .remove::<Task>()
+                .remove::<TaskQueue>();
+            // move the work order back onto the queue
+            
+            if let Ok(current_work_order) = workers.get(trigger.target()) {
+                if let Some(index) = work_order_queue.in_progress.iter().position(|element| element.0 == current_work_order.0) {
+                    let work_order = work_order_queue.in_progress.remove(index).unwrap();
+                    work_order_queue.pending.push_back(work_order);
+                }
+            }
+            // despawn the observer
+            commands.entity(trigger.observer()).despawn();
         }
     }
 }
