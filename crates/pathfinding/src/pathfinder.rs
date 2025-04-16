@@ -1,10 +1,6 @@
 use std::cmp::Reverse;
 
-use bevy::{
-    ecs::spawn::SpawnIter,
-    platform_support::collections::HashMap,
-    prelude::*,
-};
+use bevy::{ecs::spawn::SpawnIter, platform_support::collections::HashMap, prelude::*};
 use common::{
     functions::world_coordinates_to_world_position, traits::Neighbors, types::WorldCoordinates,
 };
@@ -67,25 +63,31 @@ impl Pathfinder {
     }
 
     /// Spawns a PathfinderListener with one separate Pathfinder child target the exact block
-    /// 
+    ///
     /// Use this, if an entity has to land exactly on the given target
     pub fn exact(start: WorldCoordinates, target: WorldCoordinates) -> impl Bundle {
         (
             PathfinderListener,
-            children![
-                (Pathfinder::new(start, target), Name::new(format!("Pathfinder for {:?}", target.0)))
-            ]
+            children![(
+                Pathfinder::new(start, target),
+                Name::new(format!("Pathfinder for {:?}", target.0))
+            )],
         )
     }
 
     /// Spawns a PathfinderListener with separate Pathfinder children targeting the blocks surrounding the given target
-    /// 
+    ///
     /// Use this if an entity has to come close to a given target but not go onto it
     pub fn nearest(start: WorldCoordinates, target: WorldCoordinates) -> impl Bundle {
         let finders: Vec<(Pathfinder, Name)> = target
             .same_layer_neighbors()
             .iter()
-            .map(|(coordinates, _)| (Pathfinder::new(start, *coordinates), Name::new(format!("Pathfinder for {:?}", coordinates.0))))
+            .map(|(coordinates, _)| {
+                (
+                    Pathfinder::new(start, *coordinates),
+                    Name::new(format!("Pathfinder for {:?}", coordinates.0)),
+                )
+            })
             .collect();
         (
             PathfinderListener,
@@ -106,10 +108,11 @@ impl Pathfinder {
 
         for (neighbor, neighbor_cost) in current_coordinates.all_neighbors() {
             match self.is_floor_block(world_map, neighbor) {
-                Ok(true) => 
-                debug!("block is floor"),
-                Ok(false) => 
-                {debug!("block is NOT floor"); continue},
+                Ok(true) => debug!("block is floor"),
+                Ok(false) => {
+                    debug!("block is NOT floor");
+                    continue;
+                }
                 Err(e) => {
                     debug!("error, failure: {}", self.current_failures);
                     self.current_failures += 1;
@@ -144,7 +147,7 @@ impl Pathfinder {
                 PathfindingErrors::NotEnoughChunks
             }
         })?;
-        
+
         debug!("checking {}, is {:?}", neighbor, neighbor_block);
         let block_below = world_map
             .get_raw_block(WorldCoordinates(neighbor - IVec3::Z))
@@ -155,7 +158,7 @@ impl Pathfinder {
                     PathfindingErrors::NotEnoughChunks
                 }
             })?;
-            debug!("below {}, is {:?}", neighbor - IVec3::Z, block_below);
+        debug!("below {}, is {:?}", neighbor - IVec3::Z, block_below);
         Ok(neighbor_block == BlockType::None && matches!(block_below, BlockType::Solid(_)))
     }
 

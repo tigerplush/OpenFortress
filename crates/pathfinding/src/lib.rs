@@ -23,21 +23,21 @@ fn calculate_path(
     for (entity, mut path) in &mut query {
         match path.calculate_step(&world_map) {
             PathfindingState::Calculating => (),
-            PathfindingState::Failed(err) => {
-                match err {
-                    PathfindingErrors::NotEnoughChunks => {
-                        info!("not enough chunks");
-                    }
-                    PathfindingErrors::Unreachable => {
-                        info!("pathfinding failed");
-                        commands.entity(entity).trigger(PathfindingEvent::Failed);
-                    }
+            PathfindingState::Failed(err) => match err {
+                PathfindingErrors::NotEnoughChunks => {
+                    info!("not enough chunks");
                 }
-            }
+                PathfindingErrors::Unreachable => {
+                    info!("pathfinding failed");
+                    commands.entity(entity).trigger(PathfindingEvent::Failed);
+                }
+            },
             PathfindingState::Complete(path) => {
                 info!("pathfinding done");
                 // commands.entity(entity).remove::<Pathfinder>().insert(path);
-                commands.entity(entity).trigger(PathfindingEvent::Succeeded(path));
+                commands
+                    .entity(entity)
+                    .trigger(PathfindingEvent::Succeeded(path));
             }
         }
     }
@@ -54,7 +54,12 @@ impl Event for PathfindingEvent {
     const AUTO_PROPAGATE: bool = true;
 }
 
-fn listen_for_path(trigger: Trigger<PathfindingEvent>, pathfinders: Query<&Pathfinder>, listeners: Query<&PathfinderListener>, mut commands: Commands) {
+fn listen_for_path(
+    trigger: Trigger<PathfindingEvent>,
+    pathfinders: Query<&Pathfinder>,
+    listeners: Query<&PathfinderListener>,
+    mut commands: Commands,
+) {
     // if the event is triggered on a listener, we insert the path
     if let PathfindingEvent::Succeeded(path) = trigger.event() {
         if listeners.contains(trigger.target()) {
