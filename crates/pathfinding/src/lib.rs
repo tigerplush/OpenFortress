@@ -4,7 +4,7 @@ use bevy::{platform_support::collections::HashMap, prelude::*};
 use common::{
     functions::world_coordinates_to_world_position, traits::Neighbors, types::WorldCoordinates,
 };
-use map_generation::map_generation::WorldMap;
+use map_generation::{block_type::BlockType, map_generation::WorldMap};
 use path::Path;
 use priority_queue::PriorityQueue;
 
@@ -29,6 +29,22 @@ pub struct Pathfinder {
     came_from: HashMap<IVec3, Option<IVec3>>,
     cost_so_far: HashMap<IVec3, u32>,
     steps: u32,
+    allowed_failures: u8,
+    current_failures: u8,
+}
+
+impl Default for Pathfinder {
+    fn default() -> Self {
+        Pathfinder {
+            target: IVec3::ZERO,
+            frontier: PriorityQueue::new(),
+            came_from: HashMap::new(),
+            cost_so_far: HashMap::new(),
+            steps: 0,
+            allowed_failures: 3,
+            current_failures: 0,
+        }
+    }
 }
 
 impl Pathfinder {
@@ -44,12 +60,12 @@ impl Pathfinder {
             frontier,
             came_from,
             cost_so_far,
-            steps: 0,
+            ..default()
         }
     }
 
     fn calculate_step(&mut self, world_map: &WorldMap) -> PathfindingState {
-        let Some((current_coordinates, _current_priority)) = self.frontier.pop() else {
+        let Some((current_coordinates, current_priority)) = self.frontier.pop() else {
             return PathfindingState::Failed(PathfindingErrors::Unreachable);
         };
 
@@ -58,9 +74,16 @@ impl Pathfinder {
         }
 
         for (neighbor, neighbor_cost) in current_coordinates.all_neighbors() {
-            // check if the next block is passable
-            // if the chunk isn't loaded, return current coords to back to the frontier
-            // return PathfindingError
+            let result = self.is_floor_block(world_map, neighbor);
+            match self.is_floor_block(world_map, neighbor) {
+                Ok(true) => (),
+                Ok(false) => continue,
+                Err(_) => {
+                    self.frontier.push(current_coordinates, current_priority);
+                    let Err(e) = result else { unreachable!() };
+                    return PathfindingState::Failed(e);
+                }
+            }
 
             let new_cost = self.cost_so_far.get(&current_coordinates).unwrap() + neighbor_cost;
             let current_cost = self.cost_so_far.get(&neighbor);
@@ -74,6 +97,34 @@ impl Pathfinder {
         }
         self.steps += 1;
         PathfindingState::Calculating
+    }
+
+    fn is_floor_block(
+        &mut self,
+        world_map: &WorldMap,
+        neighbor: IVec3,
+    ) -> Result<bool, PathfindingErrors> {
+        let neighbor_block = world_map
+            .get_raw_block(WorldCoordinates(neighbor))
+            .ok_or_else(|| {
+                self.current_failures += 1;
+                if self.current_failures >= self.allowed_failures {
+                    PathfindingErrors::Unreachable
+                } else {
+                    PathfindingErrors::NotEnoughChunks
+                }
+            })?;
+        let block_below = world_map
+            .get_raw_block(WorldCoordinates(neighbor - IVec3::NEG_Z))
+            .ok_or_else(|| {
+                self.current_failures += 1;
+                if self.current_failures >= self.allowed_failures {
+                    PathfindingErrors::Unreachable
+                } else {
+                    PathfindingErrors::NotEnoughChunks
+                }
+            })?;
+        Ok(neighbor_block == BlockType::None && matches!(block_below, BlockType::Solid(_)))
     }
 
     fn to_path(&self) -> Vec<Vec3> {
@@ -106,7 +157,7 @@ enum PathfindingState {
 }
 
 enum PathfindingErrors {
-    // NotEnoughChunks,
+    NotEnoughChunks,
     Unreachable,
 }
 
@@ -121,7 +172,7 @@ fn calculate_path(
             PathfindingState::Failed(err) => {
                 info!("pathfinding failed");
                 match err {
-                    // PathfindingErrors::NotEnoughChunks => {}
+                    PathfindingErrors::NotEnoughChunks => {}
                     PathfindingErrors::Unreachable => {
                         commands.entity(entity).remove::<Pathfinder>();
                     }

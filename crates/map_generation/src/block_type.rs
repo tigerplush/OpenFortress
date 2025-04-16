@@ -187,7 +187,7 @@ impl BlockType {
     }
 }
 
-/// ```
+/// ```text
 ///    SE S SW E W NE N NW
 /// 0b  0 0  0 0 0  0 0  0
 /// ```
