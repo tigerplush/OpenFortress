@@ -21,7 +21,8 @@ impl Chunk {
                 let world_y = coordinates.0.y as f32 + (y as f32 / CHUNK_SIZE.y as f32);
                 let threshold = noise
                     .get([world_x as f64, world_y as f64])
-                    .remap(-1.0, 1.0, -10984.0, 8848.0)
+                    // .remap(-1.0, 1.0, -10984.0, 8848.0)
+                    .remap(-1.0, 1.0, -100.0, 100.0)
                     .round() as i32;
                 for z in 0..CHUNK_SIZE.z {
                     let height = coordinates.0.z * CHUNK_SIZE.z as i32 + z as i32;
