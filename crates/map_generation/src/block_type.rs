@@ -6,14 +6,14 @@ use bevy_ecs_tilemap::{
     tiles::{TileBundle, TileColor, TileFlip, TilePos, TileStorage, TileTextureIndex},
 };
 
-#[derive(Clone, Copy, PartialEq, Reflect)]
+#[derive(Clone, Copy, Debug, PartialEq, Reflect)]
 pub enum BlockType {
     Solid(SolidMaterial),
     Liquid,
     None,
 }
 
-#[derive(Clone, Copy, PartialEq, Reflect)]
+#[derive(Clone, Copy, Debug, PartialEq, Reflect)]
 pub enum SolidMaterial {
     Dirt,
     Grass,

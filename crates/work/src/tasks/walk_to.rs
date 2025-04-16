@@ -18,7 +18,7 @@ pub(crate) fn handle(query: Query<(Entity, &Transform, &WalkTo)>, mut commands: 
         let target = commands
             .entity(entity)
             .remove::<WalkTo>()
-            .insert(Pathfinder::new(start, walk_to.0))
+            .insert(Pathfinder::exact(start, walk_to.0))
             .id();
         commands.spawn_named_observer(target, on_path_completed, "on_path_complete");
     }

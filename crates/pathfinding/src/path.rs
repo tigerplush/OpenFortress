@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use bevy::prelude::*;
 
-#[derive(Component, Reflect)]
+#[derive(Clone, Component, Debug, PartialEq, Reflect)]
 #[reflect(Component)]
 pub struct Path {
     set: Vec<Vec3>,
