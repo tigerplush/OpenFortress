@@ -2094,6 +2094,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "designations"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy-inspector-egui",
+ "camera",
+ "common",
+ "leafwing-input-manager",
+ "map_generation",
+ "work",
+]
+
+[[package]]
 name = "dispatch"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3350,6 +3363,7 @@ dependencies = [
  "bevy",
  "camera",
  "common",
+ "designations",
  "dwarf",
  "leafwing-input-manager",
  "map_generation",

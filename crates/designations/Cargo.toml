@@ -1,16 +1,13 @@
 [package]
-name = "main_game"
+name = "designations"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
 bevy = { workspace = true }
+bevy-inspector-egui = { workspace = true }
 leafwing-input-manager = { workspace = true }
-assets = { path = "../assets"}
 camera = { path = "../camera"}
-common = { path = "../common"}
-designations = { path = "../designations" }
-dwarf = { path = "../dwarf"}
+common = { path = "../common" }
 map_generation = { path = "../map_generation" }
-pathfinding = { path = "../pathfinding" }
 work = { path = "../work" }

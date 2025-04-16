@@ -20,6 +20,7 @@ bevy = "=0.16.0-rc.3"
 noise = "0.9"
 priority-queue = "2.3.1"
 leafwing-input-manager = { git = "https://github.com/Leafwing-Studios/leafwing-input-manager.git" }
+bevy-inspector-egui = { git = "https://github.com/slyedoc/bevy-inspector-egui.git", branch = "bevy_0.16"}
 
 [dependencies]
 animation = { path = "crates/animation"}
@@ -31,7 +32,7 @@ menu_screen = { path = "crates/menu_screen"}
 splashscreen = { path = "crates/splashscreen"}
 ui = { path = "crates/ui"}
 bevy = { workspace = true }
-bevy-inspector-egui = { git = "https://github.com/slyedoc/bevy-inspector-egui.git", branch = "bevy_0.16"}
+bevy-inspector-egui ={ workspace = true }
 
 # Enable a small amount of optimization in the dev profile.
 [profile.dev]

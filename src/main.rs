@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy::window::WindowResolution;
+use bevy_inspector_egui::bevy_egui::EguiPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-
 fn main() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins.set(WindowPlugin {
@@ -13,7 +13,7 @@ fn main() {
         }),
         ..default()
     }));
-    app.add_plugins(WorldInspectorPlugin::new());
+    app.add_plugins((EguiPlugin, WorldInspectorPlugin::new()));
     app.add_plugins((
         animation::plugin,
         assets::plugin,
