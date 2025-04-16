@@ -74,13 +74,12 @@ impl Pathfinder {
         }
 
         for (neighbor, neighbor_cost) in current_coordinates.all_neighbors() {
-            let result = self.is_floor_block(world_map, neighbor);
             match self.is_floor_block(world_map, neighbor) {
                 Ok(true) => (),
                 Ok(false) => continue,
-                Err(_) => {
+                Err(e) => {
+                    self.current_failures += 1;
                     self.frontier.push(current_coordinates, current_priority);
-                    let Err(e) = result else { unreachable!() };
                     return PathfindingState::Failed(e);
                 }
             }
@@ -100,14 +99,13 @@ impl Pathfinder {
     }
 
     fn is_floor_block(
-        &mut self,
+        &self,
         world_map: &WorldMap,
         neighbor: IVec3,
     ) -> Result<bool, PathfindingErrors> {
         let neighbor_block = world_map
             .get_raw_block(WorldCoordinates(neighbor))
-            .ok_or_else(|| {
-                self.current_failures += 1;
+            .ok_or({
                 if self.current_failures >= self.allowed_failures {
                     PathfindingErrors::Unreachable
                 } else {
@@ -116,8 +114,7 @@ impl Pathfinder {
             })?;
         let block_below = world_map
             .get_raw_block(WorldCoordinates(neighbor - IVec3::NEG_Z))
-            .ok_or_else(|| {
-                self.current_failures += 1;
+            .ok_or({
                 if self.current_failures >= self.allowed_failures {
                     PathfindingErrors::Unreachable
                 } else {

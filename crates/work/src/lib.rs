@@ -38,7 +38,7 @@ impl WorkOrder {
     /// Creates a TaskQueue from work order
     fn realise(&self) -> impl Bundle {
         match self {
-            WorkOrder::Dig(pos) => TaskQueue::new(&[Task::dig(*pos), Task::walk_to(*pos)]),
+            WorkOrder::Dig(pos) => TaskQueue::new(&[Task::dig(*pos), Task::walk_to_nearest(*pos)]),
         }
     }
 }

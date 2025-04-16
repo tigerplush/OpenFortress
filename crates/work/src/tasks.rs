@@ -3,20 +3,24 @@ use common::types::WorldCoordinates;
 use dig::Dig;
 use map_generation::map_generation::WorldMap;
 use walk_to::WalkTo;
+use walk_to_nearest::WalkToNearest;
 
 pub mod dig;
 pub mod walk_to;
+pub mod walk_to_nearest;
 
 pub(crate) fn plugin(app: &mut App) {
     app.register_type::<TaskQueue>()
         .register_type::<Task>()
         .register_type::<Dig>()
+        .register_type::<WalkToNearest>()
         .register_type::<WalkTo>()
         .add_systems(
             Update,
             (
                 check_tasks,
                 dig::handle.run_if(resource_exists::<WorldMap>),
+                walk_to_nearest::handle,
                 walk_to::handle,
             ),
         );
@@ -39,6 +43,7 @@ impl TaskQueue {
 #[reflect(Component)]
 /// A task is a concrete step taken in order to achieve some greater goal.
 pub(crate) enum Task {
+    WalkToNearest(WalkToNearest),
     WalkTo(WalkTo),
     Dig(Dig),
 }
@@ -50,6 +55,10 @@ impl Task {
 
     pub(crate) fn walk_to(pos: WorldCoordinates) -> Task {
         Task::WalkTo(WalkTo(pos))
+    }
+
+    pub(crate) fn walk_to_nearest(pos: WorldCoordinates) -> Task {
+        Task::WalkToNearest(WalkToNearest(pos))
     }
 }
 
@@ -66,6 +75,9 @@ pub(crate) fn check_tasks(
         if let Some(task) = task_queue.0.pop() {
             info!("{} is taking on task {:?}", entity, task);
             match task {
+                Task::WalkToNearest(walk_to_nearest) => {
+                    commands.entity(entity).insert(walk_to_nearest);
+                }
                 Task::WalkTo(walk_to) => {
                     commands.entity(entity).insert(walk_to);
                 }
