@@ -28,5 +28,5 @@ fn setup(background: Res<MenuBackgroundAsset>, mut commands: Commands) {
 }
 
 fn on_press_start(_trigger: Trigger<Pointer<Click>>, mut next_state: ResMut<NextState<AppState>>) {
-    next_state.set(AppState::MainGame);
+    next_state.set(AppState::WorldGeneration);
 }

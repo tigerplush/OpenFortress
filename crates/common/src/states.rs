@@ -6,5 +6,6 @@ pub enum AppState {
     Splashscreen,
     Loading,
     MainMenu,
+    WorldGeneration,
     MainGame,
 }

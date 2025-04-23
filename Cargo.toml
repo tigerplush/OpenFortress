@@ -31,8 +31,9 @@ main_game = { path = "crates/main_game" }
 menu_screen = { path = "crates/menu_screen"}
 splashscreen = { path = "crates/splashscreen"}
 ui = { path = "crates/ui"}
+world_generation = { path = "crates/world_generation"}
 bevy = { workspace = true }
-bevy-inspector-egui ={ workspace = true }
+bevy-inspector-egui = { workspace = true }
 
 # Enable a small amount of optimization in the dev profile.
 [profile.dev]

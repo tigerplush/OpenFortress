@@ -4013,6 +4013,7 @@ dependencies = [
  "menu_screen",
  "splashscreen",
  "ui",
+ "world_generation",
 ]
 
 [[package]]
@@ -6338,6 +6339,16 @@ dependencies = [
  "common",
  "map_generation",
  "pathfinding",
+]
+
+[[package]]
+name = "world_generation"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy-inspector-egui",
+ "common",
+ "map_generation",
 ]
 
 [[package]]
