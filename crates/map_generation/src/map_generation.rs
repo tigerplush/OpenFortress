@@ -8,6 +8,12 @@ use common::{
 };
 use noise::OpenSimplex;
 
+#[derive(Default, Reflect, Resource)]
+#[reflect(Resource)]
+pub struct WorldGenerationSettings {
+    pub seed: u32,
+}
+
 use crate::{
     Chunk, ChunkVisualisation, ToChunkAndBlock, block_type::BlockType, chunk_visualisation,
     to_index,
@@ -15,6 +21,7 @@ use crate::{
 
 pub fn plugin(app: &mut App) {
     app.register_type::<WorldMap>()
+        .register_type::<WorldGenerationSettings>()
         .register_type::<ChunkVisualisation>()
         .insert_resource(ClearColor(Color::srgb_u8(50, 45, 52)))
         .add_plugins(TilemapPlugin)
@@ -42,10 +49,10 @@ pub struct WorldMap {
 }
 
 impl WorldMap {
-    fn new(entity: Entity) -> Self {
+    fn new(entity: Entity, seed: u32) -> Self {
         WorldMap {
             chunks: HashMap::default(),
-            noise: OpenSimplex::new(0),
+            noise: OpenSimplex::new(seed),
             entity,
             block_states: HashMap::default(),
         }
@@ -113,7 +120,7 @@ impl WorldMap {
     }
 }
 
-fn spawn_world(mut commands: Commands) {
+fn spawn_world(world_generation_settings: Res<WorldGenerationSettings>, mut commands: Commands) {
     let entity = commands
         .spawn((
             Name::new("World Map"),
@@ -123,5 +130,5 @@ fn spawn_world(mut commands: Commands) {
             Visibility::Inherited,
         ))
         .id();
-    commands.insert_resource(WorldMap::new(entity));
+    commands.insert_resource(WorldMap::new(entity, world_generation_settings.seed));
 }

@@ -1,0 +1,10 @@
+[package]
+name = "world_generation"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bevy = { workspace = true }
+bevy-inspector-egui = { workspace = true }
+common = { path = "../common" }
+map_generation = { path = "../map_generation" }

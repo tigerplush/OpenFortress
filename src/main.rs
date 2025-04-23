@@ -23,6 +23,7 @@ fn main() {
         menu_screen::plugin,
         splashscreen::plugin,
         ui::plugin,
+        world_generation::plugin,
     ));
     app.run();
 }
