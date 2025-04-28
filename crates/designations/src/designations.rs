@@ -69,6 +69,7 @@ fn handle_brush(
             .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor).ok())
             .map(|ray| ray.origin.truncate())
         {
+            #[allow(clippy::single_match)]
             match brush_settings.current_action {
                 MouseActions::Dig => {
                     let world_coordinates =
