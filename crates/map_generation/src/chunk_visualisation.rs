@@ -1,5 +1,5 @@
 use assets::tileset_asset::TilesetAsset;
-use bevy::{color::palettes::css::WHITE, platform_support::collections::HashMap, prelude::*};
+use bevy::{color::palettes::css::WHITE, platform::collections::HashMap, prelude::*};
 use bevy_ecs_tilemap::{
     TilemapBundle,
     anchor::TilemapAnchor,

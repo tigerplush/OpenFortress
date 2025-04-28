@@ -13,7 +13,12 @@ fn main() {
         }),
         ..default()
     }));
-    app.add_plugins((EguiPlugin, WorldInspectorPlugin::new()));
+    app.add_plugins((
+        EguiPlugin {
+            enable_multipass_for_primary_context: false,
+        },
+        WorldInspectorPlugin::new(),
+    ));
     app.add_plugins((
         animation::plugin,
         assets::plugin,

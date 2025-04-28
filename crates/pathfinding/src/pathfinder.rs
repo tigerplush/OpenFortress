@@ -1,6 +1,6 @@
 use std::cmp::Reverse;
 
-use bevy::{ecs::spawn::SpawnIter, platform_support::collections::HashMap, prelude::*};
+use bevy::{ecs::spawn::SpawnIter, platform::collections::HashMap, prelude::*};
 use common::{
     functions::world_coordinates_to_world_position, traits::Neighbors, types::WorldCoordinates,
 };

@@ -1,4 +1,4 @@
-use bevy::{platform_support::collections::HashMap, prelude::*};
+use bevy::{platform::collections::HashMap, prelude::*};
 use bevy_ecs_tilemap::TilemapPlugin;
 use common::{
     constants::TILE_SIZE,

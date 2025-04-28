@@ -53,6 +53,7 @@ impl Task {
         Task::Dig(Dig(pos))
     }
 
+    #[allow(dead_code)]
     pub(crate) fn walk_to(pos: WorldCoordinates) -> Task {
         Task::WalkTo(WalkTo(pos))
     }

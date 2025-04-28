@@ -16,11 +16,11 @@ license = "MIT OR Apache-2.0"
 default = []
 
 [workspace.dependencies]
-bevy = "=0.16.0-rc.3"
+bevy = "0.16"
 noise = "0.9"
 priority-queue = "2.3.1"
 leafwing-input-manager = { git = "https://github.com/Leafwing-Studios/leafwing-input-manager.git" }
-bevy-inspector-egui = { git = "https://github.com/slyedoc/bevy-inspector-egui.git", branch = "bevy_0.16"}
+bevy-inspector-egui = "0.31"
 
 [dependencies]
 animation = { path = "crates/animation"}
