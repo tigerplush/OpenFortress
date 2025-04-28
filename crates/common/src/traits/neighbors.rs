@@ -4,7 +4,7 @@ pub trait Neighbors<T> {
     /// Returns all neighbors on the same layer with their squared cost.
     ///
     /// The order is:
-    /// ```
+    /// ```text
     /// NW, N, NE,
     ///  W,     E,
     /// SW, S, SE
