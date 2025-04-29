@@ -1,4 +1,5 @@
 use bevy::{prelude::*, window::PrimaryWindow};
+use bevy_inspector_egui::bevy_egui::EguiContexts;
 use camera::CameraLayer;
 use common::{
     functions::world_position_to_world_coordinates, states::AppState, types::WorldCoordinates,
@@ -69,7 +70,14 @@ fn handle_brush_input(
     window: Single<&Window, With<PrimaryWindow>>,
     camera: Single<(&Camera, &GlobalTransform, &CameraLayer), With<Camera>>,
     mut brush_event_writer: EventWriter<BrushInputEvent>,
+    mut contexts: EguiContexts,
 ) {
+    // Skip pointer events that are captured by egui
+    let ctx = contexts.ctx_mut();
+    if ctx.wants_pointer_input() {
+        return;
+    }
+
     let window = window.into_inner();
     let action_state = query.into_inner();
     let (camera, camera_transform, layer) = camera.into_inner();
