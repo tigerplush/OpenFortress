@@ -1,5 +1,7 @@
 # OpenFortress
-This is an attempt of a Dwarf Fortress clone implemented in Rust
+This is an attempt of a Dwarf Fortress clone implemented in Rust.
+
+Join our Community Server on [Discord](https://discord.gg/vZJpNxAwnw)!
 
 ## Startup
 Run with `cargo run`
