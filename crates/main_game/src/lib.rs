@@ -1,6 +1,6 @@
 use assets::icon_asset::IconAsset;
 use bevy::prelude::*;
-use camera::CameraPlugin;
+use camera::{CameraLayer, CameraPlugin};
 use common::{constants::TILE_SIZE, states::AppState, traits::AddNamedObserver};
 use dwarf::Dwarf;
 use work::WorkOrder;
@@ -15,6 +15,7 @@ pub fn plugin(app: &mut App) {
         work::plugin,
     ))
     .add_systems(OnEnter(AppState::MainGame), setup)
+    .add_systems(Update, update_work_order_layer_visibility)
     .add_named_observer(add_vis_to_work_order, "add_vis_to_work_order");
 }
 
@@ -35,4 +36,20 @@ fn add_vis_to_work_order(
     commands
         .entity(trigger.target())
         .insert(icon_asset.sprite(IconAsset::SHOVEL));
+}
+
+fn update_work_order_layer_visibility(
+    camera_layer: Single<Ref<CameraLayer>>,
+    mut work_order_query: Query<(&Transform, &mut Visibility), With<WorkOrder>>,
+) {
+    if !camera_layer.is_changed() {
+        return;
+    }
+    for (transform, mut visible) in work_order_query.iter_mut() {
+        *visible = if transform.translation.z as i32 == camera_layer.0 {
+            Visibility::Inherited
+        } else {
+            Visibility::Hidden
+        };
+    }
 }
