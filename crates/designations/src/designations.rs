@@ -1,6 +1,9 @@
 use bevy::{prelude::*, window::PrimaryWindow};
+use bevy_inspector_egui::bevy_egui::EguiContexts;
 use camera::CameraLayer;
-use common::{functions::world_position_to_world_coordinates, states::AppState};
+use common::{
+    functions::world_position_to_world_coordinates, states::AppState, types::WorldCoordinates,
+};
 use leafwing_input_manager::{
     Actionlike, InputManagerBundle,
     plugin::InputManagerPlugin,
@@ -18,6 +21,11 @@ pub(crate) enum MouseActions {
     Dig,
 }
 
+#[derive(Event)]
+enum BrushInputEvent {
+    Designated(WorldCoordinates),
+}
+
 #[derive(Default, Reflect, Resource)]
 #[reflect(Resource)]
 pub(crate) struct BrushSettings {
@@ -27,10 +35,16 @@ pub(crate) struct BrushSettings {
 pub fn plugin(app: &mut App) {
     app.insert_resource(BrushSettings::default())
         .add_plugins(InputManagerPlugin::<MouseControls>::default())
+        .add_event::<BrushInputEvent>()
         .add_systems(OnEnter(AppState::MainGame), setup_brush)
         .add_systems(
             Update,
-            (handle_brush, ui::brushes).run_if(in_state(AppState::MainGame)),
+            (
+                handle_brush_input,
+                handle_brush.after(handle_brush_input),
+                ui::brushes,
+            )
+                .run_if(in_state(AppState::MainGame)),
         );
 }
 
@@ -51,15 +65,19 @@ fn setup_brush(mut commands: Commands) {
     ));
 }
 
-fn handle_brush(
-    brush_settings: Res<BrushSettings>,
-    world_map: Res<WorldMap>,
-    work_order_queue: Res<WorkOrderQueue>,
+fn handle_brush_input(
     query: Single<&ActionState<MouseControls>>,
     window: Single<&Window, With<PrimaryWindow>>,
     camera: Single<(&Camera, &GlobalTransform, &CameraLayer), With<Camera>>,
-    mut commands: Commands,
+    mut brush_event_writer: EventWriter<BrushInputEvent>,
+    mut contexts: EguiContexts,
 ) {
+    // Skip pointer events that are captured by egui
+    let ctx = contexts.ctx_mut();
+    if ctx.wants_pointer_input() {
+        return;
+    }
+
     let window = window.into_inner();
     let action_state = query.into_inner();
     let (camera, camera_transform, layer) = camera.into_inner();
@@ -69,18 +87,32 @@ fn handle_brush(
             .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor).ok())
             .map(|ray| ray.origin.truncate())
         {
-            #[allow(clippy::single_match)]
+            let world_coordinates =
+                world_position_to_world_coordinates(world_position.extend(layer.0 as f32));
+            brush_event_writer.write(BrushInputEvent::Designated(world_coordinates));
+        }
+    }
+}
+
+fn handle_brush(
+    brush_settings: Res<BrushSettings>,
+    world_map: Res<WorldMap>,
+    work_order_queue: Res<WorkOrderQueue>,
+    mut brush_event_reader: EventReader<BrushInputEvent>,
+    mut commands: Commands,
+) {
+    for brush_input_event in brush_event_reader.read() {
+        #[allow(irrefutable_let_patterns)]
+        if let BrushInputEvent::Designated(world_coordinate) = brush_input_event {
             match brush_settings.current_action {
                 MouseActions::Dig => {
-                    let world_coordinates =
-                        world_position_to_world_coordinates(world_position.extend(layer.0 as f32));
-                    if !work_order_queue.contains(&WorkOrder::Dig(world_coordinates))
-                        && world_map.get_block(world_coordinates).is_some()
+                    if !work_order_queue.contains(&WorkOrder::Dig(*world_coordinate))
+                        && world_map.get_block(*world_coordinate).is_some()
                     {
-                        commands.spawn(WorkOrder::dig(world_position.extend(layer.0 as f32)));
+                        commands.spawn(WorkOrder::dig(*world_coordinate));
                     }
                 }
-                _ => (),
+                MouseActions::None => (),
             }
         }
     }

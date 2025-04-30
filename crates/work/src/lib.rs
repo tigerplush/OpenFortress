@@ -1,8 +1,5 @@
 use bevy::prelude::*;
-use common::{
-    constants::TILE_SIZE, functions::world_position_to_world_coordinates,
-    traits::SpawnNamedObserver, types::WorldCoordinates,
-};
+use common::{constants::TILE_SIZE, traits::SpawnNamedObserver, types::WorldCoordinates};
 use tasks::{Task, TaskEvent, TaskQueue};
 use work_order_queue::WorkOrderQueue;
 
@@ -24,13 +21,10 @@ pub enum WorkOrder {
 
 impl WorkOrder {
     /// Creates a digging work order for the given world position
-    pub fn dig(world_position: Vec3) -> impl Bundle {
-        let world_coordinates = world_position_to_world_coordinates(world_position);
+    pub fn dig(world_coordinates: WorldCoordinates) -> impl Bundle {
         (
             Name::new(format!("WorkOrder - Dig {}", world_coordinates.0)),
-            Transform::from_translation(
-                (world_position / TILE_SIZE.extend(1.0)).round() * TILE_SIZE.extend(1.0),
-            ),
+            Transform::from_translation(world_coordinates.0.as_vec3() * TILE_SIZE.extend(1.0)),
             WorkOrder::Dig(world_coordinates),
         )
     }
