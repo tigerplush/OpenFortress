@@ -103,7 +103,7 @@ pub(crate) fn on_insert(
 
         let tile_size = TilemapTileSize::from(TILE_SIZE / 2.0);
         let grid_size = tile_size.into();
-        let tilemap_entity = commands.spawn(Name::new("Tilemap")).id();
+        let tilemap_entity = commands.spawn(Name::new("Half-Tile Tilemap")).id();
         commands
             .entity(tilemap_entity)
             .with_children(|parent| {
@@ -139,6 +139,7 @@ pub(crate) fn on_insert(
             target,
             &tileset.floor_tileset,
             -0.5,
+            "Full-Tile Tilemap"
         );
     }
 
@@ -150,12 +151,13 @@ pub(crate) fn on_insert(
             target,
             &tileset.water_tileset,
             -0.5,
+            "Water Tilemap"
         );
     }
 
     // if the fog tiles aren't empty, spawn the tilemap for fog
     if !fog_tiles.is_empty() {
-        spawn_tile_map(&mut commands, &fog_tiles, target, &tileset.fog_tileset, 1.0);
+        spawn_tile_map(&mut commands, &fog_tiles, target, &tileset.fog_tileset, 1.0, "Fog Tilemap");
     }
 }
 
@@ -176,12 +178,13 @@ fn spawn_tile_map(
     target: Entity,
     tileset: &Handle<Image>,
     z_offset: f32,
+    name: impl Into<String>,
 ) {
     let size = TilemapSize::from(CHUNK_SIZE.truncate());
     let mut storage = TileStorage::empty(size);
     let tile_size = TilemapTileSize::from(TILE_SIZE);
     let grid_size = tile_size.into();
-    let tilemap_entity = commands.spawn(Name::new("Fog Tilemap")).id();
+    let tilemap_entity = commands.spawn(Name::new(name.into())).id();
     commands
         .entity(tilemap_entity)
         .with_children(|parent| {
