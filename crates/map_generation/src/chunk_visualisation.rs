@@ -139,7 +139,7 @@ pub(crate) fn on_insert(
             target,
             &tileset.floor_tileset,
             -0.5,
-            "Full-Tile Tilemap"
+            "Full-Tile Tilemap",
         );
     }
 
@@ -151,13 +151,20 @@ pub(crate) fn on_insert(
             target,
             &tileset.water_tileset,
             -0.5,
-            "Water Tilemap"
+            "Water Tilemap",
         );
     }
 
     // if the fog tiles aren't empty, spawn the tilemap for fog
     if !fog_tiles.is_empty() {
-        spawn_tile_map(&mut commands, &fog_tiles, target, &tileset.fog_tileset, 1.0, "Fog Tilemap");
+        spawn_tile_map(
+            &mut commands,
+            &fog_tiles,
+            target,
+            &tileset.fog_tileset,
+            1.0,
+            "Fog Tilemap",
+        );
     }
 }
 

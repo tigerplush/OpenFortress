@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 bevy = { workspace = true }
-bevy_ecs_tilemap = { git = "https://github.com/StarArawn/bevy_ecs_tilemap.git" }
+bevy_ecs_tilemap = "0.16.0"
 noise = { workspace = true }
 assets = { path = "../assets" }
 camera = { path = "../camera" }

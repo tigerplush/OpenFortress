@@ -723,8 +723,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_ecs_tilemap"
-version = "0.16.0-rc.2"
-source = "git+https://github.com/StarArawn/bevy_ecs_tilemap.git#843f7be28f1d6c0b4709403f50608e16abaa8477"
+version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ec11e943225eb172928a85f2183b665f7782743b00bca937fbab3736921a1666"
 dependencies = [
  "bevy",
  "log",
@@ -3043,8 +3044,9 @@ checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 
 [[package]]
 name = "leafwing-input-manager"
-version = "0.16.0"
-source = "git+https://github.com/Leafwing-Studios/leafwing-input-manager.git#54a4181111f6ea70338fea1667f956ef448eaa86"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5e5921290ac62f78a4f2f2f9fe3a31c73bbf4309b013bf25f91514ac111e3976"
 dependencies = [
  "bevy",
  "dyn-clone",
@@ -3058,8 +3060,9 @@ dependencies = [
 
 [[package]]
 name = "leafwing_input_manager_macros"
-version = "0.16.0"
-source = "git+https://github.com/Leafwing-Studios/leafwing-input-manager.git#54a4181111f6ea70338fea1667f956ef448eaa86"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2226cb83129176a6c634f2ce0828c2c29896ea0898fc198636f98696b8056890"
 dependencies = [
  "proc-macro-crate",
  "proc-macro2",

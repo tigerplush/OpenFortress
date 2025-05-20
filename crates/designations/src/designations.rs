@@ -5,7 +5,7 @@ use common::{
     functions::world_position_to_world_coordinates, states::AppState, types::WorldCoordinates,
 };
 use leafwing_input_manager::{
-    Actionlike, InputManagerBundle,
+    Actionlike,
     plugin::InputManagerPlugin,
     prelude::{ActionState, InputMap, MouseMove},
 };
@@ -59,10 +59,7 @@ fn setup_brush(mut commands: Commands) {
     let input_map = InputMap::default()
         .with_dual_axis(MouseControls::Move, MouseMove::default())
         .with(MouseControls::PrimaryAction, MouseButton::Left);
-    commands.spawn((
-        Name::new("Brush Controls"),
-        InputManagerBundle::with_map(input_map),
-    ));
+    commands.spawn((Name::new("Brush Controls"), input_map));
 }
 
 fn handle_brush_input(

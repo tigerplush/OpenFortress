@@ -3,7 +3,7 @@ use std::ops::DerefMut;
 use bevy::prelude::*;
 use common::states::AppState;
 use leafwing_input_manager::{
-    Actionlike, InputManagerBundle,
+    Actionlike,
     plugin::InputManagerPlugin,
     prelude::{ActionState, InputMap, MouseScrollAxis, VirtualDPad},
 };
@@ -62,7 +62,7 @@ fn setup(mut commands: Commands) {
         .with(CameraControls::ScrollUp, KeyCode::Numpad8)
         .with(CameraControls::ScrollDown, KeyCode::Numpad2);
     commands.spawn((
-        InputManagerBundle::with_map(input_map),
+        input_map,
         Camera2d,
         CameraLayer(0),
         StateScoped(AppState::MainGame),

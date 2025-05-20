@@ -19,7 +19,7 @@ default = []
 bevy = "0.16"
 noise = "0.9"
 priority-queue = "2.3.1"
-leafwing-input-manager = { git = "https://github.com/Leafwing-Studios/leafwing-input-manager.git" }
+leafwing-input-manager = "0.17.0"
 bevy-inspector-egui = "0.31"
 
 [dependencies]
