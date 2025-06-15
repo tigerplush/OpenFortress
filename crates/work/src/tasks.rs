@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use common::types::WorldCoordinates;
+use common::types::BlockCoordinates;
 use dig::Dig;
 use map_generation::map_generation::WorldMap;
 use walk_to::WalkTo;
@@ -49,16 +49,16 @@ pub(crate) enum Task {
 }
 
 impl Task {
-    pub(crate) fn dig(pos: WorldCoordinates) -> Task {
+    pub(crate) fn dig(pos: BlockCoordinates) -> Task {
         Task::Dig(Dig(pos))
     }
 
     #[allow(dead_code)]
-    pub(crate) fn walk_to(pos: WorldCoordinates) -> Task {
+    pub(crate) fn walk_to(pos: BlockCoordinates) -> Task {
         Task::WalkTo(WalkTo(pos))
     }
 
-    pub(crate) fn walk_to_nearest(pos: WorldCoordinates) -> Task {
+    pub(crate) fn walk_to_nearest(pos: BlockCoordinates) -> Task {
         Task::WalkToNearest(WalkToNearest(pos))
     }
 }

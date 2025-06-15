@@ -6,26 +6,26 @@ use bevy::{
 use crate::traits::Neighbors;
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, Reflect)]
-pub struct WorldCoordinates(pub IVec3);
+pub struct BlockCoordinates(pub IVec3);
 
-impl WorldCoordinates {
+impl BlockCoordinates {
     /// Manually overrides the z value of the coordinates.
-    pub fn with_z_offset(mut self, z_offset: i32) -> WorldCoordinates {
+    pub fn with_z_offset(mut self, z_offset: i32) -> BlockCoordinates {
         self.0.z = z_offset;
         self
     }
 }
 
-impl Neighbors<WorldCoordinates> for WorldCoordinates {
-    fn same_layer_neighbors(&self) -> Vec<(WorldCoordinates, u32)> {
+impl Neighbors<BlockCoordinates> for BlockCoordinates {
+    fn same_layer_neighbors(&self) -> Vec<(BlockCoordinates, u32)> {
         self.0
             .same_layer_neighbors()
             .iter()
-            .map(|(vec, cost)| (WorldCoordinates(*vec), *cost))
+            .map(|(vec, cost)| (BlockCoordinates(*vec), *cost))
             .collect()
     }
 
-    fn all_neighbors(&self) -> Vec<(WorldCoordinates, u32)> {
+    fn all_neighbors(&self) -> Vec<(BlockCoordinates, u32)> {
         todo!("not implemented")
     }
 }
