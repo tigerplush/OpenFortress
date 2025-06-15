@@ -1,5 +1,6 @@
 use bevy::{
-    math::{IVec3, UVec3},
+    math::{IVec3, UVec3, Vec3},
+    prelude::Component,
     reflect::Reflect,
 };
 
@@ -39,5 +40,20 @@ pub struct ChunkBlockCoordinates(pub UVec3);
 impl From<(u32, u32, u32)> for ChunkBlockCoordinates {
     fn from(value: (u32, u32, u32)) -> Self {
         ChunkBlockCoordinates(UVec3::new(value.0, value.1, value.2))
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Default, Reflect, Component)]
+pub struct WorldCoordinates(pub Vec3);
+
+impl WorldCoordinates {
+    pub fn block(&self) -> BlockCoordinates {
+        BlockCoordinates(self.0.round().as_ivec3())
+    }
+}
+
+impl From<&BlockCoordinates> for WorldCoordinates {
+    fn from(wc: &BlockCoordinates) -> WorldCoordinates {
+        WorldCoordinates(wc.0.as_vec3())
     }
 }
