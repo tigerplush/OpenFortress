@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use common::{
-    functions::world_position_to_world_coordinates, traits::SpawnNamedObserver,
-    types::BlockCoordinates,
+    traits::SpawnNamedObserver,
+    types::{BlockCoordinates, WorldCoordinates},
 };
 use pathfinding::{path::Path, pathfinder::Pathfinder};
 
@@ -11,10 +11,10 @@ use super::Task;
 #[reflect(Component)]
 pub(crate) struct WalkTo(pub(crate) BlockCoordinates);
 
-pub(crate) fn handle(query: Query<(Entity, &Transform, &WalkTo)>, mut commands: Commands) {
-    for (entity, transform, walk_to) in &query {
+pub(crate) fn handle(query: Query<(Entity, &WorldCoordinates, &WalkTo)>, mut commands: Commands) {
+    for (entity, coordinates, walk_to) in &query {
         info!("inserting pathfinding component");
-        let start = world_position_to_world_coordinates(transform.translation);
+        let start = coordinates.block();
         let target = commands
             .entity(entity)
             .remove::<WalkTo>()

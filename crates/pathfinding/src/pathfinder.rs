@@ -1,9 +1,7 @@
 use std::cmp::Reverse;
 
 use bevy::{ecs::spawn::SpawnIter, platform::collections::HashMap, prelude::*};
-use common::{
-    functions::world_coordinates_to_world_position, traits::Neighbors, types::BlockCoordinates,
-};
+use common::{traits::Neighbors, types::BlockCoordinates};
 use map_generation::{block_type::BlockType, map_generation::WorldMap};
 use priority_queue::PriorityQueue;
 
@@ -162,15 +160,13 @@ impl Pathfinder {
         Ok(neighbor_block == BlockType::None && matches!(block_below, BlockType::Solid(_)))
     }
 
-    fn to_path(&self) -> Vec<Vec3> {
+    fn to_path(&self) -> Vec<BlockCoordinates> {
         let mut points = vec![];
         let mut next = self.target;
-        points.push(world_coordinates_to_world_position(BlockCoordinates(next)));
+        points.push(BlockCoordinates(next));
         while let Some(point_option) = self.came_from.get(&next) {
             if let Some(point) = point_option {
-                points.push(world_coordinates_to_world_position(BlockCoordinates(
-                    *point,
-                )));
+                points.push(BlockCoordinates(*point));
                 next = *point;
             } else {
                 break;
