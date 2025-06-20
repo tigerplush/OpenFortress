@@ -1,5 +1,8 @@
 use bevy::prelude::*;
-use common::{constants::TILE_SIZE, traits::SpawnNamedObserver, types::BlockCoordinates};
+use common::{
+    traits::SpawnNamedObserver,
+    types::{BlockCoordinates, WorldCoordinates},
+};
 use tasks::{Task, TaskEvent, TaskQueue};
 use work_order_queue::WorkOrderQueue;
 
@@ -24,7 +27,7 @@ impl WorkOrder {
     pub fn dig(world_coordinates: BlockCoordinates) -> impl Bundle {
         (
             Name::new(format!("WorkOrder - Dig {}", world_coordinates.0)),
-            Transform::from_translation(world_coordinates.0.as_vec3() * TILE_SIZE.extend(1.0)),
+            WorldCoordinates(world_coordinates.0.as_vec3()),
             WorkOrder::Dig(world_coordinates),
         )
     }
