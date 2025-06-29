@@ -1,9 +1,7 @@
 use std::cmp::Reverse;
 
 use bevy::{ecs::spawn::SpawnIter, platform::collections::HashMap, prelude::*};
-use common::{
-    functions::world_coordinates_to_world_position, traits::Neighbors, types::WorldCoordinates,
-};
+use common::{traits::Neighbors, types::BlockCoordinates};
 use map_generation::{block_type::BlockType, map_generation::WorldMap};
 use priority_queue::PriorityQueue;
 
@@ -47,7 +45,7 @@ pub(crate) struct PathfinderListener;
 
 impl Pathfinder {
     /// Creates a new pathfinder that will try to find a path via A* from start to target
-    fn new(start: WorldCoordinates, target: WorldCoordinates) -> Self {
+    fn new(start: BlockCoordinates, target: BlockCoordinates) -> Self {
         let frontier = PriorityQueue::from(vec![(start.0, Reverse(0))]);
         let mut came_from = HashMap::default();
         came_from.insert(start.0, None);
@@ -65,7 +63,7 @@ impl Pathfinder {
     /// Spawns a PathfinderListener with one separate Pathfinder child target the exact block
     ///
     /// Use this, if an entity has to land exactly on the given target
-    pub fn exact(start: WorldCoordinates, target: WorldCoordinates) -> impl Bundle {
+    pub fn exact(start: BlockCoordinates, target: BlockCoordinates) -> impl Bundle {
         (
             PathfinderListener,
             children![(
@@ -78,7 +76,7 @@ impl Pathfinder {
     /// Spawns a PathfinderListener with separate Pathfinder children targeting the blocks surrounding the given target
     ///
     /// Use this if an entity has to come close to a given target but not go onto it
-    pub fn nearest(start: WorldCoordinates, target: WorldCoordinates) -> impl Bundle {
+    pub fn nearest(start: BlockCoordinates, target: BlockCoordinates) -> impl Bundle {
         let finders: Vec<(Pathfinder, Name)> = target
             .same_layer_neighbors()
             .iter()
@@ -140,7 +138,7 @@ impl Pathfinder {
         world_map: &WorldMap,
         neighbor: IVec3,
     ) -> Result<bool, PathfindingErrors> {
-        let neighbor_block = world_map.get_raw_block(WorldCoordinates(neighbor)).ok_or({
+        let neighbor_block = world_map.get_raw_block(BlockCoordinates(neighbor)).ok_or({
             if self.current_failures >= self.allowed_failures {
                 PathfindingErrors::Unreachable
             } else {
@@ -150,7 +148,7 @@ impl Pathfinder {
 
         trace!("checking {}, is {:?}", neighbor, neighbor_block);
         let block_below = world_map
-            .get_raw_block(WorldCoordinates(neighbor - IVec3::Z))
+            .get_raw_block(BlockCoordinates(neighbor - IVec3::Z))
             .ok_or({
                 if self.current_failures >= self.allowed_failures {
                     PathfindingErrors::Unreachable
@@ -162,15 +160,13 @@ impl Pathfinder {
         Ok(neighbor_block == BlockType::None && matches!(block_below, BlockType::Solid(_)))
     }
 
-    fn to_path(&self) -> Vec<Vec3> {
+    fn to_path(&self) -> Vec<BlockCoordinates> {
         let mut points = vec![];
         let mut next = self.target;
-        points.push(world_coordinates_to_world_position(WorldCoordinates(next)));
+        points.push(BlockCoordinates(next));
         while let Some(point_option) = self.came_from.get(&next) {
             if let Some(point) = point_option {
-                points.push(world_coordinates_to_world_position(WorldCoordinates(
-                    *point,
-                )));
+                points.push(BlockCoordinates(*point));
                 next = *point;
             } else {
                 break;

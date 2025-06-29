@@ -10,7 +10,7 @@ use camera::CameraLayer;
 use common::{
     constants::TILE_SIZE,
     traits::Neighbors,
-    types::{ChunkCoordinates, WorldCoordinates},
+    types::{BlockCoordinates, ChunkCoordinates},
 };
 use std::ops::{Range, RangeInclusive};
 
@@ -281,7 +281,7 @@ pub(crate) fn on_chunk_visualisation_event(
 
 #[derive(Event)]
 pub enum ChunkVisualisationEvent {
-    SetDirty(WorldCoordinates),
+    SetDirty(BlockCoordinates),
 }
 
 #[derive(Component, Reflect)]

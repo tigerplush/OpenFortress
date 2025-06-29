@@ -1,31 +1,32 @@
 use bevy::{
-    math::{IVec3, UVec3},
+    math::{IVec3, UVec3, Vec3},
+    prelude::Component,
     reflect::Reflect,
 };
 
 use crate::traits::Neighbors;
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, Reflect)]
-pub struct WorldCoordinates(pub IVec3);
+pub struct BlockCoordinates(pub IVec3);
 
-impl WorldCoordinates {
+impl BlockCoordinates {
     /// Manually overrides the z value of the coordinates.
-    pub fn with_z_offset(mut self, z_offset: i32) -> WorldCoordinates {
+    pub fn with_z_offset(mut self, z_offset: i32) -> BlockCoordinates {
         self.0.z = z_offset;
         self
     }
 }
 
-impl Neighbors<WorldCoordinates> for WorldCoordinates {
-    fn same_layer_neighbors(&self) -> Vec<(WorldCoordinates, u32)> {
+impl Neighbors<BlockCoordinates> for BlockCoordinates {
+    fn same_layer_neighbors(&self) -> Vec<(BlockCoordinates, u32)> {
         self.0
             .same_layer_neighbors()
             .iter()
-            .map(|(vec, cost)| (WorldCoordinates(*vec), *cost))
+            .map(|(vec, cost)| (BlockCoordinates(*vec), *cost))
             .collect()
     }
 
-    fn all_neighbors(&self) -> Vec<(WorldCoordinates, u32)> {
+    fn all_neighbors(&self) -> Vec<(BlockCoordinates, u32)> {
         todo!("not implemented")
     }
 }
@@ -34,10 +35,25 @@ impl Neighbors<WorldCoordinates> for WorldCoordinates {
 #[derive(Clone, Copy, PartialEq, Reflect)]
 pub struct ChunkCoordinates(pub IVec3);
 /// Coordinates of a block within a chunk
-pub struct BlockCoordinates(pub UVec3);
+pub struct ChunkBlockCoordinates(pub UVec3);
 
-impl From<(u32, u32, u32)> for BlockCoordinates {
+impl From<(u32, u32, u32)> for ChunkBlockCoordinates {
     fn from(value: (u32, u32, u32)) -> Self {
-        BlockCoordinates(UVec3::new(value.0, value.1, value.2))
+        ChunkBlockCoordinates(UVec3::new(value.0, value.1, value.2))
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Default, Reflect, Component)]
+pub struct WorldCoordinates(pub Vec3);
+
+impl WorldCoordinates {
+    pub fn block(&self) -> BlockCoordinates {
+        BlockCoordinates(self.0.round().as_ivec3())
+    }
+}
+
+impl From<&BlockCoordinates> for WorldCoordinates {
+    fn from(wc: &BlockCoordinates) -> WorldCoordinates {
+        WorldCoordinates(wc.0.as_vec3())
     }
 }

@@ -1,5 +1,8 @@
 use bevy::prelude::*;
-use common::{constants::TILE_SIZE, traits::SpawnNamedObserver, types::WorldCoordinates};
+use common::{
+    traits::SpawnNamedObserver,
+    types::{BlockCoordinates, WorldCoordinates},
+};
 use tasks::{Task, TaskEvent, TaskQueue};
 use work_order_queue::WorkOrderQueue;
 
@@ -16,15 +19,15 @@ pub fn plugin(app: &mut App) {
 /// Represents work orders that can be created by the player
 #[derive(Clone, Component, Copy, PartialEq, Reflect)]
 pub enum WorkOrder {
-    Dig(WorldCoordinates),
+    Dig(BlockCoordinates),
 }
 
 impl WorkOrder {
     /// Creates a digging work order for the given world position
-    pub fn dig(world_coordinates: WorldCoordinates) -> impl Bundle {
+    pub fn dig(world_coordinates: BlockCoordinates) -> impl Bundle {
         (
             Name::new(format!("WorkOrder - Dig {}", world_coordinates.0)),
-            Transform::from_translation(world_coordinates.0.as_vec3() * TILE_SIZE.extend(1.0)),
+            WorldCoordinates(world_coordinates.0.as_vec3()),
             WorkOrder::Dig(world_coordinates),
         )
     }

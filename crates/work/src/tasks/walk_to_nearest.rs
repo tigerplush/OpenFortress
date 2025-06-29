@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use common::{
     functions::world_position_to_world_coordinates, traits::SpawnNamedObserver,
-    types::WorldCoordinates,
+    types::BlockCoordinates,
 };
 use pathfinding::{PathEvent, pathfinder::Pathfinder};
 
@@ -9,7 +9,7 @@ use super::{Task, TaskEvent};
 
 #[derive(Clone, Component, Copy, Debug, Reflect)]
 #[reflect(Component)]
-pub(crate) struct WalkToNearest(pub(crate) WorldCoordinates);
+pub(crate) struct WalkToNearest(pub(crate) BlockCoordinates);
 
 pub(crate) fn handle(query: Query<(Entity, &Transform, &WalkToNearest)>, mut commands: Commands) {
     for (entity, transform, walk_to) in &query {

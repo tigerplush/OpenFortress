@@ -1,19 +1,19 @@
+use bevy::prelude::*;
 use std::time::Duration;
 
-use bevy::prelude::*;
-
 use crate::PathEvent;
+use common::types::{BlockCoordinates, WorldCoordinates};
 
 #[derive(Clone, Component, Debug, PartialEq, Reflect)]
 #[reflect(Component)]
 pub struct Path {
-    set: Vec<Vec3>,
+    set: Vec<BlockCoordinates>,
     current_index: usize,
     current_t: f32,
 }
 
 impl Path {
-    pub(crate) fn new(set: Vec<Vec3>) -> Self {
+    pub(crate) fn new(set: Vec<BlockCoordinates>) -> Self {
         Path {
             set,
             current_index: 0,
@@ -33,13 +33,13 @@ impl Path {
         self.current_index >= self.set.len()
     }
 
-    fn current_position(&self) -> Vec3 {
+    fn current_position(&self) -> WorldCoordinates {
         if self.current_index + 1 >= self.set.len() {
-            return *self.set.last().unwrap();
+            return self.set.last().unwrap().into();
         }
         let current = self.set[self.current_index];
         let next = self.set[self.current_index + 1];
-        current.lerp(next, self.current_t)
+        WorldCoordinates(current.0.as_vec3().lerp(next.0.as_vec3(), self.current_t))
     }
 }
 
@@ -58,8 +58,8 @@ pub(crate) fn tick_path(
     }
 }
 
-pub(crate) fn follow_path(mut query: Query<(&mut Transform, &Path)>) {
+pub(crate) fn follow_path(mut query: Query<(&mut WorldCoordinates, &Path)>) {
     for (mut transform, path) in &mut query {
-        transform.translation = path.current_position();
+        *transform = path.current_position();
     }
 }

@@ -1,7 +1,7 @@
 use assets::icon_asset::IconAsset;
 use bevy::prelude::*;
 use camera::CameraPlugin;
-use common::{constants::TILE_SIZE, states::AppState, traits::AddNamedObserver};
+use common::{states::AppState, traits::AddNamedObserver, types::WorldCoordinates};
 use dwarf::Dwarf;
 use work::WorkOrder;
 
@@ -20,10 +20,7 @@ pub fn plugin(app: &mut App) {
 
 fn setup(mut commands: Commands) {
     for i in 0..1 {
-        commands.spawn((
-            Dwarf,
-            Transform::from_xyz((i - 4) as f32 * TILE_SIZE.x, 0.0, 0.0),
-        ));
+        commands.spawn((Dwarf, WorldCoordinates(Vec3::new((i - 4) as f32, 0.0, 0.0))));
     }
 }
 

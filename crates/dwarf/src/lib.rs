@@ -1,7 +1,7 @@
 use animation::{AnimationConfig, AnimationState, Frames};
 use assets::dwarf_sprite::DwarfSpriteAsset;
 use bevy::prelude::*;
-use common::traits::AddNamedObserver;
+use common::{traits::AddNamedObserver, types::WorldCoordinates};
 use work::Worker;
 
 pub fn plugin(app: &mut App) {
@@ -9,7 +9,7 @@ pub fn plugin(app: &mut App) {
 }
 
 #[derive(Component)]
-#[require(AnimationConfig)]
+#[require(AnimationConfig, WorldCoordinates)]
 pub struct Dwarf;
 
 fn on_add_dwarf(
