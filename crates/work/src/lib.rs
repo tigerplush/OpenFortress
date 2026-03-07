@@ -61,8 +61,7 @@ fn fetch_new_work_order(
         if let Some((work_order_entity, work_order)) = work_order_queue.pending.pop_front() {
             info!(
                 "dwarf is taking work order {:?} for entity {}",
-                work_order,
-                work_order_entity
+                work_order, work_order_entity
             );
             work_order_queue
                 .in_progress
