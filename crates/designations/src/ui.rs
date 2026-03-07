@@ -1,11 +1,14 @@
-use bevy::{prelude::*, window::PrimaryWindow};
-use bevy_inspector_egui::{bevy_egui::EguiContext, egui};
+use bevy::prelude::*;
+use bevy_inspector_egui::{
+    bevy_egui::{EguiContext, PrimaryEguiContext},
+    egui,
+};
 
 use crate::{BrushSettings, MouseActions};
 
 pub(crate) fn brushes(
     mut brush_settings: ResMut<BrushSettings>,
-    context: Single<&mut EguiContext, With<PrimaryWindow>>,
+    context: Single<&mut EguiContext, With<PrimaryEguiContext>>,
 ) {
     let mut egui_context = context.into_inner().clone();
     egui::TopBottomPanel::bottom("brushes")

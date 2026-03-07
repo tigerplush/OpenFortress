@@ -30,18 +30,10 @@ fn main() -> AppExit {
         auto_create_primary_context: false,
         ..default()
     });
-    app.add_systems(Startup, setup);
+    app.add_observer(add_egui_context);
     app.run()
 }
 
-fn setup(mut commands: Commands) {
-    commands.spawn((
-        Name::new("EguiExclusiveCamera"),
-        Camera2d,
-        PrimaryEguiContext,
-        Camera {
-            order: 100,
-            ..default()
-        },
-    ));
+fn add_egui_context(trigger: On<Add, Camera2d>, mut commands: Commands) {
+    commands.entity(trigger.entity).insert(PrimaryEguiContext);
 }

@@ -1,5 +1,5 @@
 use bevy::{prelude::*, window::PrimaryWindow};
-use bevy_inspector_egui::bevy_egui::EguiContexts;
+use bevy_inspector_egui::bevy_egui::{EguiContexts, EguiPrimaryContextPass};
 use camera::CameraLayer;
 use common::{
     functions::world_position_to_world_coordinates, states::AppState, types::BlockCoordinates,
@@ -39,12 +39,12 @@ pub fn plugin(app: &mut App) {
         .add_systems(OnEnter(AppState::MainGame), setup_brush)
         .add_systems(
             Update,
-            (
-                handle_brush_input,
-                handle_brush.after(handle_brush_input),
-                ui::brushes,
-            )
+            (handle_brush_input, handle_brush.after(handle_brush_input))
                 .run_if(in_state(AppState::MainGame)),
+        )
+        .add_systems(
+            EguiPrimaryContextPass,
+            ui::brushes.run_if(in_state(AppState::MainGame)),
         );
 }
 
