@@ -2,7 +2,8 @@ use bevy::prelude::*;
 use bevy::window::WindowResolution;
 use bevy_inspector_egui::bevy_egui::EguiPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
-fn main() {
+
+fn main() -> AppExit {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins.set(WindowPlugin {
         primary_window: Some(Window {
@@ -25,5 +26,5 @@ fn main() {
         ui::plugin,
         world_generation::plugin,
     ));
-    app.run();
+    app.run()
 }
