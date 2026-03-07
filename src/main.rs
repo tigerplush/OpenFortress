@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy::window::WindowResolution;
-use bevy_inspector_egui::bevy_egui::EguiPlugin;
+use bevy_inspector_egui::bevy_egui::{EguiGlobalSettings, EguiPlugin, PrimaryEguiContext};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 fn main() -> AppExit {
@@ -26,5 +26,22 @@ fn main() -> AppExit {
         ui::plugin,
         world_generation::plugin,
     ));
+    app.insert_resource(EguiGlobalSettings {
+        auto_create_primary_context: false,
+        ..default()
+    });
+    app.add_systems(Startup, setup);
     app.run()
+}
+
+fn setup(mut commands: Commands) {
+    commands.spawn((
+        Name::new("EguiExclusiveCamera"),
+        Camera2d,
+        PrimaryEguiContext,
+        Camera {
+            order: 100,
+            ..default()
+        },
+    ));
 }
