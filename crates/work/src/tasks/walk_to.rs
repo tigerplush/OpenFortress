@@ -24,8 +24,8 @@ pub(crate) fn handle(query: Query<(Entity, &WorldCoordinates, &WalkTo)>, mut com
     }
 }
 
-fn on_path_completed(trigger: Trigger<OnRemove, Path>, mut commands: Commands) {
-    commands.entity(trigger.target()).remove::<Task>();
+fn on_path_completed(trigger: On<Remove, Path>, mut commands: Commands) {
+    commands.entity(trigger.entity).remove::<Task>();
     debug!("despawning observer {}", trigger.observer());
     commands.entity(trigger.observer()).despawn();
 }

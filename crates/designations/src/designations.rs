@@ -21,7 +21,7 @@ pub(crate) enum MouseActions {
     Dig,
 }
 
-#[derive(Event)]
+#[derive(Message)]
 enum BrushInputEvent {
     Designated(BlockCoordinates),
 }
@@ -35,7 +35,7 @@ pub(crate) struct BrushSettings {
 pub fn plugin(app: &mut App) {
     app.insert_resource(BrushSettings::default())
         .add_plugins(InputManagerPlugin::<MouseControls>::default())
-        .add_event::<BrushInputEvent>()
+        .add_message::<BrushInputEvent>()
         .add_systems(OnEnter(AppState::MainGame), setup_brush)
         .add_systems(
             Update,
@@ -66,11 +66,13 @@ fn handle_brush_input(
     query: Single<&ActionState<MouseControls>>,
     window: Single<&Window, With<PrimaryWindow>>,
     camera: Single<(&Camera, &GlobalTransform, &CameraLayer), With<Camera>>,
-    mut brush_event_writer: EventWriter<BrushInputEvent>,
+    mut brush_event_writer: MessageWriter<BrushInputEvent>,
     mut contexts: EguiContexts,
 ) {
     // Skip pointer events that are captured by egui
-    let ctx = contexts.ctx_mut();
+    let Ok(ctx) = contexts.ctx_mut() else {
+        return;
+    };
     if ctx.wants_pointer_input() {
         return;
     }
@@ -95,7 +97,7 @@ fn handle_brush(
     brush_settings: Res<BrushSettings>,
     world_map: Res<WorldMap>,
     work_order_queue: Res<WorkOrderQueue>,
-    mut brush_event_reader: EventReader<BrushInputEvent>,
+    mut brush_event_reader: MessageReader<BrushInputEvent>,
     mut commands: Commands,
 ) {
     for brush_input_event in brush_event_reader.read() {

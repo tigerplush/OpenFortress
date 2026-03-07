@@ -15,10 +15,10 @@ impl IconAsset {
 
     pub fn sprite(&self, index: usize) -> Sprite {
         Sprite {
-            image: self.image.clone_weak(),
+            image: self.image.clone(),
             color: Color::default().with_alpha(0.8),
             texture_atlas: Some(TextureAtlas {
-                layout: self.layout_handle.clone_weak(),
+                layout: self.layout_handle.clone(),
                 index,
             }),
             ..default()

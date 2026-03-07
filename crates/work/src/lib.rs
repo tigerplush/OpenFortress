@@ -3,8 +3,10 @@ use common::{
     traits::SpawnNamedObserver,
     types::{BlockCoordinates, WorldCoordinates},
 };
-use tasks::{Task, TaskEvent, TaskQueue};
+use tasks::{Task, TaskQueue, TaskState};
 use work_order_queue::WorkOrderQueue;
+
+use crate::tasks::TaskEvent;
 
 mod tasks;
 pub mod work_order_queue;
@@ -85,20 +87,18 @@ fn check_work_orders(
 }
 
 fn on_task_finished(
-    trigger: Trigger<TaskEvent>,
+    trigger: On<TaskEvent>,
     mut work_order_queue: ResMut<WorkOrderQueue>,
     workers: Query<&CurrentWorkOrder>,
     mut commands: Commands,
 ) {
-    match trigger.event() {
-        TaskEvent::Completed => {
+    match trigger.state {
+        TaskState::Completed => {
             // on task completed:
             // remove CurrentWorkOrder from worker
-            commands
-                .entity(trigger.target())
-                .remove::<CurrentWorkOrder>();
+            commands.entity(trigger.entity).remove::<CurrentWorkOrder>();
             // despawn WorkOrder
-            if let Ok(current_work_order) = workers.get(trigger.target()) {
+            if let Ok(current_work_order) = workers.get(trigger.entity) {
                 debug!("despawning work order {}", current_work_order.0);
                 commands.entity(current_work_order.0).despawn();
             }
@@ -106,18 +106,18 @@ fn on_task_finished(
             debug!("despawning observer {}", trigger.observer());
             commands.entity(trigger.observer()).despawn();
         }
-        TaskEvent::Failed => {
+        TaskState::Failed => {
             // on task completed:
             // remove CurrentWorkOrder from worker
             // remove task queue from worker
             commands
-                .entity(trigger.target())
+                .entity(trigger.entity)
                 .remove::<CurrentWorkOrder>()
                 .remove::<Task>()
                 .remove::<TaskQueue>();
             // move the work order back onto the queue
 
-            if let Ok(current_work_order) = workers.get(trigger.target()) {
+            if let Ok(current_work_order) = workers.get(trigger.entity) {
                 if let Some(index) = work_order_queue
                     .in_progress
                     .iter()

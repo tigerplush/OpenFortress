@@ -14,7 +14,7 @@ pub fn plugin(app: &mut App) {
 fn setup(mut commands: Commands) {
     commands.ui_root().insert((
         Name::new("Loading Screen"),
-        StateScoped(AppState::Loading),
+        DespawnOnExit(AppState::Loading),
         children![(
             Node {
                 justify_content: JustifyContent::Center,
@@ -26,7 +26,7 @@ fn setup(mut commands: Commands) {
         )],
     ));
 
-    commands.spawn((Camera2d, StateScoped(AppState::Loading)));
+    commands.spawn((Camera2d, DespawnOnExit(AppState::Loading)));
 }
 
 fn continue_to_title_screen(mut next_state: ResMut<NextState<AppState>>) {

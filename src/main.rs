@@ -7,18 +7,13 @@ fn main() {
     app.add_plugins(DefaultPlugins.set(WindowPlugin {
         primary_window: Some(Window {
             title: format!("Open Fortress {}", env!("CARGO_PKG_VERSION")),
-            resolution: WindowResolution::new(1280.0, 720.0),
+            resolution: WindowResolution::new(1280, 720),
             resizable: false,
             ..default()
         }),
         ..default()
     }));
-    app.add_plugins((
-        EguiPlugin {
-            enable_multipass_for_primary_context: false,
-        },
-        WorldInspectorPlugin::new(),
-    ));
+    app.add_plugins((EguiPlugin::default(), WorldInspectorPlugin::new()));
     app.add_plugins((
         animation::plugin,
         assets::plugin,

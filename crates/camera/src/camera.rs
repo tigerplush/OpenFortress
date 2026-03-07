@@ -65,7 +65,7 @@ fn setup(mut commands: Commands) {
         input_map,
         Camera2d,
         CameraLayer(0),
-        StateScoped(AppState::MainGame),
+        DespawnOnExit(AppState::MainGame),
     ));
 }
 

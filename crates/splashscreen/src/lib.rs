@@ -25,7 +25,7 @@ pub fn plugin(app: &mut App) {
 fn setup(asset_server: Res<AssetServer>, mut commands: Commands) {
     commands.ui_root().insert((
         Name::new("Splash Screen"),
-        StateScoped(AppState::Splashscreen),
+        DespawnOnExit(AppState::Splashscreen),
         children![(
             Name::new("Splash Image"),
             Node {
@@ -46,7 +46,7 @@ fn setup(asset_server: Res<AssetServer>, mut commands: Commands) {
         )],
     ));
 
-    commands.spawn((Camera2d, StateScoped(AppState::Splashscreen)));
+    commands.spawn((Camera2d, DespawnOnExit(AppState::Splashscreen)));
 }
 
 fn advance_state(

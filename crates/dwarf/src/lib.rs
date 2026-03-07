@@ -12,15 +12,11 @@ pub fn plugin(app: &mut App) {
 #[require(AnimationConfig, WorldCoordinates)]
 pub struct Dwarf;
 
-fn on_add_dwarf(
-    trigger: Trigger<OnAdd, Dwarf>,
-    dwarf: Res<DwarfSpriteAsset>,
-    mut commands: Commands,
-) {
-    commands.entity(trigger.target()).insert((
+fn on_add_dwarf(trigger: On<Add, Dwarf>, dwarf: Res<DwarfSpriteAsset>, mut commands: Commands) {
+    commands.entity(trigger.entity).insert((
         Name::new("Dwarf"),
         Sprite {
-            image: dwarf.sprite.clone_weak(),
+            image: dwarf.sprite.clone(),
             texture_atlas: Some(dwarf.texture_atlas.clone()),
             ..default()
         },

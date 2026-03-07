@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use std::time::Duration;
 
-use crate::PathEvent;
+use crate::{PathEvent, PathState};
 use common::types::{BlockCoordinates, WorldCoordinates};
 
 #[derive(Clone, Component, Debug, PartialEq, Reflect)]
@@ -53,7 +53,10 @@ pub(crate) fn tick_path(
         if path.complete() {
             debug!("path complete, removing path from {}", entity);
             commands.entity(entity).remove::<Path>();
-            commands.entity(entity).trigger(PathEvent::Completed);
+            commands.trigger(PathEvent {
+                entity,
+                state: PathState::Completed,
+            });
         }
     }
 }

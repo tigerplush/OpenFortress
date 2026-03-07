@@ -32,22 +32,22 @@ impl WorkOrderQueue {
 }
 
 fn register_work_order(
-    trigger: Trigger<OnAdd, WorkOrder>,
+    trigger: On<Add, WorkOrder>,
     mut work_order_queue: ResMut<WorkOrderQueue>,
     work_orders: Query<&WorkOrder>,
 ) {
-    let work_order = work_orders.get(trigger.target()).unwrap();
+    let work_order = work_orders.get(trigger.entity).unwrap();
     work_order_queue
         .pending
-        .push_back((trigger.target(), *work_order));
+        .push_back((trigger.entity, *work_order));
 }
 
 fn unregister_work_order(
-    trigger: Trigger<OnRemove, WorkOrder>,
+    trigger: On<Remove, WorkOrder>,
     mut work_order_queue: ResMut<WorkOrderQueue>,
     work_orders: Query<&WorkOrder>,
 ) {
-    let work_order = work_orders.get(trigger.target()).unwrap();
+    let work_order = work_orders.get(trigger.entity).unwrap();
     work_order_queue
         .pending
         .retain(|(_, order)| order != work_order);
