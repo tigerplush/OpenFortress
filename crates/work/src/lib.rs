@@ -117,15 +117,14 @@ fn on_task_finished(
                 .remove::<TaskQueue>();
             // move the work order back onto the queue
 
-            if let Ok(current_work_order) = workers.get(trigger.entity) {
-                if let Some(index) = work_order_queue
+            if let Ok(current_work_order) = workers.get(trigger.entity)
+                && let Some(index) = work_order_queue
                     .in_progress
                     .iter()
                     .position(|element| element.0 == current_work_order.0)
-                {
-                    let work_order = work_order_queue.in_progress.remove(index).unwrap();
-                    work_order_queue.pending.push_back(work_order);
-                }
+            {
+                let work_order = work_order_queue.in_progress.remove(index).unwrap();
+                work_order_queue.pending.push_back(work_order);
             }
             // despawn the observer
             debug!("despawning observer {}", trigger.observer());

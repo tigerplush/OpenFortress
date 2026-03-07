@@ -80,16 +80,15 @@ fn handle_brush_input(
     let window = window.into_inner();
     let action_state = query.into_inner();
     let (camera, camera_transform, layer) = camera.into_inner();
-    if action_state.pressed(&MouseControls::PrimaryAction) {
-        if let Some(world_position) = window
+    if action_state.pressed(&MouseControls::PrimaryAction)
+        && let Some(world_position) = window
             .cursor_position()
             .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor).ok())
             .map(|ray| ray.origin.truncate())
-        {
-            let world_coordinates =
-                world_position_to_world_coordinates(world_position.extend(layer.0 as f32));
-            brush_event_writer.write(BrushInputEvent::Designated(world_coordinates));
-        }
+    {
+        let world_coordinates =
+            world_position_to_world_coordinates(world_position.extend(layer.0 as f32));
+        brush_event_writer.write(BrushInputEvent::Designated(world_coordinates));
     }
 }
 
