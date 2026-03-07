@@ -7,8 +7,7 @@ pub fn plugin(app: &mut App) {
         .add_systems(
             Update,
             continue_to_title_screen.run_if(all_assets_loaded.and(in_state(AppState::Loading))),
-        )
-        .add_systems(OnExit(AppState::Loading), teardown);
+        );
 }
 
 fn setup(mut commands: Commands) {
@@ -36,5 +35,3 @@ fn continue_to_title_screen(mut next_state: ResMut<NextState<AppState>>) {
 fn all_assets_loaded(resource_handles: Res<ResourceHandles>) -> bool {
     resource_handles.is_all_done()
 }
-
-fn teardown() {}

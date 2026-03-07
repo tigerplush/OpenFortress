@@ -18,8 +18,7 @@ pub fn plugin(app: &mut App) {
                 advance_state.after(image_node_fade::tick),
             )
                 .run_if(in_state(AppState::Splashscreen)),
-        )
-        .add_systems(OnExit(AppState::Splashscreen), teardown);
+        );
 }
 
 fn setup(asset_server: Res<AssetServer>, mut commands: Commands) {
@@ -57,5 +56,3 @@ fn advance_state(
         next_state.set(AppState::Loading);
     }
 }
-
-fn teardown() {}
