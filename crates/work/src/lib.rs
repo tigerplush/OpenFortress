@@ -19,7 +19,7 @@ pub fn plugin(app: &mut App) {
 }
 
 /// Represents work orders that can be created by the player
-#[derive(Clone, Component, Copy, PartialEq, Reflect)]
+#[derive(Clone, Component, Copy, Debug, PartialEq, Reflect)]
 pub enum WorkOrder {
     Dig(BlockCoordinates),
 }
@@ -60,7 +60,8 @@ fn fetch_new_work_order(
     for worker_entity in &query {
         if let Some((work_order_entity, work_order)) = work_order_queue.pending.pop_front() {
             info!(
-                "dwarf is taking work order for entity {}",
+                "dwarf is taking work order {:?} for entity {}",
+                work_order,
                 work_order_entity
             );
             work_order_queue

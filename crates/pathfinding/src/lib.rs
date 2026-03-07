@@ -28,10 +28,10 @@ fn calculate_path(
             PathfindingState::Calculating => (),
             PathfindingState::Failed(err) => match err {
                 PathfindingErrors::NotEnoughChunks => {
-                    info!("not enough chunks");
+                    debug!("not enough chunks");
                 }
                 PathfindingErrors::Unreachable => {
-                    info!("pathfinding failed");
+                    debug!("pathfinding failed");
                     commands.trigger(PathfindingCalculationEvent {
                         entity,
                         calculation: PathfindingCalculation::Failed,
@@ -41,7 +41,7 @@ fn calculate_path(
                 }
             },
             PathfindingState::Complete(path) => {
-                info!("patfhinder {} done", entity);
+                debug!("pathfinder {} done", entity);
                 commands.trigger(PathfindingCalculationEvent {
                     entity,
                     calculation: PathfindingCalculation::Succeeded(path),
@@ -64,8 +64,8 @@ pub enum PathState {
     Completed,
 }
 
-#[derive(EntityEvent)]
-#[entity_event(propagate)]
+#[derive(Debug, EntityEvent)]
+#[entity_event(auto_propagate)]
 struct PathfindingCalculationEvent {
     entity: Entity,
     calculation: PathfindingCalculation,
