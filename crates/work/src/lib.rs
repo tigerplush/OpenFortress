@@ -3,8 +3,10 @@ use common::{
     traits::SpawnNamedObserver,
     types::{BlockCoordinates, WorldCoordinates},
 };
-use tasks::{Task, TaskEvent, TaskQueue};
+use tasks::{Task, TaskQueue, TaskState};
 use work_order_queue::WorkOrderQueue;
+
+use crate::tasks::TaskEvent;
 
 mod tasks;
 pub mod work_order_queue;
@@ -17,7 +19,7 @@ pub fn plugin(app: &mut App) {
 }
 
 /// Represents work orders that can be created by the player
-#[derive(Clone, Component, Copy, PartialEq, Reflect)]
+#[derive(Clone, Component, Copy, Debug, PartialEq, Reflect)]
 pub enum WorkOrder {
     Dig(BlockCoordinates),
 }
@@ -58,8 +60,8 @@ fn fetch_new_work_order(
     for worker_entity in &query {
         if let Some((work_order_entity, work_order)) = work_order_queue.pending.pop_front() {
             info!(
-                "dwarf is taking work order for entity {}",
-                work_order_entity
+                "dwarf is taking work order {:?} for entity {}",
+                work_order, work_order_entity
             );
             work_order_queue
                 .in_progress
@@ -85,20 +87,18 @@ fn check_work_orders(
 }
 
 fn on_task_finished(
-    trigger: Trigger<TaskEvent>,
+    trigger: On<TaskEvent>,
     mut work_order_queue: ResMut<WorkOrderQueue>,
     workers: Query<&CurrentWorkOrder>,
     mut commands: Commands,
 ) {
-    match trigger.event() {
-        TaskEvent::Completed => {
+    match trigger.state {
+        TaskState::Completed => {
             // on task completed:
             // remove CurrentWorkOrder from worker
-            commands
-                .entity(trigger.target())
-                .remove::<CurrentWorkOrder>();
+            commands.entity(trigger.entity).remove::<CurrentWorkOrder>();
             // despawn WorkOrder
-            if let Ok(current_work_order) = workers.get(trigger.target()) {
+            if let Ok(current_work_order) = workers.get(trigger.entity) {
                 debug!("despawning work order {}", current_work_order.0);
                 commands.entity(current_work_order.0).despawn();
             }
@@ -106,26 +106,25 @@ fn on_task_finished(
             debug!("despawning observer {}", trigger.observer());
             commands.entity(trigger.observer()).despawn();
         }
-        TaskEvent::Failed => {
+        TaskState::Failed => {
             // on task completed:
             // remove CurrentWorkOrder from worker
             // remove task queue from worker
             commands
-                .entity(trigger.target())
+                .entity(trigger.entity)
                 .remove::<CurrentWorkOrder>()
                 .remove::<Task>()
                 .remove::<TaskQueue>();
             // move the work order back onto the queue
 
-            if let Ok(current_work_order) = workers.get(trigger.target()) {
-                if let Some(index) = work_order_queue
+            if let Ok(current_work_order) = workers.get(trigger.entity)
+                && let Some(index) = work_order_queue
                     .in_progress
                     .iter()
                     .position(|element| element.0 == current_work_order.0)
-                {
-                    let work_order = work_order_queue.in_progress.remove(index).unwrap();
-                    work_order_queue.pending.push_back(work_order);
-                }
+            {
+                let work_order = work_order_queue.in_progress.remove(index).unwrap();
+                work_order_queue.pending.push_back(work_order);
             }
             // despawn the observer
             debug!("despawning observer {}", trigger.observer());

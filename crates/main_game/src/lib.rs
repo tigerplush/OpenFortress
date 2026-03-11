@@ -25,11 +25,11 @@ fn setup(mut commands: Commands) {
 }
 
 fn add_vis_to_work_order(
-    trigger: Trigger<OnAdd, WorkOrder>,
+    trigger: On<Add, WorkOrder>,
     icon_asset: Res<IconAsset>,
     mut commands: Commands,
 ) {
     commands
-        .entity(trigger.target())
+        .entity(trigger.entity)
         .insert(icon_asset.sprite(IconAsset::SHOVEL));
 }

@@ -3,9 +3,11 @@ use common::{
     functions::world_position_to_world_coordinates, traits::SpawnNamedObserver,
     types::BlockCoordinates,
 };
-use pathfinding::{PathEvent, pathfinder::Pathfinder};
+use pathfinding::{PathEvent, PathState, pathfinder::Pathfinder};
 
-use super::{Task, TaskEvent};
+use crate::tasks::TaskEvent;
+
+use super::{Task, TaskState};
 
 #[derive(Clone, Component, Copy, Debug, Reflect)]
 #[reflect(Component)]
@@ -24,13 +26,16 @@ pub(crate) fn handle(query: Query<(Entity, &Transform, &WalkToNearest)>, mut com
     }
 }
 
-fn on_path_event(trigger: Trigger<PathEvent>, mut commands: Commands) {
-    match trigger.event() {
-        PathEvent::CalculationFailed => {
-            commands.entity(trigger.target()).trigger(TaskEvent::Failed);
+fn on_path_event(trigger: On<PathEvent>, mut commands: Commands) {
+    match trigger.state {
+        PathState::CalculationFailed => {
+            commands.trigger(TaskEvent {
+                entity: trigger.entity,
+                state: TaskState::Failed,
+            });
         }
-        PathEvent::Completed => {
-            commands.entity(trigger.target()).remove::<Task>();
+        PathState::Completed => {
+            commands.entity(trigger.entity).remove::<Task>();
         }
     }
     debug!("despawning observer {}", trigger.observer());

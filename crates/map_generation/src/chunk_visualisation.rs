@@ -25,14 +25,14 @@ use crate::{
 ///
 /// Is called when a [`ChunkVisualisation`]` is inserted into an entity
 pub(crate) fn on_insert(
-    trigger: Trigger<OnInsert, ChunkVisualisation>,
+    trigger: On<Insert, ChunkVisualisation>,
     mut world_map: ResMut<WorldMap>,
     tileset: Res<TilesetAsset>,
     camera_layer: Single<&CameraLayer>,
     chunks: Query<&ChunkVisualisation>,
     mut commands: Commands,
 ) {
-    let target = trigger.target();
+    let target = trigger.entity;
     let chunk_visualisation = chunks.get(target).unwrap();
     world_map.ensure_surrounding_exist(chunk_visualisation.0);
 
@@ -123,7 +123,7 @@ pub(crate) fn on_insert(
                 map_type: TilemapType::Square,
                 size: map_size,
                 storage: tile_storage,
-                texture: TilemapTexture::Single(tileset.soil_tileset.clone_weak()),
+                texture: TilemapTexture::Single(tileset.soil_tileset.clone()),
                 tile_size,
                 anchor: TilemapAnchor::BottomLeft,
                 ..default()
@@ -236,7 +236,7 @@ fn spawn_tile_map(
             map_type: TilemapType::Square,
             size,
             storage,
-            texture: TilemapTexture::Single(tileset.clone_weak()),
+            texture: TilemapTexture::Single(tileset.clone()),
             tile_size,
             anchor: TilemapAnchor::BottomLeft,
             transform: Transform::from_xyz(0.0, 0.0, z_offset),
@@ -246,7 +246,7 @@ fn spawn_tile_map(
 }
 
 pub(crate) fn on_chunk_visualisation_event(
-    trigger: Trigger<ChunkVisualisationEvent>,
+    trigger: On<ChunkVisualisationEvent>,
     query: Query<(Entity, &ChunkVisualisation)>,
     mut commands: Commands,
 ) {

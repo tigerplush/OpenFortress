@@ -1,11 +1,11 @@
 use bevy::prelude::*;
 
 pub trait UiRoot {
-    fn ui_root(&mut self) -> EntityCommands;
+    fn ui_root(&mut self) -> EntityCommands<'_>;
 }
 
 impl UiRoot for Commands<'_, '_> {
-    fn ui_root(&mut self) -> EntityCommands {
+    fn ui_root(&mut self) -> EntityCommands<'_> {
         self.spawn((
             Name::new("Ui Root"),
             Node {

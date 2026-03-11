@@ -13,7 +13,6 @@ use states::AppState;
 
 pub fn plugin(app: &mut App) {
     app.init_state::<AppState>()
-        .enable_state_scoped_entities::<AppState>()
         .add_systems(PostUpdate, systems::apply_world_coordinates)
         .register_type::<ImageNodeFade>();
 }

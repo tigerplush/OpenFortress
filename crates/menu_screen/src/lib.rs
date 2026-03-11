@@ -13,9 +13,9 @@ fn setup(background: Res<MenuBackgroundAsset>, mut commands: Commands) {
     commands
         .ui_root()
         .insert((
-            StateScoped(AppState::MainMenu),
+            DespawnOnExit(AppState::MainMenu),
             ImageNode {
-                image: background.sprite.clone_weak(),
+                image: background.sprite.clone(),
                 ..default()
             },
         ))
@@ -24,9 +24,9 @@ fn setup(background: Res<MenuBackgroundAsset>, mut commands: Commands) {
             root.spawn_named_observer(target, on_press_start, "on_press_start");
         });
 
-    commands.spawn((Camera2d, StateScoped(AppState::MainMenu)));
+    commands.spawn((Camera2d, DespawnOnExit(AppState::MainMenu)));
 }
 
-fn on_press_start(_trigger: Trigger<Pointer<Click>>, mut next_state: ResMut<NextState<AppState>>) {
+fn on_press_start(_trigger: On<Pointer<Click>>, mut next_state: ResMut<NextState<AppState>>) {
     next_state.set(AppState::WorldGeneration);
 }

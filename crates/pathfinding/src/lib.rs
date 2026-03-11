@@ -28,62 +28,71 @@ fn calculate_path(
             PathfindingState::Calculating => (),
             PathfindingState::Failed(err) => match err {
                 PathfindingErrors::NotEnoughChunks => {
-                    info!("not enough chunks");
+                    debug!("not enough chunks");
                 }
                 PathfindingErrors::Unreachable => {
-                    info!("pathfinding failed");
-                    commands
-                        .entity(entity)
-                        .trigger(PathfindingCalculationEvent::Failed);
+                    debug!("pathfinding failed");
+                    commands.trigger(PathfindingCalculationEvent {
+                        entity,
+                        calculation: PathfindingCalculation::Failed,
+                    });
 
                     commands.entity(entity).despawn();
                 }
             },
             PathfindingState::Complete(path) => {
-                info!("patfhinder {} done", entity);
-                // commands.entity(entity).remove::<Pathfinder>().insert(path);
-                commands
-                    .entity(entity)
-                    .trigger(PathfindingCalculationEvent::Succeeded(path));
+                debug!("pathfinder {} done", entity);
+                commands.trigger(PathfindingCalculationEvent {
+                    entity,
+                    calculation: PathfindingCalculation::Succeeded(path),
+                });
                 commands.entity(entity).despawn();
             }
         }
     }
 }
 
+#[derive(EntityEvent)]
+pub struct PathEvent {
+    pub entity: Entity,
+    pub state: PathState,
+}
+
 #[derive(Event)]
-pub enum PathEvent {
+pub enum PathState {
     CalculationFailed,
     Completed,
 }
 
+#[derive(Debug, EntityEvent)]
+#[entity_event(auto_propagate)]
+struct PathfindingCalculationEvent {
+    entity: Entity,
+    calculation: PathfindingCalculation,
+}
+
 #[derive(Debug, PartialEq)]
-enum PathfindingCalculationEvent {
+enum PathfindingCalculation {
     Failed,
     Succeeded(Path),
 }
 
-impl Event for PathfindingCalculationEvent {
-    type Traversal = &'static ChildOf;
-    const AUTO_PROPAGATE: bool = true;
-}
-
 fn listen_for_path(
-    trigger: Trigger<PathfindingCalculationEvent>,
+    trigger: On<PathfindingCalculationEvent>,
     listeners: Query<&PathfinderListener>,
     mut commands: Commands,
 ) {
     // if the event is triggered on a listener, we insert the path
-    if let PathfindingCalculationEvent::Succeeded(path) = trigger.event() {
+    if let PathfindingCalculation::Succeeded(path) = &trigger.calculation {
         // if this is a successful path, we don't care about any other paths, so:
         // add path to the listener entity and remove listener
-        if listeners.contains(trigger.target()) {
+        if listeners.contains(trigger.entity) {
             debug!(
                 "entity {} has found a successful path, removing all pathfinding children",
-                trigger.target()
+                trigger.entity
             );
             commands
-                .entity(trigger.target())
+                .entity(trigger.entity)
                 .remove::<PathfinderListener>()
                 .insert(path.clone());
         }
@@ -111,7 +120,10 @@ fn check_pathfinder(
             commands
                 .entity(parent)
                 .remove::<PathfinderListener>()
-                .trigger(PathEvent::CalculationFailed);
+                .trigger(|entity| PathEvent {
+                    entity,
+                    state: PathState::CalculationFailed,
+                });
         }
     }
 }

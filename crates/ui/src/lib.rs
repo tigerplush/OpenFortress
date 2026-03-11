@@ -28,18 +28,18 @@ pub fn plugin(app: &mut App) {
 }
 
 fn add_button(
-    trigger: Trigger<OnAdd, UiButton>,
+    trigger: On<Add, UiButton>,
     font_asset: Res<FontAsset>,
     panel_asset: Res<UiPanelAsset>,
     query: Query<&UiButton>,
     mut commands: Commands,
 ) {
-    let button = query.get(trigger.target()).unwrap();
+    let button = query.get(trigger.entity).unwrap();
     match button {
         UiButton::Menu(label) => {
-            commands.entity(trigger.target()).insert((
+            commands.entity(trigger.entity).insert((
                 ImageNode {
-                    image: panel_asset.image.clone_weak(),
+                    image: panel_asset.image.clone(),
                     image_mode: NodeImageMode::Sliced(panel_asset.slicer.clone()),
                     ..default()
                 },
@@ -51,7 +51,7 @@ fn add_button(
                 children![(
                     Text::new(label),
                     TextFont {
-                        font: font_asset.font.clone_weak(),
+                        font: font_asset.font.clone(),
                         font_size: 50.0,
                         ..default()
                     },
@@ -69,8 +69,8 @@ fn trigger_interaction_sound_effect(
 ) {
     for interaction in &query {
         let source = match interaction {
-            Interaction::Hovered => sound_assets.hover.clone_weak(),
-            Interaction::Pressed => sound_assets.press.clone_weak(),
+            Interaction::Hovered => sound_assets.hover.clone(),
+            Interaction::Pressed => sound_assets.press.clone(),
             _ => continue,
         };
         commands.spawn((

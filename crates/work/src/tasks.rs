@@ -63,8 +63,13 @@ impl Task {
     }
 }
 
-#[derive(Event)]
-pub enum TaskEvent {
+#[derive(EntityEvent)]
+pub struct TaskEvent {
+    pub entity: Entity,
+    pub state: TaskState,
+}
+
+pub enum TaskState {
     Completed,
     Failed,
 }
@@ -92,7 +97,10 @@ pub(crate) fn check_tasks(
             commands
                 .entity(entity)
                 .remove::<TaskQueue>()
-                .trigger(TaskEvent::Completed);
+                .trigger(|entity| TaskEvent {
+                    entity,
+                    state: TaskState::Completed,
+                });
         }
     }
 }

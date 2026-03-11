@@ -1,5 +1,5 @@
 use bevy::{prelude::*, window::PrimaryWindow};
-use bevy_inspector_egui::bevy_egui::EguiContexts;
+use bevy_inspector_egui::bevy_egui::{EguiContexts, EguiPrimaryContextPass};
 use camera::CameraLayer;
 use common::{
     functions::world_position_to_world_coordinates, states::AppState, types::BlockCoordinates,
@@ -21,7 +21,7 @@ pub(crate) enum MouseActions {
     Dig,
 }
 
-#[derive(Event)]
+#[derive(Message)]
 enum BrushInputEvent {
     Designated(BlockCoordinates),
 }
@@ -35,16 +35,16 @@ pub(crate) struct BrushSettings {
 pub fn plugin(app: &mut App) {
     app.insert_resource(BrushSettings::default())
         .add_plugins(InputManagerPlugin::<MouseControls>::default())
-        .add_event::<BrushInputEvent>()
+        .add_message::<BrushInputEvent>()
         .add_systems(OnEnter(AppState::MainGame), setup_brush)
         .add_systems(
             Update,
-            (
-                handle_brush_input,
-                handle_brush.after(handle_brush_input),
-                ui::brushes,
-            )
+            (handle_brush_input, handle_brush.after(handle_brush_input))
                 .run_if(in_state(AppState::MainGame)),
+        )
+        .add_systems(
+            EguiPrimaryContextPass,
+            ui::brushes.run_if(in_state(AppState::MainGame)),
         );
 }
 
@@ -66,11 +66,13 @@ fn handle_brush_input(
     query: Single<&ActionState<MouseControls>>,
     window: Single<&Window, With<PrimaryWindow>>,
     camera: Single<(&Camera, &GlobalTransform, &CameraLayer), With<Camera>>,
-    mut brush_event_writer: EventWriter<BrushInputEvent>,
+    mut brush_event_writer: MessageWriter<BrushInputEvent>,
     mut contexts: EguiContexts,
 ) {
     // Skip pointer events that are captured by egui
-    let ctx = contexts.ctx_mut();
+    let Ok(ctx) = contexts.ctx_mut() else {
+        return;
+    };
     if ctx.wants_pointer_input() {
         return;
     }
@@ -78,16 +80,15 @@ fn handle_brush_input(
     let window = window.into_inner();
     let action_state = query.into_inner();
     let (camera, camera_transform, layer) = camera.into_inner();
-    if action_state.pressed(&MouseControls::PrimaryAction) {
-        if let Some(world_position) = window
+    if action_state.pressed(&MouseControls::PrimaryAction)
+        && let Some(world_position) = window
             .cursor_position()
             .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor).ok())
             .map(|ray| ray.origin.truncate())
-        {
-            let world_coordinates =
-                world_position_to_world_coordinates(world_position.extend(layer.0 as f32));
-            brush_event_writer.write(BrushInputEvent::Designated(world_coordinates));
-        }
+    {
+        let world_coordinates =
+            world_position_to_world_coordinates(world_position.extend(layer.0 as f32));
+        brush_event_writer.write(BrushInputEvent::Designated(world_coordinates));
     }
 }
 
@@ -95,7 +96,7 @@ fn handle_brush(
     brush_settings: Res<BrushSettings>,
     world_map: Res<WorldMap>,
     work_order_queue: Res<WorkOrderQueue>,
-    mut brush_event_reader: EventReader<BrushInputEvent>,
+    mut brush_event_reader: MessageReader<BrushInputEvent>,
     mut commands: Commands,
 ) {
     for brush_input_event in brush_event_reader.read() {
