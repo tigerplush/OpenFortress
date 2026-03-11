@@ -2,7 +2,7 @@ use std::cmp::Reverse;
 
 use bevy::{ecs::spawn::SpawnIter, platform::collections::HashMap, prelude::*};
 use common::{traits::Neighbors, types::IWorldCoordinates};
-use map_generation::{block_type::BlockType, map_generation::WorldMap};
+use map_generation::{block_type::BlockType, world_map::WorldMap};
 use priority_queue::PriorityQueue;
 
 use crate::path::Path;

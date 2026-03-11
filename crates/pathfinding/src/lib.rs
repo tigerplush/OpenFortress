@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use common::traits::AddNamedObserver;
-use map_generation::map_generation::WorldMap;
+use map_generation::world_map::WorldMap;
 use path::Path;
 use pathfinder::{Pathfinder, PathfinderListener, PathfindingErrors, PathfindingState};
 

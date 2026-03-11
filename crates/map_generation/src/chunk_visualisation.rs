@@ -18,7 +18,7 @@ use crate::{
     ToChunkAndBlock,
     block_type::BlockType,
     chunk::{CHUNK_SIZE, to_world_coordinates},
-    map_generation::WorldMap,
+    world_map::WorldMap,
 };
 
 /// actually spawns chunk visualisations

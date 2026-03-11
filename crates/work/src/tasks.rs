@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use common::types::IWorldCoordinates;
 use dig::Dig;
-use map_generation::map_generation::WorldMap;
 use walk_to::WalkTo;
 use walk_to_nearest::WalkToNearest;
 
@@ -19,7 +18,8 @@ pub(crate) fn plugin(app: &mut App) {
             Update,
             (
                 check_tasks,
-                dig::handle.run_if(resource_exists::<WorldMap>),
+                dig::tick,
+                dig::cleanup,
                 walk_to_nearest::handle,
                 walk_to::handle,
             ),

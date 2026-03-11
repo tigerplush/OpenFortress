@@ -9,7 +9,7 @@ use leafwing_input_manager::{
     plugin::InputManagerPlugin,
     prelude::{ActionState, InputMap, MouseMove},
 };
-use map_generation::map_generation::WorldMap;
+use map_generation::world_map::WorldMap;
 use work::{WorkOrder, work_order_queue::WorkOrderQueue};
 
 use crate::ui;
