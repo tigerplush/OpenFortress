@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use common::types::{IWorldCoordinates, ChunkBlockCoordinates, ChunkCoordinates};
+use common::types::{ChunkBlockCoordinates, ChunkCoordinates, IWorldCoordinates};
 use noise::{NoiseFn, OpenSimplex};
 
 use crate::block_type::{BlockType, SolidMaterial};

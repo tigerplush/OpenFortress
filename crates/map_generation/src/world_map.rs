@@ -1,10 +1,16 @@
 use std::collections::HashMap;
 
 use bevy::prelude::*;
-use common::{traits::Neighbors, types::{ChunkCoordinates, IWorldCoordinates}};
+use common::{
+    traits::Neighbors,
+    types::{ChunkCoordinates, IWorldCoordinates},
+};
 use noise::OpenSimplex;
 
-use crate::{block_type::BlockType, chunk::{Chunk, ToChunkAndBlock, to_index}};
+use crate::{
+    block_type::BlockType,
+    chunk::{Chunk, ToChunkAndBlock, to_index},
+};
 
 #[derive(Resource, Reflect)]
 #[reflect(Resource)]

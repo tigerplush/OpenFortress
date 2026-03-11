@@ -7,17 +7,14 @@ use bevy_ecs_tilemap::{
     tiles::{AnimatedTile, TileBundle, TileColor, TilePos, TileStorage, TileTextureIndex},
 };
 use camera::CameraLayer;
-use common::{
-    constants::TILE_SIZE,
-    traits::Neighbors,
-    types::{IWorldCoordinates, ChunkCoordinates},
-};
+use common::{constants::TILE_SIZE, traits::Neighbors, types::ChunkCoordinates};
 use std::ops::{Range, RangeInclusive};
 
 use crate::{
     ToChunkAndBlock,
     block_type::BlockType,
     chunk::{CHUNK_SIZE, to_world_coordinates},
+    messages::ChunkVisualisationEvent,
     world_map::WorldMap,
 };
 
@@ -277,11 +274,6 @@ pub(crate) fn on_chunk_visualisation_event(
                 .insert(ChunkVisualisation(coordinates));
         }
     }
-}
-
-#[derive(Event)]
-pub enum ChunkVisualisationEvent {
-    SetDirty(IWorldCoordinates),
 }
 
 #[derive(Component, Reflect)]

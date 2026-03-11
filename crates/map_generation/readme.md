@@ -2,6 +2,11 @@
 
 This crate is responsible for generating and maintaining the maps.
 
+## Interaction
+When possible, the world map shouldn't be changed from outside the crate. Use
+`UpdateMap` to send messages to the map, like `UpdateMap::Damage(...)`.
+The map in turn will then send `MapUpdate` events to let others know of updates.
+
 ## Visualisation and rendering
 * Every chunk should be rendered as a single Sprite/Mesh
 * Starting at the current layer every tile is checked downards (negative z direction). If a solid tile is hit, that tile will be rendered

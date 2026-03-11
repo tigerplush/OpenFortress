@@ -138,13 +138,15 @@ impl Pathfinder {
         world_map: &WorldMap,
         neighbor: IVec3,
     ) -> Result<bool, PathfindingErrors> {
-        let neighbor_block = world_map.get_raw_block(IWorldCoordinates(neighbor)).ok_or({
-            if self.current_failures >= self.allowed_failures {
-                PathfindingErrors::Unreachable
-            } else {
-                PathfindingErrors::NotEnoughChunks
-            }
-        })?;
+        let neighbor_block = world_map
+            .get_raw_block(IWorldCoordinates(neighbor))
+            .ok_or({
+                if self.current_failures >= self.allowed_failures {
+                    PathfindingErrors::Unreachable
+                } else {
+                    PathfindingErrors::NotEnoughChunks
+                }
+            })?;
 
         trace!("checking {}, is {:?}", neighbor, neighbor_block);
         let block_below = world_map
