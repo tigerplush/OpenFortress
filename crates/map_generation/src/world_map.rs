@@ -77,9 +77,9 @@ impl WorldMap {
                 .block_states
                 .entry(coordinates.0)
                 .and_modify(|block| *block -= damage)
-                .or_insert(1.0)
+                .or_insert(1.0 - damage)
         };
-        if remaining_health < 0.0 {
+        if remaining_health <= 0.0 {
             let (chunk_coordinates, block_coordinates) = coordinates.to_chunk_and_block();
             self.get_or_insert_chunk_mut(chunk_coordinates)
                 .remove_block(block_coordinates);
