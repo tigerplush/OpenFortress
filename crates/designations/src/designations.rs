@@ -2,7 +2,7 @@ use bevy::{prelude::*, window::PrimaryWindow};
 use bevy_inspector_egui::bevy_egui::{EguiContexts, EguiPrimaryContextPass};
 use camera::CameraLayer;
 use common::{
-    functions::world_position_to_world_coordinates, states::AppState, types::BlockCoordinates,
+    functions::world_position_to_world_coordinates, states::AppState, types::IWorldCoordinates,
 };
 use leafwing_input_manager::{
     Actionlike,
@@ -23,7 +23,7 @@ pub(crate) enum MouseActions {
 
 #[derive(Message)]
 enum BrushInputEvent {
-    Designated(BlockCoordinates),
+    Designated(IWorldCoordinates),
 }
 
 #[derive(Default, Reflect, Resource)]

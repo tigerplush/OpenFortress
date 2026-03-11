@@ -4,7 +4,7 @@ use common::{
     constants::TILE_SIZE,
     states::AppState,
     traits::{AddNamedObserver, Neighbors},
-    types::{BlockCoordinates, ChunkCoordinates},
+    types::{IWorldCoordinates, ChunkCoordinates},
 };
 use noise::OpenSimplex;
 
@@ -74,7 +74,7 @@ impl WorldMap {
     }
 
     /// Tries to fetch a block from world. Will return None, if the chunk doesn't exist or the block is of type BlockType::None
-    pub fn get_block(&self, coordinates: BlockCoordinates) -> Option<BlockType> {
+    pub fn get_block(&self, coordinates: IWorldCoordinates) -> Option<BlockType> {
         let (chunk_coordinates, block_coordinates) = coordinates.to_chunk_and_block();
         let index = to_index(block_coordinates);
         self.chunks
@@ -86,7 +86,7 @@ impl WorldMap {
     }
 
     /// Returns a result of type BlockType, if the corresponding chunk has been found. Returns an empty error, when the chunk is not loaded.
-    pub fn get_raw_block(&self, coordinates: BlockCoordinates) -> Option<BlockType> {
+    pub fn get_raw_block(&self, coordinates: IWorldCoordinates) -> Option<BlockType> {
         let (chunk_coordinate, block_coordinates) = coordinates.to_chunk_and_block();
         let index = to_index(block_coordinates);
         self.chunks
@@ -94,7 +94,7 @@ impl WorldMap {
             .map(|chunk| chunk.blocks[index])
     }
 
-    pub fn solidness(&self, coordinates: BlockCoordinates) -> bool {
+    pub fn solidness(&self, coordinates: IWorldCoordinates) -> bool {
         let (chunk_coordinates, block_coordinates) = coordinates.to_chunk_and_block();
         let index = to_index(block_coordinates);
         self.chunks
@@ -103,7 +103,7 @@ impl WorldMap {
     }
 
     /// Adds damage to a block. Returns true, if the block is destroyed, false otherwise.
-    pub fn damage_block(&mut self, coordinates: BlockCoordinates, damage: f32) -> bool {
+    pub fn damage_block(&mut self, coordinates: IWorldCoordinates, damage: f32) -> bool {
         let remaining_health = {
             *self
                 .block_states

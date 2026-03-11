@@ -1,12 +1,12 @@
 use bevy::prelude::*;
-use common::types::BlockCoordinates;
+use common::types::IWorldCoordinates;
 use map_generation::{chunk_visualisation::ChunkVisualisationEvent, map_generation::WorldMap};
 
 use super::Task;
 
 #[derive(Clone, Component, Copy, Debug, Reflect)]
 #[reflect(Component)]
-pub(crate) struct Dig(pub(crate) BlockCoordinates);
+pub(crate) struct Dig(pub(crate) IWorldCoordinates);
 
 pub(crate) fn handle(
     time: Res<Time>,
