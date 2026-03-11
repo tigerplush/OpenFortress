@@ -41,7 +41,10 @@ pub(crate) fn cleanup(
     for block_update in message_reader.read() {
         if let BlockUpdate::Removed(coordinates) = block_update {
             for (entity, dig) in &query {
-                debug!("Block {:?} is destroyed, removing task from {}", coordinates, entity);
+                debug!(
+                    "Block {:?} is destroyed, removing task from {}",
+                    coordinates, entity
+                );
                 if dig.0 == *coordinates {
                     commands
                         .entity(entity)

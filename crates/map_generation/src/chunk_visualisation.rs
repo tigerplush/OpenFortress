@@ -14,7 +14,7 @@ use crate::{
     ToChunkAndBlock,
     block_type::BlockType,
     chunk::{CHUNK_SIZE, to_world_coordinates},
-    messages::ChunkVisualisationEvent,
+    messages::BlockUpdate,
     world_map::WorldMap,
 };
 
@@ -242,36 +242,42 @@ fn spawn_tile_map(
         .insert(ChildOf(target));
 }
 
-pub(crate) fn on_chunk_visualisation_event(
-    trigger: On<ChunkVisualisationEvent>,
+pub(crate) fn update(
     query: Query<(Entity, &ChunkVisualisation)>,
+    mut message_reader: MessageReader<BlockUpdate>,
     mut commands: Commands,
 ) {
-    let ChunkVisualisationEvent::SetDirty(coordinates) = trigger.event();
-    let (chunk_coordinates, block_coordinates) = coordinates.to_chunk_and_block();
+    for block_update in message_reader.read() {
+        match block_update {
+            BlockUpdate::Added => todo!(),
+            BlockUpdate::Removed(world_coordinates) => {
+                let (chunk_coordinates, block_coordinates) = world_coordinates.to_chunk_and_block();
 
-    let mut all = vec![chunk_coordinates];
-    if block_coordinates.0.x == 0
-        || block_coordinates.0.y == 0
-        || block_coordinates.0.x == CHUNK_SIZE.x - 1
-        || block_coordinates.0.y == CHUNK_SIZE.y - 1
-    {
-        let neighbors: Vec<ChunkCoordinates> = chunk_coordinates
-            .0
-            .same_layer_neighbors()
-            .iter()
-            .map(|(coordinate, _)| ChunkCoordinates(*coordinate))
-            .collect();
-        all.extend(neighbors);
-    }
-    for coordinates in all {
-        if let Some((entity, _)) = query
-            .iter()
-            .find(|(_, chunk_vis)| chunk_vis.0 == coordinates)
-        {
-            commands
-                .entity(entity)
-                .insert(ChunkVisualisation(coordinates));
+                let mut all = vec![chunk_coordinates];
+                if block_coordinates.0.x == 0
+                    || block_coordinates.0.y == 0
+                    || block_coordinates.0.x == CHUNK_SIZE.x - 1
+                    || block_coordinates.0.y == CHUNK_SIZE.y - 1
+                {
+                    let neighbors: Vec<ChunkCoordinates> = chunk_coordinates
+                        .0
+                        .same_layer_neighbors()
+                        .iter()
+                        .map(|(coordinate, _)| ChunkCoordinates(*coordinate))
+                        .collect();
+                    all.extend(neighbors);
+                }
+                for coordinates in all {
+                    if let Some((entity, _)) = query
+                        .iter()
+                        .find(|(_, chunk_vis)| chunk_vis.0 == coordinates)
+                    {
+                        commands
+                            .entity(entity)
+                            .insert(ChunkVisualisation(coordinates));
+                    }
+                }
+            }
         }
     }
 }

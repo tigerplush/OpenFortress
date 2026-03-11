@@ -14,8 +14,3 @@ pub enum BlockUpdate {
     Added,
     Removed(IWorldCoordinates),
 }
-
-#[derive(Event)]
-pub enum ChunkVisualisationEvent {
-    SetDirty(IWorldCoordinates),
-}
