@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use common::types::{BlockCoordinates, ChunkBlockCoordinates, ChunkCoordinates};
+use common::types::{ChunkBlockCoordinates, ChunkCoordinates, IWorldCoordinates};
 use noise::{NoiseFn, OpenSimplex};
 
 use crate::block_type::{BlockType, SolidMaterial};
@@ -55,7 +55,7 @@ pub(crate) trait ToChunkAndBlock {
     fn to_chunk_and_block(&self) -> (ChunkCoordinates, ChunkBlockCoordinates);
 }
 
-impl ToChunkAndBlock for BlockCoordinates {
+impl ToChunkAndBlock for IWorldCoordinates {
     fn to_chunk_and_block(&self) -> (ChunkCoordinates, ChunkBlockCoordinates) {
         (
             ChunkCoordinates(self.0.div_euclid(CHUNK_SIZE.as_ivec3())),
@@ -75,12 +75,12 @@ pub(crate) fn to_index(coordinates: impl Into<ChunkBlockCoordinates>) -> usize {
 pub(crate) fn to_world_coordinates(
     chunk_coordinates: ChunkCoordinates,
     block_coordinates: impl Into<ChunkBlockCoordinates>,
-) -> BlockCoordinates {
+) -> IWorldCoordinates {
     let block_coordinates: ChunkBlockCoordinates = block_coordinates.into();
     let x = chunk_coordinates.0.x * CHUNK_SIZE.x as i32 + block_coordinates.0.x as i32;
     let y = chunk_coordinates.0.y * CHUNK_SIZE.y as i32 + block_coordinates.0.y as i32;
     let z = chunk_coordinates.0.z * CHUNK_SIZE.z as i32 + block_coordinates.0.z as i32;
-    BlockCoordinates(IVec3::new(x, y, z))
+    IWorldCoordinates(IVec3::new(x, y, z))
 }
 
 #[test]
@@ -101,6 +101,6 @@ fn test_to_world() {
     let chunk_coordinates = ChunkCoordinates(IVec3::ZERO);
     assert_eq!(
         to_world_coordinates(chunk_coordinates, (1, 2, 3)),
-        BlockCoordinates(IVec3::new(1, 2, 3))
+        IWorldCoordinates(IVec3::new(1, 2, 3))
     )
 }

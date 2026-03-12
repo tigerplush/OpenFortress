@@ -2,18 +2,18 @@ use bevy::prelude::*;
 use std::time::Duration;
 
 use crate::{PathEvent, PathState};
-use common::types::{BlockCoordinates, WorldCoordinates};
+use common::types::{IWorldCoordinates, WorldCoordinates};
 
 #[derive(Clone, Component, Debug, PartialEq, Reflect)]
 #[reflect(Component)]
 pub struct Path {
-    set: Vec<BlockCoordinates>,
+    set: Vec<IWorldCoordinates>,
     current_index: usize,
     current_t: f32,
 }
 
 impl Path {
-    pub(crate) fn new(set: Vec<BlockCoordinates>) -> Self {
+    pub(crate) fn new(set: Vec<IWorldCoordinates>) -> Self {
         Path {
             set,
             current_index: 0,

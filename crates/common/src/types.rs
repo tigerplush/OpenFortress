@@ -6,27 +6,28 @@ use bevy::{
 
 use crate::traits::Neighbors;
 
+/// These are essentially rounded world coordinates.
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, Reflect)]
-pub struct BlockCoordinates(pub IVec3);
+pub struct IWorldCoordinates(pub IVec3);
 
-impl BlockCoordinates {
+impl IWorldCoordinates {
     /// Manually overrides the z value of the coordinates.
-    pub fn with_z_offset(mut self, z_offset: i32) -> BlockCoordinates {
+    pub fn with_z_offset(mut self, z_offset: i32) -> IWorldCoordinates {
         self.0.z = z_offset;
         self
     }
 }
 
-impl Neighbors<BlockCoordinates> for BlockCoordinates {
-    fn same_layer_neighbors(&self) -> Vec<(BlockCoordinates, u32)> {
+impl Neighbors<IWorldCoordinates> for IWorldCoordinates {
+    fn same_layer_neighbors(&self) -> Vec<(IWorldCoordinates, u32)> {
         self.0
             .same_layer_neighbors()
             .iter()
-            .map(|(vec, cost)| (BlockCoordinates(*vec), *cost))
+            .map(|(vec, cost)| (IWorldCoordinates(*vec), *cost))
             .collect()
     }
 
-    fn all_neighbors(&self) -> Vec<(BlockCoordinates, u32)> {
+    fn all_neighbors(&self) -> Vec<(IWorldCoordinates, u32)> {
         todo!("not implemented")
     }
 }
@@ -43,17 +44,18 @@ impl From<(u32, u32, u32)> for ChunkBlockCoordinates {
     }
 }
 
+/// World coordinates that can be directly taken from a translation.
 #[derive(Clone, Copy, Debug, PartialEq, Default, Reflect, Component)]
 pub struct WorldCoordinates(pub Vec3);
 
 impl WorldCoordinates {
-    pub fn block(&self) -> BlockCoordinates {
-        BlockCoordinates(self.0.round().as_ivec3())
+    pub fn block(&self) -> IWorldCoordinates {
+        IWorldCoordinates(self.0.round().as_ivec3())
     }
 }
 
-impl From<&BlockCoordinates> for WorldCoordinates {
-    fn from(wc: &BlockCoordinates) -> WorldCoordinates {
+impl From<&IWorldCoordinates> for WorldCoordinates {
+    fn from(wc: &IWorldCoordinates) -> WorldCoordinates {
         WorldCoordinates(wc.0.as_vec3())
     }
 }
