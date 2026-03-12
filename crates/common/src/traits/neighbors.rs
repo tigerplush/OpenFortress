@@ -16,9 +16,11 @@ pub trait Neighbors<T> {
     fn all_neighbors(&self) -> Vec<(T, u32)>;
 }
 
+pub type SquaredDistance = u32;
+
 #[rustfmt::skip]
 impl Neighbors<IVec3> for IVec3 {
-    fn same_layer_neighbors(&self) -> Vec<(IVec3, u32)> {
+    fn same_layer_neighbors(&self) -> Vec<(IVec3, SquaredDistance)> {
         vec![
             (self + IVec3::new(-1,  1,  0), 2), (self + IVec3::new( 0,  1,  0), 1), (self + IVec3::new( 1,  1,  0), 2),
             (self + IVec3::new(-1,  0,  0), 1),                                     (self + IVec3::new( 1,  0,  0), 1),
@@ -26,7 +28,7 @@ impl Neighbors<IVec3> for IVec3 {
         ]
     }
 
-    fn all_neighbors(&self) -> Vec<(IVec3, u32)> {
+    fn all_neighbors(&self) -> Vec<(IVec3, SquaredDistance)> {
         vec![
             // layer above
             (self + IVec3::new(-1,  1,  1), 3), (self + IVec3::new( 0,  1,  1), 2), (self + IVec3::new( 1,  1,  1), 3),

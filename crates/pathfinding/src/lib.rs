@@ -4,8 +4,8 @@ use path::Path;
 pub mod path;
 pub mod pathfinder;
 mod pathfinding;
+pub mod pathfinding_map;
 pub use pathfinding::plugin;
-
 
 #[derive(EntityEvent)]
 pub struct PathEvent {

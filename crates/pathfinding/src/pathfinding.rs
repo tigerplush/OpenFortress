@@ -3,7 +3,9 @@ use common::traits::AddNamedObserver;
 use map_generation::world_map::WorldMap;
 
 use crate::{
-    PathEvent, PathState, PathfindingCalculation, PathfindingCalculationEvent, path::{self, Path}, pathfinder::{Pathfinder, PathfinderListener, PathfindingErrors, PathfindingState}
+    PathEvent, PathState, PathfindingCalculation, PathfindingCalculationEvent,
+    path::{self, Path},
+    pathfinder::{Pathfinder, PathfinderListener, PathfindingErrors, PathfindingState},
 };
 
 pub fn plugin(app: &mut App) {
@@ -23,12 +25,9 @@ fn calculate_path(
     mut commands: Commands,
 ) {
     for (entity, mut path) in &mut query {
-        match path.calculate_step(&world_map) {
+        match path.calculate_step(world_map.as_ref()) {
             PathfindingState::Calculating => (),
             PathfindingState::Failed(err) => match err {
-                PathfindingErrors::NotEnoughChunks => {
-                    debug!("not enough chunks");
-                }
                 PathfindingErrors::Unreachable => {
                     debug!("pathfinding failed");
                     commands.trigger(PathfindingCalculationEvent {

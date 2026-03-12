@@ -2,10 +2,9 @@ use std::cmp::Reverse;
 
 use bevy::{ecs::spawn::SpawnIter, platform::collections::HashMap, prelude::*};
 use common::{traits::Neighbors, types::IWorldCoordinates};
-use map_generation::{block_type::BlockType, world_map::WorldMap};
 use priority_queue::PriorityQueue;
 
-use crate::path::Path;
+use crate::{path::Path, pathfinding_map::PathfindingMap};
 
 /// Attach this to calculate and ultimately follow a path.
 ///
@@ -17,7 +16,7 @@ pub struct Pathfinder {
     #[reflect(ignore)]
     frontier: PriorityQueue<IVec3, Reverse<u32>>,
     came_from: HashMap<IVec3, Option<IVec3>>,
-    cost_so_far: HashMap<IVec3, u32>,
+    cost_so_far: HashMap<IVec3, f32>,
     steps: u32,
     allowed_failures: u8,
     current_failures: u8,
@@ -50,7 +49,7 @@ impl Pathfinder {
         let mut came_from = HashMap::default();
         came_from.insert(start.0, None);
         let mut cost_so_far = HashMap::default();
-        cost_so_far.insert(start.0, 0);
+        cost_so_far.insert(start.0, 0.0);
         Pathfinder {
             target: target.0,
             frontier,
@@ -93,73 +92,37 @@ impl Pathfinder {
         )
     }
 
-    pub(crate) fn calculate_step(&mut self, world_map: &WorldMap) -> PathfindingState {
-        let Some((current_coordinates, current_priority)) = self.frontier.pop() else {
-            debug!("No frontier available");
+    pub(crate) fn calculate_step(
+        &mut self,
+        pathfinding_map: &impl PathfindingMap,
+    ) -> PathfindingState {
+        let Some((current_coordinates, _current_priority)) = self.frontier.pop() else {
+            info!("No frontier available");
             return PathfindingState::Failed(PathfindingErrors::Unreachable);
         };
 
         if current_coordinates == self.target {
-            debug!("frontier is target");
+            info!("frontier is target");
             return PathfindingState::Complete(Path::new(self.to_path()));
         }
 
-        for (neighbor, neighbor_cost) in current_coordinates.all_neighbors() {
-            match self.is_floor_block(world_map, neighbor) {
-                Ok(true) => trace!("block is floor"),
-                Ok(false) => {
-                    trace!("block is NOT floor");
-                    continue;
-                }
-                Err(e) => {
-                    debug!("error, failure: {}", self.current_failures);
-                    self.current_failures += 1;
-                    self.frontier.push(current_coordinates, current_priority);
-                    return PathfindingState::Failed(e);
-                }
-            }
-
+        for (neighbor, neighbor_cost) in pathfinding_map.get_neighbors(current_coordinates) {
+            info!(
+                "current {:?} to neighbor {:?} would cost {}",
+                current_coordinates, neighbor, neighbor_cost
+            );
             let new_cost = self.cost_so_far.get(&current_coordinates).unwrap() + neighbor_cost;
             let current_cost = self.cost_so_far.get(&neighbor);
             if current_cost.is_none() || new_cost < *current_cost.unwrap() {
                 self.cost_so_far.insert(neighbor, new_cost);
-                let priority =
-                    new_cost + heuristic(world_map) + neighbor.distance_squared(self.target) as u32;
-                self.frontier.push(neighbor, Reverse(priority));
+                let priority = new_cost + heuristic(neighbor, self.target);
+                self.frontier
+                    .push(neighbor, Reverse(priority.round() as u32));
                 self.came_from.insert(neighbor, Some(current_coordinates));
             }
         }
         self.steps += 1;
         PathfindingState::Calculating
-    }
-
-    fn is_floor_block(
-        &self,
-        world_map: &WorldMap,
-        neighbor: IVec3,
-    ) -> Result<bool, PathfindingErrors> {
-        let neighbor_block = world_map
-            .get_raw_block(IWorldCoordinates(neighbor))
-            .ok_or({
-                if self.current_failures >= self.allowed_failures {
-                    PathfindingErrors::Unreachable
-                } else {
-                    PathfindingErrors::NotEnoughChunks
-                }
-            })?;
-
-        trace!("checking {}, is {:?}", neighbor, neighbor_block);
-        let block_below = world_map
-            .get_raw_block(IWorldCoordinates(neighbor - IVec3::Z))
-            .ok_or({
-                if self.current_failures >= self.allowed_failures {
-                    PathfindingErrors::Unreachable
-                } else {
-                    PathfindingErrors::NotEnoughChunks
-                }
-            })?;
-        trace!("below {}, is {:?}", neighbor - IVec3::Z, block_below);
-        Ok(neighbor_block == BlockType::None && matches!(block_below, BlockType::Solid(_)))
     }
 
     fn to_path(&self) -> Vec<IWorldCoordinates> {
@@ -179,8 +142,8 @@ impl Pathfinder {
     }
 }
 
-fn heuristic(_world_map: &WorldMap) -> u32 {
-    1
+fn heuristic(from: IVec3, to: IVec3) -> f32 {
+    from.distance_squared(to) as f32
 }
 
 pub(crate) enum PathfindingState {
@@ -190,6 +153,5 @@ pub(crate) enum PathfindingState {
 }
 
 pub(crate) enum PathfindingErrors {
-    NotEnoughChunks,
     Unreachable,
 }
