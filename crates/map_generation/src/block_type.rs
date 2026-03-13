@@ -39,6 +39,11 @@ impl SolidMaterial {
             SolidMaterial::Grass => TileTextureIndex(1),
         }
     }
+
+    /// Returns the cost of an entity leaving this field.
+    pub const fn traversal_cost(&self) -> f32 {
+        1.0
+    }
 }
 
 impl BlockType {

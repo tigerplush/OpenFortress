@@ -47,7 +47,8 @@ impl WorldMap {
             .or_insert(Chunk::new(coordinates, self.noise))
     }
 
-    /// Tries to fetch a block from world. Will return None, if the chunk doesn't exist or the block is of type BlockType::None
+    /// Tries to fetch a block from world. Will return None, if the chunk
+    /// doesn't exist or the block is of type BlockType::None
     pub fn get_block(&self, coordinates: IWorldCoordinates) -> Option<BlockType> {
         let (chunk_coordinates, block_coordinates) = coordinates.to_chunk_and_block();
         let index = to_index(block_coordinates);
@@ -59,7 +60,8 @@ impl WorldMap {
             })
     }
 
-    /// Returns a result of type BlockType, if the corresponding chunk has been found. Returns an empty error, when the chunk is not loaded.
+    /// Returns an option of type BlockType, if the corresponding chunk has been
+    /// found. Returns None when the chunk is not loaded.
     pub fn get_raw_block(&self, coordinates: IWorldCoordinates) -> Option<BlockType> {
         let (chunk_coordinate, block_coordinates) = coordinates.to_chunk_and_block();
         let index = to_index(block_coordinates);
