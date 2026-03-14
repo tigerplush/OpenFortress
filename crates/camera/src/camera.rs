@@ -60,7 +60,9 @@ fn setup(mut commands: Commands) {
         .with_dual_axis(CameraControls::Pan, VirtualDPad::wasd())
         .with_axis(CameraControls::Zoom, MouseScrollAxis::Y)
         .with(CameraControls::ScrollUp, KeyCode::Numpad8)
-        .with(CameraControls::ScrollDown, KeyCode::Numpad2);
+        .with(CameraControls::ScrollUp, KeyCode::KeyE)
+        .with(CameraControls::ScrollDown, KeyCode::Numpad2)
+        .with(CameraControls::ScrollDown, KeyCode::KeyQ);
     commands.spawn((
         input_map,
         Camera2d,
