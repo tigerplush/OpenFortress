@@ -60,23 +60,21 @@ pub(crate) fn on_insert(
     for x in 0..CHUNK_SIZE.x {
         for y in 0..CHUNK_SIZE.y {
             for z in 0..=chunk_visualisation_settings.visible_layers {
-                let world_coordinates =
-                    to_world_coordinates(chunk_visualisation.0, (x, y, 0))
-                        // we begin at the camera layer. If we don't find a block, we step down a layer until we either find one
-                        // or the opacity of the fog is too high to see
-                        .with_z_offset(camera_layer.0 - z);
-                if let Some(block) = world_map.get_block(world_coordinates) {
-                    if block.to_tile(
-                        x,
-                        y,
+                let world_coordinates = to_world_coordinates(chunk_visualisation.0, (x, y, 0))
+                    // we begin at the camera layer. If we don't find a block, we step down a layer until we either find one
+                    // or the opacity of the fog is too high to see
+                    .with_z_offset(camera_layer.0 - z);
+                if let Some(block) = world_map.get_block(world_coordinates)
+                    && block.to_tile(
+                        UVec2::new(x, y),
                         z,
                         &mut tilemaps,
                         &world_coordinates,
                         world_map.as_ref(),
                         chunk_visualisation_settings.visible_layers as f32,
-                    ) {
-                        break;
-                    }
+                    )
+                {
+                    break;
                 }
             }
         }

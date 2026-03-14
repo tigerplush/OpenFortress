@@ -66,7 +66,7 @@ pub(crate) enum TileWrapper {
 
 impl TileWrapper {
     /// Spaws a tilebundle based on its type.
-    /// 
+    ///
     /// For half-tiles, this actually spawns four tiles.
     pub(crate) fn spawn_bundle(
         &self,
@@ -148,12 +148,11 @@ impl Default for Tilemaps {
 
 pub(crate) trait ToTiles {
     /// Adds itself to the tilemap.
-    /// 
+    ///
     /// Returns true if the tile is solid.
     fn to_tile(
         &self,
-        x: u32,
-        y: u32,
+        pos: UVec2,
         z: i32,
         tilemaps: &mut Tilemaps,
         current_world_coordinates: &IWorldCoordinates,
@@ -165,8 +164,7 @@ pub(crate) trait ToTiles {
 impl ToTiles for BlockType {
     fn to_tile(
         &self,
-        x: u32,
-        y: u32,
+        pos: UVec2,
         z: i32,
         tilemaps: &mut Tilemaps,
         current_world_coordinates: &IWorldCoordinates,
@@ -188,14 +186,17 @@ impl ToTiles for BlockType {
                     flags |= solid << index;
                 }
                 tilemaps.0.entry(TileType::Half).and_modify(|m| {
-                    m.insert(TilePosType::Half((x, y)), TileWrapper::Half((*self, flags)));
+                    m.insert(
+                        TilePosType::Half((pos.x, pos.y)),
+                        TileWrapper::Half((*self, flags)),
+                    );
                 });
                 true
             }
             BlockType::Solid(_) => {
                 tilemaps.0.entry(TileType::Full).and_modify(|m| {
                     m.insert(
-                        TilePosType::Full(TilePos::new(x, y)),
+                        TilePosType::Full(TilePos::new(pos.x, pos.y)),
                         TileWrapper::Full(*self),
                     );
                 });
@@ -203,14 +204,17 @@ impl ToTiles for BlockType {
             }
             BlockType::Liquid => {
                 tilemaps.0.entry(TileType::Animated).and_modify(|m| {
-                    m.insert(TilePosType::Full(TilePos::new(x, y)), TileWrapper::Animated);
+                    m.insert(
+                        TilePosType::Full(TilePos::new(pos.x, pos.y)),
+                        TileWrapper::Animated,
+                    );
                 });
                 true
             }
             BlockType::None if z != 0 => {
                 tilemaps.0.entry(TileType::Fog).and_modify(|m| {
                     m.insert(
-                        TilePosType::Full(TilePos::new(x, y)),
+                        TilePosType::Full(TilePos::new(pos.x, pos.y)),
                         TileWrapper::Fog(z as f32 / visible_layers),
                     );
                 });
