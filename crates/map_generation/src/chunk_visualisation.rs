@@ -278,6 +278,7 @@ pub(crate) fn update(
                     }
                 }
             }
+            _ => (),
         }
     }
 }

@@ -9,8 +9,7 @@ use leafwing_input_manager::{
     plugin::InputManagerPlugin,
     prelude::{ActionState, InputMap, MouseMove},
 };
-use map_generation::world_map::WorldMap;
-use work::{WorkOrder, work_order_queue::WorkOrderQueue};
+use map_generation::messages::UpdateMap;
 
 use crate::ui;
 
@@ -94,21 +93,15 @@ fn handle_brush_input(
 
 fn handle_brush(
     brush_settings: Res<BrushSettings>,
-    world_map: Res<WorldMap>,
-    work_order_queue: Res<WorkOrderQueue>,
     mut brush_event_reader: MessageReader<BrushInputEvent>,
-    mut commands: Commands,
+    mut world_map_event_writer: MessageWriter<UpdateMap>,
 ) {
     for brush_input_event in brush_event_reader.read() {
         #[allow(irrefutable_let_patterns)]
         if let BrushInputEvent::Designated(world_coordinate) = brush_input_event {
             match brush_settings.current_action {
                 MouseActions::Dig => {
-                    if !work_order_queue.contains(&WorkOrder::Dig(*world_coordinate))
-                        && world_map.get_block(*world_coordinate).is_some()
-                    {
-                        commands.spawn(WorkOrder::dig(*world_coordinate));
-                    }
+                    world_map_event_writer.write(UpdateMap::ScheduleForRemoval(*world_coordinate));
                 }
                 MouseActions::None => (),
             }

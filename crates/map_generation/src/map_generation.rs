@@ -55,11 +55,19 @@ fn handle_messages(
     mut message_writer: MessageWriter<BlockUpdate>,
 ) {
     for update_message in message_reader.read() {
-        match update_message {
-            &UpdateMap::DamageBlock(world_coordinates, damage) => {
+        match *update_message {
+            UpdateMap::DamageBlock(world_coordinates, damage) => {
                 if world_map.damage_block(world_coordinates, damage) {
                     debug!("block {:?} was destroyed", world_coordinates);
                     message_writer.write(BlockUpdate::Removed(world_coordinates));
+                }
+            }
+            UpdateMap::ScheduleForRemoval(world_coordinates) => {
+                if world_map
+                    .get_raw_block(world_coordinates)
+                    .is_some_and(|block| block.is_solid())
+                {
+                    message_writer.write(BlockUpdate::ScheduleForRemoval(world_coordinates));
                 }
             }
         }

@@ -3,6 +3,7 @@ use common::{
     traits::SpawnNamedObserver,
     types::{IWorldCoordinates, WorldCoordinates},
 };
+use map_generation::messages::BlockUpdate;
 use tasks::{Task, TaskQueue, TaskState};
 use work_order_queue::WorkOrderQueue;
 
@@ -15,7 +16,10 @@ pub fn plugin(app: &mut App) {
     app.register_type::<WorkOrder>()
         .register_type::<CurrentWorkOrder>()
         .add_plugins((tasks::plugin, work_order_queue::plugin))
-        .add_systems(Update, (fetch_new_work_order, check_work_orders));
+        .add_systems(
+            Update,
+            (fetch_new_work_order, check_work_orders, handle_map_updates),
+        );
 }
 
 /// Represents work orders that can be created by the player
@@ -51,6 +55,23 @@ pub struct Worker;
 #[derive(Component, Reflect)]
 #[reflect(Component)]
 struct CurrentWorkOrder(Entity);
+
+fn handle_map_updates(
+    mut work_order_queue: ResMut<WorkOrderQueue>,
+    mut message_reader: MessageReader<BlockUpdate>,
+    mut commands: Commands,
+) {
+    for message in message_reader.read() {
+        if let BlockUpdate::ScheduleForRemoval(world_coordinates) = message
+            && !work_order_queue.contains(&WorkOrder::Dig(*world_coordinates))
+        {
+            let entity = commands.spawn(WorkOrder::dig(*world_coordinates)).id();
+            work_order_queue
+                .pending
+                .push_back((entity, WorkOrder::Dig(*world_coordinates)));
+        }
+    }
+}
 
 fn fetch_new_work_order(
     mut work_order_queue: ResMut<WorkOrderQueue>,
