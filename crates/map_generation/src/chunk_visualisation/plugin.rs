@@ -1,22 +1,45 @@
-use assets::tileset_asset::TilesetAsset;
-use bevy::{color::palettes::css::WHITE, platform::collections::HashMap, prelude::*};
-use bevy_ecs_tilemap::{
-    TilemapBundle,
-    anchor::TilemapAnchor,
-    map::{TilemapId, TilemapSize, TilemapTexture, TilemapTileSize, TilemapType},
-    tiles::{AnimatedTile, TileBundle, TileColor, TilePos, TileStorage, TileTextureIndex},
+use std::{
+    collections::HashMap,
+    ops::{Range, RangeInclusive},
 };
+
+use assets::tileset_asset::TilesetAsset;
+use bevy::{color::palettes::css::WHITE, prelude::*};
+use bevy_ecs_tilemap::prelude::*;
 use camera::CameraLayer;
-use common::{constants::TILE_SIZE, traits::Neighbors, types::ChunkCoordinates};
-use std::ops::{Range, RangeInclusive};
+use common::{
+    constants::TILE_SIZE,
+    states::AppState,
+    traits::{AddNamedObserver, Neighbors},
+    types::ChunkCoordinates,
+};
 
 use crate::{
-    ToChunkAndBlock,
     block_type::BlockType,
-    chunk::{CHUNK_SIZE, to_world_coordinates},
+    chunk::{CHUNK_SIZE, ToChunkAndBlock, to_world_coordinates},
+    chunk_visualisation::ChunkVisualisation,
     messages::BlockUpdate,
     world_map::WorldMap,
 };
+
+pub fn plugin(app: &mut App) {
+    app.register_type::<ChunkVisualisation>()
+        .add_systems(
+            Update,
+            (update, request, delete).run_if(in_state(AppState::MainGame)),
+        )
+        .add_named_observer(on_insert, "on_chunk_vis_insert");
+}
+
+/// Wrapper to wrap the contents of a full-tile tilemap
+enum TileWrapper {
+    /// Wrapper for a fog type, carries the opacity in percent (ranging 0.0 to 1.0)
+    Fog(f32),
+    /// Wrapper for a water type
+    Water,
+    /// Wrapper for a block type
+    Floor(BlockType),
+}
 
 /// actually spawns chunk visualisations
 ///
@@ -165,16 +188,6 @@ pub(crate) fn on_insert(
     }
 }
 
-/// Wrapper to wrap the contents of a full-tile tilemap
-enum TileWrapper {
-    /// Wrapper for a fog type, carries the opacity in percent (ranging 0.0 to 1.0)
-    Fog(f32),
-    /// Wrapper for a water type
-    Water,
-    /// Wrapper for a block type
-    Floor(BlockType),
-}
-
 /// spawns a full-tile tilemap
 fn spawn_tile_map(
     commands: &mut Commands,
@@ -283,26 +296,7 @@ pub(crate) fn update(
     }
 }
 
-#[derive(Component, Reflect)]
-#[reflect(Component)]
-pub(crate) struct ChunkVisualisation(ChunkCoordinates);
-
-impl ChunkVisualisation {
-    fn bundle(coordinates: ChunkCoordinates) -> impl Bundle {
-        (
-            Name::new(format!("Chunk {}", coordinates.0)),
-            ChunkVisualisation(coordinates),
-            Transform::from_xyz(
-                coordinates.0.x as f32 * CHUNK_SIZE.x as f32 * TILE_SIZE.x,
-                coordinates.0.y as f32 * CHUNK_SIZE.y as f32 * TILE_SIZE.y,
-                0.0,
-            ),
-            Visibility::Inherited,
-        )
-    }
-}
-
-pub(crate) fn request(
+fn request(
     camera_transform: Single<(&Transform, &CameraLayer, &Projection)>,
     chunks: Query<&ChunkVisualisation>,
     mut commands: Commands,
@@ -330,7 +324,7 @@ pub(crate) fn request(
     }
 }
 
-pub(crate) fn delete(
+fn delete(
     camera_transform: Single<(&Transform, &CameraLayer, &Projection)>,
     chunks: Query<(Entity, &ChunkVisualisation)>,
     mut commands: Commands,

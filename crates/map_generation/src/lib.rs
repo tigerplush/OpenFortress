@@ -1,6 +1,3 @@
-use chunk::ToChunkAndBlock;
-use chunk_visualisation::ChunkVisualisation;
-
 pub mod block_type;
 mod chunk;
 pub mod chunk_visualisation;
