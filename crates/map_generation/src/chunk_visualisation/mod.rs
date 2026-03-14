@@ -4,6 +4,7 @@ use common::{constants::TILE_SIZE, types::ChunkCoordinates};
 use crate::chunk::CHUNK_SIZE;
 
 mod plugin;
+mod types;
 pub use plugin::plugin;
 
 #[derive(Resource)]

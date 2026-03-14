@@ -56,25 +56,25 @@ impl BlockType {
         parent: &mut RelatedSpawnerCommands<'_, ChildOf>,
         x: u32,
         y: u32,
-        target: Entity,
+        tilemap_id: TilemapId,
         tile_storage: &mut TileStorage,
         flags: u8,
     ) {
         for x_offset in 0..=1 {
             for y_offset in 0..=1 {
-                let tile_pos = TilePos::new(x * 2 + x_offset, y * 2 + y_offset);
+                let position = TilePos::new(x * 2 + x_offset, y * 2 + y_offset);
                 if let Some((texture_index, flip)) = self.texture_index(x_offset, y_offset, flags) {
                     let tile_entity = parent
                         .spawn(TileBundle {
-                            position: tile_pos,
-                            tilemap_id: TilemapId(target),
+                            position,
+                            tilemap_id,
                             color: TileColor(self.color()),
                             texture_index,
                             flip,
                             ..default()
                         })
                         .id();
-                    tile_storage.set(&tile_pos, tile_entity);
+                    tile_storage.set(&position, tile_entity);
                 }
             }
         }
