@@ -57,7 +57,7 @@ fn handle_messages(
             }
             UpdateMap::ScheduleForRemoval(world_coordinates) => {
                 if world_map
-                    .get_raw_block(world_coordinates)
+                    .get_block(world_coordinates)
                     .is_some_and(|block| block.is_solid())
                 {
                     message_writer.write(BlockUpdate::ScheduleForRemoval(world_coordinates));

@@ -49,7 +49,7 @@ impl WorldMap {
 
     /// Returns an option of type BlockType, if the corresponding chunk has been
     /// found. Returns None when the chunk is not loaded.
-    pub fn get_raw_block(&self, coordinates: IWorldCoordinates) -> Option<BlockType> {
+    pub fn get_block(&self, coordinates: IWorldCoordinates) -> Option<BlockType> {
         let (chunk_coordinate, block_coordinates) = coordinates.to_chunk_and_block();
         let index = to_index(block_coordinates);
         self.chunks

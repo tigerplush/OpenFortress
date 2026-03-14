@@ -12,8 +12,8 @@ impl PathfindingMap for WorldMap {
             .all_neighbors()
             .into_iter()
             .filter_map(|(neighbor, squared_distance)| {
-                let next_block = self.get_raw_block(IWorldCoordinates(neighbor))?;
-                let block_below = self.get_raw_block(IWorldCoordinates(neighbor - IVec3::Z))?;
+                let next_block = self.get_block(IWorldCoordinates(neighbor))?;
+                let block_below = self.get_block(IWorldCoordinates(neighbor - IVec3::Z))?;
                 if next_block != BlockType::None {
                     return None;
                 }

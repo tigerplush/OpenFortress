@@ -79,7 +79,7 @@ pub(crate) fn on_insert(
                         // we begin at the camera layer. If we don't find a block, we step down a layer until we either find one
                         // or the opacity of the fog is too high to see
                         .with_z_offset(camera_layer.0 - z);
-                if let Some(block) = world_map.get_raw_block(current_world_coordinates) {
+                if let Some(block) = world_map.get_block(current_world_coordinates) {
                     match block {
                         BlockType::Solid(_) => {
                             if z == 0 {
