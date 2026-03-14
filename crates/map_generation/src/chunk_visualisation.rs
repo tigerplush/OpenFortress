@@ -192,8 +192,8 @@ fn spawn_tile_map(
     commands
         .entity(tilemap_entity)
         .with_children(|parent| {
-            for (tile_pos, opacity) in tiles.iter() {
-                let tile_entity = match opacity {
+            for (tile_pos, tile_wrapper) in tiles.iter() {
+                let tile_entity = match tile_wrapper {
                     TileWrapper::Fog(opacity) => parent
                         .spawn(TileBundle {
                             position: *tile_pos,
