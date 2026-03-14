@@ -6,6 +6,12 @@ use crate::chunk::CHUNK_SIZE;
 mod plugin;
 pub use plugin::plugin;
 
+#[derive(Resource)]
+pub(crate) struct ChunkVisualisationSettings {
+    /// How many layers below our current one are visible?
+    visible_layers: i32,
+}
+
 /// Represents a visualised chunk. Most chunks only live in memory or on
 /// storage. The visible chunks however are spawned in via ChunkVisualisations.
 #[derive(Component, Reflect)]

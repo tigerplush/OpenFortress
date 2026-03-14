@@ -17,13 +17,16 @@ use common::{
 use crate::{
     block_type::BlockType,
     chunk::{CHUNK_SIZE, ToChunkAndBlock, to_world_coordinates},
-    chunk_visualisation::ChunkVisualisation,
+    chunk_visualisation::{ChunkVisualisation, ChunkVisualisationSettings},
     messages::BlockUpdate,
     world_map::WorldMap,
 };
 
 pub fn plugin(app: &mut App) {
     app.register_type::<ChunkVisualisation>()
+        .insert_resource(ChunkVisualisationSettings {
+            visible_layers: 10,
+        })
         .add_systems(
             Update,
             (update, request, delete).run_if(in_state(AppState::MainGame)),
@@ -46,6 +49,7 @@ enum TileWrapper {
 /// Is called when a [`ChunkVisualisation`]` is inserted into an entity
 pub(crate) fn on_insert(
     trigger: On<Insert, ChunkVisualisation>,
+    chunk_visualisation_settings: Res<ChunkVisualisationSettings>,
     mut world_map: ResMut<WorldMap>,
     tileset: Res<TilesetAsset>,
     camera_layer: Single<&CameraLayer>,
@@ -68,10 +72,10 @@ pub(crate) fn on_insert(
     let mut full_tiles = HashMap::new();
     let mut half_tiles = HashMap::new();
 
-    // we iterate over every x and y coordinate of the current chunk and go from the current camera layer downwards 11 layers
+    // we iterate over every x and y coordinate of the current chunk and go from the current camera layer downwards visible_layers + 1 layers
     for x in 0..CHUNK_SIZE.x {
         for y in 0..CHUNK_SIZE.y {
-            for z in 0..11 {
+            for z in 0..(chunk_visualisation_settings.visible_layers + 1) {
                 let current_world_coordinates =
                     to_world_coordinates(chunk_visualisation.0, (x, y, 0))
                         // we begin at the camera layer. If we don't find a block, we step down a layer until we either find one
@@ -109,8 +113,8 @@ pub(crate) fn on_insert(
                     }
                     break;
                 } else if z != 0 {
-                    // for every z layer from current camera layer -1 to current camera layer -10, we add fog with the respecting opacity
-                    fog_tiles.insert(TilePos::new(x, y), TileWrapper::Fog(z as f32 / 10.0));
+                    // for every z layer from current camera layer -1 to current camera layer -visible_layers, we add fog with the respecting opacity
+                    fog_tiles.insert(TilePos::new(x, y), TileWrapper::Fog(z as f32 / chunk_visualisation_settings.visible_layers as f32));
                 }
             }
         }
