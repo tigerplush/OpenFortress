@@ -7,10 +7,12 @@ pub enum UpdateMap {
     /// Tells the map to damage a block with the given coordinates and the
     /// given damage
     DamageBlock(IWorldCoordinates, f32),
+    ScheduleForRemoval(IWorldCoordinates),
 }
 
 #[derive(Message)]
 pub enum BlockUpdate {
     Added,
     Removed(IWorldCoordinates),
+    ScheduleForRemoval(IWorldCoordinates),
 }

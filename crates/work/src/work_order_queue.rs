@@ -8,7 +8,6 @@ use crate::WorkOrder;
 pub fn plugin(app: &mut App) {
     app.register_type::<WorkOrderQueue>()
         .insert_resource(WorkOrderQueue::default())
-        .add_named_observer(register_work_order, "register_work_order")
         .add_named_observer(unregister_work_order, "unregister_work_order");
 }
 
@@ -29,17 +28,6 @@ impl WorkOrderQueue {
                 .iter()
                 .any(|(_, work_order)| work_order == item)
     }
-}
-
-fn register_work_order(
-    trigger: On<Add, WorkOrder>,
-    mut work_order_queue: ResMut<WorkOrderQueue>,
-    work_orders: Query<&WorkOrder>,
-) {
-    let work_order = work_orders.get(trigger.entity).unwrap();
-    work_order_queue
-        .pending
-        .push_back((trigger.entity, *work_order));
 }
 
 fn unregister_work_order(

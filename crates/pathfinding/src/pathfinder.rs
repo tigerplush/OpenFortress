@@ -97,17 +97,17 @@ impl Pathfinder {
         pathfinding_map: &impl PathfindingMap,
     ) -> PathfindingState {
         let Some((current_coordinates, _current_priority)) = self.frontier.pop() else {
-            info!("No frontier available");
+            debug!("No frontier available");
             return PathfindingState::Failed(PathfindingErrors::Unreachable);
         };
 
         if current_coordinates == self.target {
-            info!("frontier is target");
+            debug!("frontier is target");
             return PathfindingState::Complete(Path::new(self.to_path()));
         }
 
         for (neighbor, neighbor_cost) in pathfinding_map.get_neighbors(current_coordinates) {
-            info!(
+            debug!(
                 "current {:?} to neighbor {:?} would cost {}",
                 current_coordinates, neighbor, neighbor_cost
             );
