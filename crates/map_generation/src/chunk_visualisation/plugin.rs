@@ -24,9 +24,7 @@ use crate::{
 
 pub fn plugin(app: &mut App) {
     app.register_type::<ChunkVisualisation>()
-        .insert_resource(ChunkVisualisationSettings {
-            visible_layers: 10,
-        })
+        .insert_resource(ChunkVisualisationSettings { visible_layers: 10 })
         .add_systems(
             Update,
             (update, request, delete).run_if(in_state(AppState::MainGame)),
@@ -81,7 +79,7 @@ pub(crate) fn on_insert(
                         // we begin at the camera layer. If we don't find a block, we step down a layer until we either find one
                         // or the opacity of the fog is too high to see
                         .with_z_offset(camera_layer.0 - z);
-                if let Some(block) = world_map.get_block(current_world_coordinates) {
+                if let Some(block) = world_map.get_raw_block(current_world_coordinates) {
                     match block {
                         BlockType::Solid(_) => {
                             if z == 0 {
@@ -104,17 +102,23 @@ pub(crate) fn on_insert(
                                 // if the current block is solid and not at the current camera z layer, we add it to the full floor tiles
                                 full_tiles.insert(TilePos::new(x, y), TileWrapper::Floor(block));
                             }
+                            break;
                         }
                         BlockType::Liquid => {
                             // if the current block is liquid, we add it to the animated water tiles
                             water_tiles.insert(TilePos::new(x, y), TileWrapper::Water);
+                            break;
+                        }
+                        _ if z != 0 => {
+                            fog_tiles.insert(
+                                TilePos::new(x, y),
+                                TileWrapper::Fog(
+                                    z as f32 / chunk_visualisation_settings.visible_layers as f32,
+                                ),
+                            );
                         }
                         _ => (),
                     }
-                    break;
-                } else if z != 0 {
-                    // for every z layer from current camera layer -1 to current camera layer -visible_layers, we add fog with the respecting opacity
-                    fog_tiles.insert(TilePos::new(x, y), TileWrapper::Fog(z as f32 / chunk_visualisation_settings.visible_layers as f32));
                 }
             }
         }
