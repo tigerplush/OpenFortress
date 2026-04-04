@@ -54,7 +54,7 @@ pub(crate) fn on_insert(
         .insert(ChildOf(world_map.entity));
 
     // Setup hashmaps for tilemaps
-    let mut tilemaps = Tilemaps::default();
+    let mut tilemaps = Tilemaps::new(chunk_visualisation_settings.visible_layers);
 
     // we iterate over every x and y coordinate of the current chunk and go from the current camera layer downwards visible_layers + 1 layers
     for x in 0..CHUNK_SIZE.x {
@@ -80,7 +80,7 @@ pub(crate) fn on_insert(
         }
     }
 
-    for (tile_type, map) in &tilemaps.0 {
+    for ((z, tile_type), map) in &tilemaps.0 {
         if !map.is_empty() {
             let tileset_image = match *tile_type {
                 TileType::Full => &tileset.floor_tileset,
@@ -88,13 +88,21 @@ pub(crate) fn on_insert(
                 TileType::Animated => &tileset.water_tileset,
                 TileType::Fog => &tileset.fog_tileset,
             };
-            spawn_tile_map(&mut commands, tile_type, map, target, tileset_image);
+            spawn_tile_map(
+                &mut commands,
+                camera_layer.0 - (*z),
+                tile_type,
+                map,
+                target,
+                tileset_image,
+            );
         }
     }
 }
 
 fn spawn_tile_map(
     commands: &mut Commands,
+    z: i32,
     tile_type: &TileType,
     tile_map: &Tilemap,
     parent_chunk: Entity,
@@ -127,7 +135,7 @@ fn spawn_tile_map(
             texture: TilemapTexture::Single(tileset.clone()),
             tile_size,
             anchor: TilemapAnchor::BottomLeft,
-            transform: Transform::from_xyz(0.0, 0.0, tile_type.z_offset()),
+            transform: Transform::from_xyz(0.0, 0.0, z as f32 + tile_type.z_offset()),
             ..default()
         })
         .insert(ChildOf(parent_chunk));

@@ -7,7 +7,7 @@ pub fn apply_world_coordinates(
     for (mut transform, coordinates) in query.iter_mut() {
         transform.translation.x = coordinates.0.x * TILE_SIZE.x;
         transform.translation.y = coordinates.0.y * TILE_SIZE.y;
-        transform.translation.z = 0.1;
+        transform.translation.z = coordinates.0.z + 0.1;
         transform.set_changed();
     }
 }

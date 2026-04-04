@@ -44,10 +44,10 @@ impl TileType {
     /// Returns the tilemap offset based on its type
     pub(crate) const fn z_offset(&self) -> f32 {
         match *self {
-            TileType::Full => -0.5,
+            TileType::Full => -0.1,
             TileType::Half => 0.0,
-            TileType::Animated => -0.5,
-            TileType::Fog => 1.0,
+            TileType::Animated => -0.1,
+            TileType::Fog => 0.2,
         }
     }
 }
@@ -133,15 +133,18 @@ pub(crate) enum TilePosType {
 pub(crate) type Tilemap = HashMap<TilePosType, TileWrapper>;
 
 /// Contains all relevant tilemaps
-pub(crate) struct Tilemaps(pub(crate) HashMap<TileType, Tilemap>);
+pub(crate) struct Tilemaps(pub(crate) HashMap<(i32, TileType), Tilemap>);
 
-impl Default for Tilemaps {
-    fn default() -> Self {
+impl Tilemaps {
+    pub(crate) fn new(layers: i32) -> Self {
         let mut map = HashMap::new();
-        map.insert(TileType::Full, HashMap::new());
-        map.insert(TileType::Half, HashMap::new());
-        map.insert(TileType::Animated, HashMap::new());
-        map.insert(TileType::Fog, HashMap::new());
+        for i in 0..=layers {
+            map.insert((i, TileType::Full), HashMap::new());
+            map.insert((i, TileType::Half), HashMap::new());
+            map.insert((i, TileType::Animated), HashMap::new());
+            map.insert((i, TileType::Fog), HashMap::new());
+        }
+        map.insert((0, TileType::Blocked), HashMap::new());
         Tilemaps(map)
     }
 }
@@ -185,7 +188,7 @@ impl ToTiles for BlockType {
                     // add its state to the flag
                     flags |= solid << index;
                 }
-                tilemaps.0.entry(TileType::Half).and_modify(|m| {
+                tilemaps.0.entry((z, TileType::Half)).and_modify(|m| {
                     m.insert(
                         TilePosType::Half((pos.x, pos.y)),
                         TileWrapper::Half((*self, flags)),
@@ -194,7 +197,7 @@ impl ToTiles for BlockType {
                 true
             }
             BlockType::Solid(_) => {
-                tilemaps.0.entry(TileType::Full).and_modify(|m| {
+                tilemaps.0.entry((z, TileType::Full)).and_modify(|m| {
                     m.insert(
                         TilePosType::Full(TilePos::new(pos.x, pos.y)),
                         TileWrapper::Full(*self),
@@ -203,7 +206,7 @@ impl ToTiles for BlockType {
                 true
             }
             BlockType::Liquid => {
-                tilemaps.0.entry(TileType::Animated).and_modify(|m| {
+                tilemaps.0.entry((z, TileType::Animated)).and_modify(|m| {
                     m.insert(
                         TilePosType::Full(TilePos::new(pos.x, pos.y)),
                         TileWrapper::Animated,
@@ -212,7 +215,7 @@ impl ToTiles for BlockType {
                 true
             }
             BlockType::None if z != 0 => {
-                tilemaps.0.entry(TileType::Fog).and_modify(|m| {
+                tilemaps.0.entry((z, TileType::Fog)).and_modify(|m| {
                     m.insert(
                         TilePosType::Full(TilePos::new(pos.x, pos.y)),
                         TileWrapper::Fog(z as f32 / visible_layers),
