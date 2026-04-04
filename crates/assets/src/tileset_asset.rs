@@ -7,6 +7,7 @@ use bevy::{
 pub struct TilesetAsset {
     pub soil_tileset: Handle<Image>,
     pub fog_tileset: Handle<Image>,
+    pub blocked_tileset: Handle<Image>,
     pub water_tileset: Handle<Image>,
     pub floor_tileset: Handle<Image>,
 }
@@ -14,6 +15,7 @@ pub struct TilesetAsset {
 impl TilesetAsset {
     const SOIL_PATH: &'static str = "tilesets/tileset_soil.png";
     const FOG_PATH: &'static str = "tilesets/tileset_fog.png";
+    const BLOCKED_PATH: &'static str = "tilesets/tileset_blocked.png";
     const WATER_PATH: &'static str = "tilesets/tileset_water.png";
     const FLOOR_PATH: &'static str = "tilesets/tileset_floors.png";
 }
@@ -30,6 +32,12 @@ impl FromWorld for TilesetAsset {
             ),
             fog_tileset: assets.load_with_settings(
                 TilesetAsset::FOG_PATH,
+                |settings: &mut ImageLoaderSettings| {
+                    settings.sampler = ImageSampler::nearest();
+                },
+            ),
+            blocked_tileset: assets.load_with_settings(
+                TilesetAsset::BLOCKED_PATH,
                 |settings: &mut ImageLoaderSettings| {
                     settings.sampler = ImageSampler::nearest();
                 },

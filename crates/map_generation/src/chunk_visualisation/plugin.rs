@@ -87,6 +87,7 @@ pub(crate) fn on_insert(
                 TileType::Half => &tileset.soil_tileset,
                 TileType::Animated => &tileset.water_tileset,
                 TileType::Fog => &tileset.fog_tileset,
+                TileType::Blocked => &tileset.blocked_tileset,
             };
             spawn_tile_map(
                 &mut commands,

@@ -1,6 +1,10 @@
 use std::{collections::HashMap, hash::Hash};
 
-use bevy::{color::palettes::css::WHITE, ecs::relationship::RelatedSpawnerCommands, prelude::*};
+use bevy::{
+    color::palettes::css::{BLACK, WHITE},
+    ecs::relationship::RelatedSpawnerCommands,
+    prelude::*,
+};
 use bevy_ecs_tilemap::prelude::*;
 use common::{constants::TILE_SIZE, traits::Neighbors, types::IWorldCoordinates};
 
@@ -12,6 +16,7 @@ pub(crate) enum TileType {
     Half,
     Animated,
     Fog,
+    Blocked,
 }
 
 impl TileType {
@@ -38,6 +43,7 @@ impl TileType {
             TileType::Half => "Full-Tile Tilemap",
             TileType::Animated => "Animated Tilemap",
             TileType::Fog => "Fog Tilemap",
+            TileType::Blocked => "Blocked Tilemap",
         }
     }
 
@@ -48,6 +54,7 @@ impl TileType {
             TileType::Half => 0.0,
             TileType::Animated => -0.1,
             TileType::Fog => 0.2,
+            TileType::Blocked => -0.1,
         }
     }
 }
@@ -62,6 +69,8 @@ pub(crate) enum TileWrapper {
     Animated,
     /// Wrapper for a fog type, carries the opacity in percent (ranging 0.0 to 1.0)
     Fog(f32),
+    // Wrapper for a tile that is not visible
+    Blocked,
 }
 
 impl TileWrapper {
@@ -113,6 +122,17 @@ impl TileWrapper {
                         position,
                         tilemap_id,
                         color: TileColor(WHITE.with_alpha(*opacity).into()),
+                        ..default()
+                    })
+                    .id();
+                tile_storage.set(&position, tile_entity);
+            }
+            (TileWrapper::Blocked, TilePosType::Full(position)) => {
+                let tile_entity = parent
+                    .spawn(TileBundle {
+                        position,
+                        tilemap_id,
+                        color: TileColor(BLACK.into()),
                         ..default()
                     })
                     .id();
@@ -192,6 +212,13 @@ impl ToTiles for BlockType {
                     m.insert(
                         TilePosType::Half((pos.x, pos.y)),
                         TileWrapper::Half((*self, flags)),
+                    );
+                });
+                // Blocks the view of the tile
+                tilemaps.0.entry((z, TileType::Blocked)).and_modify(|m| {
+                    m.insert(
+                        TilePosType::Full(TilePos::new(pos.x, pos.y)),
+                        TileWrapper::Blocked,
                     );
                 });
                 true
