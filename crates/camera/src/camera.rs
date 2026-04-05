@@ -66,6 +66,10 @@ fn setup(mut commands: Commands) {
     commands.spawn((
         input_map,
         Camera2d,
+        Projection::Orthographic(OrthographicProjection {
+            near: -0.5,
+            ..OrthographicProjection::default_2d()
+        }),
         CameraLayer(0),
         DespawnOnExit(AppState::MainGame),
     ));
@@ -85,8 +89,17 @@ fn zoom(
     }
 }
 
-fn scroll(query: Single<(&mut CameraLayer, &ActionState<CameraControls>), With<Camera2d>>) {
-    let (mut layer, action_state) = query.into_inner();
+fn scroll(
+    query: Single<
+        (
+            &mut CameraLayer,
+            &ActionState<CameraControls>,
+            &mut Transform,
+        ),
+        With<Camera2d>,
+    >,
+) {
+    let (mut layer, action_state, mut transform) = query.into_inner();
     let mut delta = 0;
     if action_state.just_pressed(&CameraControls::ScrollUp) {
         delta += 1;
@@ -95,6 +108,7 @@ fn scroll(query: Single<(&mut CameraLayer, &ActionState<CameraControls>), With<C
         delta -= 1;
     }
     layer.0 += delta;
+    transform.translation.z = layer.0 as f32;
 }
 
 fn pan(

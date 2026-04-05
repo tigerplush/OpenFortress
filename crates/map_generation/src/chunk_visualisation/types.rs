@@ -1,6 +1,10 @@
 use std::{collections::HashMap, hash::Hash};
 
-use bevy::{color::palettes::css::WHITE, ecs::relationship::RelatedSpawnerCommands, prelude::*};
+use bevy::{
+    color::palettes::css::{BLACK, WHITE},
+    ecs::relationship::RelatedSpawnerCommands,
+    prelude::*,
+};
 use bevy_ecs_tilemap::prelude::*;
 use common::{constants::TILE_SIZE, traits::Neighbors, types::IWorldCoordinates};
 
@@ -12,6 +16,7 @@ pub(crate) enum TileType {
     Half,
     Animated,
     Fog,
+    Blocked,
 }
 
 impl TileType {
@@ -38,16 +43,18 @@ impl TileType {
             TileType::Half => "Full-Tile Tilemap",
             TileType::Animated => "Animated Tilemap",
             TileType::Fog => "Fog Tilemap",
+            TileType::Blocked => "Blocked Tilemap",
         }
     }
 
     /// Returns the tilemap offset based on its type
     pub(crate) const fn z_offset(&self) -> f32 {
         match *self {
-            TileType::Full => -0.5,
+            TileType::Full => -0.1,
             TileType::Half => 0.0,
-            TileType::Animated => -0.5,
-            TileType::Fog => 1.0,
+            TileType::Animated => -0.1,
+            TileType::Fog => 0.2,
+            TileType::Blocked => -0.1,
         }
     }
 }
@@ -62,6 +69,8 @@ pub(crate) enum TileWrapper {
     Animated,
     /// Wrapper for a fog type, carries the opacity in percent (ranging 0.0 to 1.0)
     Fog(f32),
+    // Wrapper for a tile that is not visible
+    Blocked,
 }
 
 impl TileWrapper {
@@ -118,6 +127,17 @@ impl TileWrapper {
                     .id();
                 tile_storage.set(&position, tile_entity);
             }
+            (TileWrapper::Blocked, TilePosType::Full(position)) => {
+                let tile_entity = parent
+                    .spawn(TileBundle {
+                        position,
+                        tilemap_id,
+                        color: TileColor(BLACK.into()),
+                        ..default()
+                    })
+                    .id();
+                tile_storage.set(&position, tile_entity);
+            }
             _ => (),
         }
     }
@@ -133,15 +153,18 @@ pub(crate) enum TilePosType {
 pub(crate) type Tilemap = HashMap<TilePosType, TileWrapper>;
 
 /// Contains all relevant tilemaps
-pub(crate) struct Tilemaps(pub(crate) HashMap<TileType, Tilemap>);
+pub(crate) struct Tilemaps(pub(crate) HashMap<(i32, TileType), Tilemap>);
 
-impl Default for Tilemaps {
-    fn default() -> Self {
+impl Tilemaps {
+    pub(crate) fn new(layers: i32) -> Self {
         let mut map = HashMap::new();
-        map.insert(TileType::Full, HashMap::new());
-        map.insert(TileType::Half, HashMap::new());
-        map.insert(TileType::Animated, HashMap::new());
-        map.insert(TileType::Fog, HashMap::new());
+        for i in 0..=layers {
+            map.insert((i, TileType::Full), HashMap::new());
+            map.insert((i, TileType::Half), HashMap::new());
+            map.insert((i, TileType::Animated), HashMap::new());
+            map.insert((i, TileType::Fog), HashMap::new());
+        }
+        map.insert((0, TileType::Blocked), HashMap::new());
         Tilemaps(map)
     }
 }
@@ -185,16 +208,23 @@ impl ToTiles for BlockType {
                     // add its state to the flag
                     flags |= solid << index;
                 }
-                tilemaps.0.entry(TileType::Half).and_modify(|m| {
+                tilemaps.0.entry((z, TileType::Half)).and_modify(|m| {
                     m.insert(
                         TilePosType::Half((pos.x, pos.y)),
                         TileWrapper::Half((*self, flags)),
                     );
                 });
+                // Blocks the view of the tile
+                tilemaps.0.entry((z, TileType::Blocked)).and_modify(|m| {
+                    m.insert(
+                        TilePosType::Full(TilePos::new(pos.x, pos.y)),
+                        TileWrapper::Blocked,
+                    );
+                });
                 true
             }
             BlockType::Solid(_) => {
-                tilemaps.0.entry(TileType::Full).and_modify(|m| {
+                tilemaps.0.entry((z, TileType::Full)).and_modify(|m| {
                     m.insert(
                         TilePosType::Full(TilePos::new(pos.x, pos.y)),
                         TileWrapper::Full(*self),
@@ -203,7 +233,7 @@ impl ToTiles for BlockType {
                 true
             }
             BlockType::Liquid => {
-                tilemaps.0.entry(TileType::Animated).and_modify(|m| {
+                tilemaps.0.entry((z, TileType::Animated)).and_modify(|m| {
                     m.insert(
                         TilePosType::Full(TilePos::new(pos.x, pos.y)),
                         TileWrapper::Animated,
@@ -212,7 +242,7 @@ impl ToTiles for BlockType {
                 true
             }
             BlockType::None if z != 0 => {
-                tilemaps.0.entry(TileType::Fog).and_modify(|m| {
+                tilemaps.0.entry((z, TileType::Fog)).and_modify(|m| {
                     m.insert(
                         TilePosType::Full(TilePos::new(pos.x, pos.y)),
                         TileWrapper::Fog(z as f32 / visible_layers),
